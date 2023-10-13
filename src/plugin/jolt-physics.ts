@@ -1,8 +1,26 @@
-import { Vector3, PhysicsImpostor, Quaternion, Nullable, PhysicsRaycastResult, PhysicsJoint, IMotorEnabledJoint, AbstractMesh, Epsilon, Logger, VertexBuffer } from "@babylonjs/core";
+import { Vector3, PhysicsImpostor, Quaternion, Nullable, PhysicsRaycastResult, PhysicsJoint, IMotorEnabledJoint, AbstractMesh, Epsilon, Logger, VertexBuffer, IPhysicsEnabledObject, IndicesArray } from "@babylonjs/core";
 import { IPhysicsEnginePlugin, PhysicsImpostorJoint } from "@babylonjs/core/Physics/v1/IPhysicsEnginePlugin";
 import type Jolt from 'jolt-physics';
 
 type JoltNS = typeof Jolt;
+
+interface JoltCollision {
+  bodyHash: number,
+  point: Vector3|null,
+  distance: number,
+  impulse: number,
+  normal: Vector3|null
+}
+
+type Without<T, K> = {
+  [L in Exclude<keyof T, K>]: T[L]
+};
+
+interface MeshVertexData {
+  indices: IndicesArray|number[];
+  vertices: Float32Array|number[];
+  faceCount: number;
+}
 
 class RayCastUtility {
 
@@ -17,7 +35,6 @@ class RayCastUtility {
   private _shape_filter: Jolt.ShapeFilter;
 
   constructor(private Jolt: JoltNS, jolt: Jolt.JoltInterface) {
-
     this._raycastResult = new PhysicsRaycastResult();
     this._ray_settings = new Jolt.RayCastSettings();
     this._ray_collector = new Jolt.CastRayCollectorJS();
@@ -80,6 +97,41 @@ class RayCastUtility {
   }
 }
 
+class ContactCollector {
+  public collisions: {[key: number]: JoltCollision[]} = {};
+  constructor(private Jolt: JoltNS, listener: Jolt.ContactListenerJS) {
+    listener.OnContactValidate = (inBody, inBody2, inBaseOffset, inCollisionResult) => { return Jolt.AcceptAllContactsForThisBodyPair }
+    listener.OnContactRemoved = ( shapeIdPair) => { /* do nothing */ }
+    listener.OnContactAdded = listener.OnContactPersisted = (inBody1, inBody2, inManifold, ioSettings) => {
+      inBody1 = Jolt.wrapPointer(inBody1 as any as number, Jolt.Body);
+      inBody2 = Jolt.wrapPointer(inBody2 as any as number, Jolt.Body);
+
+      const body1Hash = inBody1.GetID().GetIndexAndSequenceNumber();
+      const body2Hash = inBody2.GetID().GetIndexAndSequenceNumber();
+      const event: Without<JoltCollision, 'bodyHash'> = {
+        normal: null,
+        point: null,
+        distance: 0,
+        impulse: 0
+      };
+      let collection;
+      if(collection = this.collisions[body1Hash]) {
+        collection.push({ bodyHash: body2Hash, ... event});
+      }
+      if(collection = this.collisions[body2Hash]) {
+        collection.push({ bodyHash: body1Hash, ... event});
+      }
+    }
+  }
+  saveCollisionForHash(hash: number) {
+    this.collisions[hash] = [];
+  }
+  clear() {
+    this.collisions = {};
+  }
+
+}
+
 export class JoltJSPlugin implements IPhysicsEnginePlugin {
   public world: Jolt.PhysicsSystem;
   public name = "JoltJSPlugin";
@@ -97,6 +149,8 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
 
   private _raycaster: RayCastUtility;
 
+  private _contactCollector: ContactCollector;
+  private _contactListener: Jolt.ContactListenerJS;
 
   constructor(private Jolt: JoltNS, private jolt: Jolt.JoltInterface, private _useDeltaForWorldStep: boolean = true) {
     this.world = jolt.GetPhysicsSystem();
@@ -105,6 +159,9 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     this._tempVec3B = new Jolt.Vec3();
     this._tempQuaternion = new Jolt.Quat();
     this._raycaster = new RayCastUtility(Jolt, jolt);
+    this._contactListener = new Jolt.ContactListenerJS();
+    this._contactCollector = new ContactCollector(Jolt, this._contactListener);
+
   }
 
   setGravity(gravity: Vector3): void {
@@ -141,12 +198,21 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   }
 
   executeStep(delta: number, impostors: PhysicsImpostor[]): void {
+    const imposterBodyHash: {[hash: number]: PhysicsImpostor} = {};
+    this._contactCollector.clear();
     for (const impostor of impostors) {
       // Update physics world objects to match babylon world
       if (!impostor.soft) {
         impostor.beforeStep();
       }
+      const body: Jolt.Body = impostor.physicsBody;
+      const bodyID = body.GetID().GetIndexAndSequenceNumber();
+      imposterBodyHash[bodyID] = impostor;
+      if (impostor._onPhysicsCollideCallbacks.length > 0) {
+        this._contactCollector.saveCollisionForHash(bodyID);
+      }
     }
+
     this._stepSimulation(this._useDeltaForWorldStep ? delta : this._timeStep, this._maxSteps, this._fixedTimeStep);
 
     for (const impostor of impostors) {
@@ -154,6 +220,22 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       if (!impostor.soft) {
         impostor.afterStep();
       }
+
+      // Handle collision event
+      if (impostor._onPhysicsCollideCallbacks.length > 0) {
+        const body: Jolt.Body = impostor.physicsBody;
+        const bodyID = body.GetID().GetIndexAndSequenceNumber();
+        const collisions = this._contactCollector.collisions[bodyID];
+
+        impostor._onPhysicsCollideCallbacks.forEach(listener => {
+          if(collisions && collisions.length > 0 ) {
+            collisions.forEach( event => {
+              listener.callback(impostor, imposterBodyHash[event.bodyHash], event.point, event.distance, event.impulse, event.normal);
+            })
+          }
+        })
+      }
+
     }
   }
 
@@ -307,6 +389,47 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     }
   }
 
+  private _getMeshVertexData(impostor: PhysicsImpostor): MeshVertexData {
+    const object = impostor.object;
+    const rawVerts = object.getVerticesData ? object.getVerticesData(VertexBuffer.PositionKind) : [];
+    const indices = (object.getIndices && object.getIndices()) ? object.getIndices()! : [];
+    if (!rawVerts) {
+      throw new Error("Tried to create a MeshImpostor for an object without vertices. This will fail.");
+    }
+    // get only scale! so the object could transform correctly.
+    const oldPosition = object.position.clone();
+    const oldRotation = object.rotation && object.rotation.clone();
+    const oldQuaternion = object.rotationQuaternion && object.rotationQuaternion.clone();
+    object.position.copyFromFloats(0, 0, 0);
+    object.rotation && object.rotation.copyFromFloats(0, 0, 0);
+    object.rotationQuaternion && object.rotationQuaternion.copyFrom(impostor.getParentsRotation());
+
+    object.rotationQuaternion && object.parent && object.rotationQuaternion.conjugateInPlace();
+
+    const transform = object.computeWorldMatrix(true);
+    // convert rawVerts to object space
+    const transformedVertices = new Array<number>();
+    let index: number;
+    for (index = 0; index < rawVerts.length; index += 3) {
+      Vector3.TransformCoordinates(Vector3.FromArray(rawVerts, index), transform).toArray(transformedVertices, index);
+    }
+
+    //now set back the transformation!
+    object.position.copyFrom(oldPosition);
+    oldRotation && object.rotation && object.rotation.copyFrom(oldRotation);
+    oldQuaternion && object.rotationQuaternion && object.rotationQuaternion.copyFrom(oldQuaternion);
+
+
+    const hasIndex = (indices.length > 0)
+    const faceCount = hasIndex ? indices.length / 3 : transformedVertices.length / 9;
+
+    return {
+      indices,
+      vertices: transformedVertices,
+      faceCount
+    }
+  }
+
   private _createShape(impostor: PhysicsImpostor): Jolt.Shape {
     const object = impostor.object;
 
@@ -324,8 +447,15 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         returnValue = new this.Jolt.SphereShape(size, new this.Jolt.PhysicsMaterial())
         break;
       case PhysicsImpostor.CapsuleImpostor:
-        const capRadius = impostorExtents.x / 2;
-        returnValue = new this.Jolt.CapsuleShape(impostorExtents.y / 2 - capRadius, capRadius);
+        //if(impostor.getParam("radiusTop") && impostor.getParam("radiusBottom")) {
+        //  const radiusTop: number = impostor.getParam("radiusTop");
+        //  const radiusBottom: number = impostor.getParam("radiusBottom");
+        //  const capRadius = impostorExtents.x / 2;
+        //  returnValue = new this.Jolt.TaperedCapsuleShapeSettings(impostorExtents.y / 2 - capRadius, radiusTop, radiusBottom, new this.Jolt.PhysicsMaterial()).Create().Get();
+        //} else {
+          const capRadius = impostorExtents.x / 2;
+          returnValue = new this.Jolt.CapsuleShape(impostorExtents.y / 2 - capRadius, capRadius);
+        //}
         break;
       case PhysicsImpostor.CylinderImpostor:
         returnValue = new this.Jolt.CylinderShapeSettings(0.5 * impostorExtents.y, 0.5 * impostorExtents.x).Create().Get();
@@ -335,50 +465,42 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         this._tempVec3A.Set(impostorExtents.x / 2, impostorExtents.y / 2, impostorExtents.z / 2);
         returnValue = new this.Jolt.BoxShape(this._tempVec3A);
         break;
-      case PhysicsImpostor.MeshImpostor:
+      case PhysicsImpostor.MeshImpostor: {
         // should transform the vertex data to world coordinates!!
-        const rawVerts = object.getVerticesData ? object.getVerticesData(VertexBuffer.PositionKind) : [];
-        const rawFaces = object.getIndices ? object.getIndices() : [];
-        if (!rawVerts) {
-          throw new Error("Tried to create a MeshImpostor for an object without vertices. This will fail.");
-        }
-        // get only scale! so the object could transform correctly.
-        const oldPosition = object.position.clone();
-        const oldRotation = object.rotation && object.rotation.clone();
-        const oldQuaternion = object.rotationQuaternion && object.rotationQuaternion.clone();
-        object.position.copyFromFloats(0, 0, 0);
-        object.rotation && object.rotation.copyFromFloats(0, 0, 0);
-        object.rotationQuaternion && object.rotationQuaternion.copyFrom(impostor.getParentsRotation());
-
-        object.rotationQuaternion && object.parent && object.rotationQuaternion.conjugateInPlace();
-
-        const transform = object.computeWorldMatrix(true);
-        // convert rawVerts to object space
-        const transformedVertices = new Array<number>();
-        let index: number;
-        for (index = 0; index < rawVerts.length; index += 3) {
-          Vector3.TransformCoordinates(Vector3.FromArray(rawVerts, index), transform).toArray(transformedVertices, index);
-        }
+        const vertexData = this._getMeshVertexData(impostor);
+        const hasIndex = vertexData.indices.length > 0;
         const triangles = new this.Jolt.TriangleList();
-        const hasIndex = (rawFaces && rawFaces.length > 0)
-        const faceCount = hasIndex ? rawFaces.length / 3 : transformedVertices.length / 9;
-        triangles.resize(faceCount);
-        for (let i = 0; i < faceCount; i++) {
+        triangles.resize(vertexData.faceCount);
+        for (let i = 0; i < vertexData.faceCount; i++) {
           const t = triangles.at(i);
           [0, 2, 1].forEach((j, k) => {
             const offset = i * 3 + j;
-            const index = (hasIndex ? rawFaces[offset] : offset * 3) * 3;
+            const index = (hasIndex ? vertexData.indices[offset] : offset * 3) * 3;
             const v = t.get_mV(k)
-            v.x = transformedVertices[index + 0];
-            v.y = transformedVertices[index + 1];
-            v.z = transformedVertices[index + 2];
+            v.x = vertexData.vertices[index + 0];
+            v.y = vertexData.vertices[index + 1];
+            v.z = vertexData.vertices[index + 2];
           });
         }
         returnValue = new this.Jolt.MeshShapeSettings(triangles, new this.Jolt.PhysicsMaterialList).Create().Get();
-        //now set back the transformation!
-        object.position.copyFrom(oldPosition);
-        oldRotation && object.rotation && object.rotation.copyFrom(oldRotation);
-        oldQuaternion && object.rotationQuaternion && object.rotationQuaternion.copyFrom(oldQuaternion);
+        }
+        break;
+        case PhysicsImpostor.ConvexHullImpostor:
+          const vertexData = this._getMeshVertexData(impostor);
+          const hasIndex = vertexData.indices.length > 0;
+          const hull = new this.Jolt.ConvexHullShapeSettings;
+          for (let i = 0; i < vertexData.faceCount; i++) {
+            for(let j=0;j<3;j++) {
+              const offset = i * 3 + j;
+              const index = (hasIndex ? vertexData.indices[offset] : offset * 3) * 3;
+              const x = vertexData.vertices[index + 0];
+              const y = vertexData.vertices[index + 1];
+              const z = vertexData.vertices[index + 2];
+              hull.mPoints.push_back(new this.Jolt.Vec3(x,y,z));
+            }
+          }
+          returnValue = hull.Create().Get();
+          break;
     }
     if (returnValue === undefined) {
       throw new Error("Unsupported Shape: " + impostor.type);

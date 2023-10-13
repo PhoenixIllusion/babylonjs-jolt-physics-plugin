@@ -1,5 +1,5 @@
 import { Scene, Vector3 } from "@babylonjs/core";
-import { SceneCallback, createBox, createCylinder, createFloor, createMeshFloor, createSphere, getRandomQuat } from "./example";
+import { SceneCallback, createBox, createCapsule, createConvexHull, createCylinder, createFloor, createMeshFloor, createSphere, getRandomQuat } from "./example";
 
 export default (scene: Scene): SceneCallback => {
 
@@ -8,11 +8,11 @@ export default (scene: Scene): SceneCallback => {
     const maxNumObjects = 100;
 
     //createFloor();
-    createMeshFloor(25, 1, 2, new Vector3(0,0,0));
+    createMeshFloor(25, 2, 3, new Vector3(0,-2,0));
 
     let meshesCreated = 0;
     const generateObject = () => {
-      let numTypes = 3;
+      let numTypes = 6;
       let objectType = Math.ceil(Math.random() * numTypes);
 
       let colors = ['#ff0000', '#d9b1a3', '#4d4139', '#ccad33', '#f2ff40', '#00ff00', '#165943', '#567371', '#80d5ff', '#69778c',
@@ -25,12 +25,14 @@ export default (scene: Scene): SceneCallback => {
       const physicSetting = { mass: 1, restitution: 0.5, friction: 0};
       switch (objectType) {
         case 1: {
+          // Sphere
           let radius = 0.5 + Math.random();
           createSphere(pos, radius, physicSetting, colors[objectType - 1]);
           meshesCreated++;
           break;
         }
         case 2: {
+          // Box
           let sx = 1 + Math.random();
           let sy = 1 + Math.random();
           let sz = 1 + Math.random();
@@ -38,10 +40,38 @@ export default (scene: Scene): SceneCallback => {
           meshesCreated++;
           break;
         }
-        case 3:{
+        case 3: {
+          // Cylinder
           let radius = 0.5 + Math.random();
           let halfHeight = 0.5 + 0.5 * Math.random();
           createCylinder(pos, radius, halfHeight * 2, physicSetting, colors[objectType - 1]);
+          meshesCreated++;
+          break;
+        }
+        case 4: {
+          // Capsule
+          let radius = 0.5 + Math.random();
+          let halfHeight = 0.5 + 0.5 * Math.random();
+          createCapsule(pos, radius, radius, halfHeight * 2, physicSetting, colors[objectType - 1]);
+          meshesCreated++;
+          break;
+        }/*
+        case 5:{
+          // Tapered capsule
+          let topRadius = 0.1 + Math.random()/2;
+          let bottomRadius = 0.5 + Math.random()/2;
+          let halfHeight = 0.5 * (topRadius + bottomRadius + Math.random());
+          createCapsule(pos, topRadius, bottomRadius, halfHeight * 2, physicSetting, colors[objectType - 1]);
+          meshesCreated++;
+          break;
+        }*/
+        case 6:{
+          // Convex hull
+          const points = [];
+          for (let p = 0; p < 10; ++p)
+            points.push(new Vector3(-0.5 + 2 * Math.random(), -0.5 + 2 * Math.random(), -0.5 + 2 * Math.random()));
+							
+          createConvexHull(pos, points, physicSetting, colors[objectType - 1]);
           meshesCreated++;
           break;
         }

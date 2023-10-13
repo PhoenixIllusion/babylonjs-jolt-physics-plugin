@@ -1,4 +1,5 @@
-import { Color3, Material, Mesh, MeshBuilder, PhysicsImpostor, Quaternion, Scene, StandardMaterial, Vector3, VertexData } from "@babylonjs/core";
+import { Color3, Material, Mesh, MeshBuilder, PhysicsImpostor, PhysicsImpostorParameters, Quaternion, Scene, StandardMaterial, Vector3, VertexData } from "@babylonjs/core";
+import QuickHull from 'quickhull3d'
 import type Jolt from 'jolt-physics';
 export type JoltNS = typeof Jolt;
 
@@ -59,13 +60,60 @@ export const createBox = (position: Vector3, rotation: Quaternion, halfExtent: V
   return { box, physics };
 }
 
+export const createCapsule = (position: Vector3, radiusTop: number, radiusBottom: number, height: number, physicsOptions: PhysicsOptions = NullPhysics, color = '#FFFFFF') => {
+  const capsuleProps = { height: height + radiusTop + radiusBottom, tessellation: 16 }
+  const box = ( radiusTop !== radiusBottom )
+              ? MeshBuilder.CreateCapsule('capsule', { radiusTop, radiusBottom, ... capsuleProps })
+              : MeshBuilder.CreateCapsule('capsule', { radius: radiusBottom, ... capsuleProps })
+  box.position.copyFrom(position);
+  box.material = getMaterial(color);
+  const physics = new PhysicsImpostor(box, PhysicsImpostor.CapsuleImpostor, {
+    radiusTop: radiusTop !== radiusBottom ? radiusBottom: undefined,
+    radiusBottom: radiusTop !== radiusBottom ? radiusBottom: undefined,
+    ... physicsOptions
+  } as PhysicsImpostorParameters);
+  return { box, physics };
+}
+
+export const createConvexHull = (position: Vector3, points: Vector3[], physicsOptions: PhysicsOptions = NullPhysics, color = '#FFFFFF') => {
+  const rawPoints = points.map(x => [x.x, x.y, x.z]);
+  const faces = QuickHull(points.map(x => [x.x, x.y, x.z]));
+
+  const filteredPoints: number[][] = [];
+  const indexUsed: {[i: number]: boolean} = {}
+  faces.forEach(indices => {
+    indices.forEach( i => {
+      if(!indexUsed[i]){
+        indexUsed[i] = true;
+        filteredPoints.push(rawPoints[i]);
+      }
+    })
+  })
+  const positions = filteredPoints.flat();
+  const indices = QuickHull(filteredPoints).flat();
+  const normals: number[] = [];
+  var vertexData = new VertexData();
+  VertexData.ComputeNormals(positions, indices, normals);
+  vertexData.positions = positions;
+  vertexData.indices = indices;	
+  vertexData.normals = normals;
+  
+  const mesh = new Mesh("convex-hull");
+  vertexData.applyToMesh(mesh);
+  mesh.position.copyFrom(position);
+  mesh.material = getMaterial(color);
+  mesh.material.wireframe = true;
+  const physics = new PhysicsImpostor(mesh, PhysicsImpostor.ConvexHullImpostor, physicsOptions);
+  return { mesh, physics };
+}
+
 export const getRandomQuat = () => {
   const randomV3 = new Vector3(0.001 + Math.random(), Math.random(), Math.random()).normalize();
   return Quaternion.RotationAxis(randomV3,2 * Math.PI * Math.random());
 }
 
 export const createMeshFloor = (n: number, cell_size: number, amp: number, position: Vector3, physicsOptions: PhysicsOptions = NullPhysics, color = '#FFFFFF') => {
-  const mesh = new Mesh("custom");
+  const mesh = new Mesh("mesh-floor");
   const height = function (x: number, y: number) { return Math.sin(x / 2) * Math.cos(y / 3)*amp; };
   const positions: number[] = [];
   const indices: number[] = [];
@@ -104,8 +152,6 @@ export const createMeshFloor = (n: number, cell_size: number, amp: number, posit
     vertexData.applyToMesh(mesh);
     mesh.position.copyFrom(position);
     mesh.material = getMaterial(color);
-    mesh.material.backFaceCulling = false;
     const physics = new PhysicsImpostor(mesh, PhysicsImpostor.MeshImpostor, physicsOptions);
     return { mesh, physics };
-
 }

@@ -2,7 +2,7 @@ import './style.css';
 
 import "@babylonjs/core/Debug/debugLayer";
 import "@babylonjs/inspector";
-import { Engine, Scene,  Vector3, HemisphericLight,  MeshBuilder, FreeCamera, PhysicsAggregate, PhysicsShapeType, PhysicsImpostor, DirectionalLight } from "@babylonjs/core";
+import { Engine, Scene,  Vector3, HemisphericLight,  MeshBuilder, FreeCamera, PhysicsAggregate, PhysicsShapeType, PhysicsImpostor, DirectionalLight, FlyCamera } from "@babylonjs/core";
 import { JoltJSPlugin } from './plugin/jolt-physics';
 
 import initJolt from 'https://www.unpkg.com/jolt-physics/dist/jolt-physics.wasm-compat.js';
@@ -30,12 +30,12 @@ export class App {
         const joltInterface = new Jolt.JoltInterface(settings);
 
         scene.enablePhysics(new Vector3(0, -9.8, 0), new JoltJSPlugin(Jolt, joltInterface))
-        const camera = new FreeCamera("camera1", new Vector3(0, 15, 30), scene);
+        const camera = new FlyCamera("camera1", new Vector3(0, 15, 30), scene);
         // This targets the camera to scene origin
         camera.setTarget(Vector3.Zero());
 
         // This attaches the camera to the canvas
-        camera.attachControl(this.canvas, true);
+        camera.attachControl(true);
 
         // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
         const light = new DirectionalLight("light", new Vector3(-1, -3, 0), scene);
@@ -44,7 +44,7 @@ export class App {
         // Default intensity is 1. Let's dim the light a small amount
         light.intensity = 0.7;
 
-        const callback = this.createScene(scene);
+        const callback = this.createScene(Jolt, scene);
   
         // hide/show the Inspector
         window.addEventListener("keydown", (ev) => {
