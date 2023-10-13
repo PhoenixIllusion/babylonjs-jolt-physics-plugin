@@ -386,9 +386,93 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     return returnValue;
   }
 
-  generateJoint(joint: PhysicsImpostorJoint): void {
-    console.error("generateJoint", joint);
-    throw new Error("Method not implemented.");
+  generateJoint(impostorJoint: PhysicsImpostorJoint): void {
+    const mainBody: Jolt.Body = impostorJoint.mainImpostor.physicsBody;
+    const connectedBody: Jolt.Body = impostorJoint.connectedImpostor.physicsBody;
+    if (!mainBody || !connectedBody) {
+      return;
+    } 
+
+    const jointData = impostorJoint.joint.jointData;
+    if (!jointData.mainPivot) {
+        jointData.mainPivot = new Vector3(0, 0, 0);
+    }
+    if (!jointData.connectedPivot) {
+        jointData.connectedPivot = new Vector3(0, 0, 0);
+    }
+    if (!jointData.mainAxis) {
+      jointData.mainAxis = new Vector3(0, 0, 0);
+    }
+    if (!jointData.connectedAxis) {
+        jointData.connectedAxis = new Vector3(0, 0, 0);
+    }
+    const options = jointData.nativeParams || {};
+
+    const setIfAvailable = <T extends Jolt.ConstraintSettings>(setting: T, k: keyof T, key: any) => {
+      if(options[key] !== undefined) {
+        setting[k] = options[key];
+      }
+    }
+
+    const setPoints = (constraintSettings: {mPoint1: Jolt.Vec3, mPoint2: Jolt.Vec3}) => {
+      constraintSettings.mPoint1.Set(p1.x, p1.y, p1.z);
+      constraintSettings.mPoint2.Set(p2.x, p2.y, p2.z);
+    }
+    const setHindgeAxis = (constraintSettings: {mHingeAxis1: Jolt.Vec3, mHingeAxis2: Jolt.Vec3}) => {
+      const h1 = jointData.mainAxis!;
+      const h2 = jointData.connectedAxis!;
+      constraintSettings.mHingeAxis1.Set(h1.x, h1.y, h1.z);
+      constraintSettings.mHingeAxis2.Set(h2.x, h2.y, h2.z);
+    }
+    const setSliderAxis = (constraintSettings: {mSliderAxis1: Jolt.Vec3, mSliderAxis2: Jolt.Vec3}) => {
+      const h1 = jointData.mainAxis!;
+      const h2 = jointData.connectedAxis!;
+      constraintSettings.mSliderAxis1.Set(h1.x, h1.y, h1.z);
+      constraintSettings.mSliderAxis2.Set(h2.x, h2.y, h2.z);
+    }
+    const setNormalAxis = (constraintSettings: {mNormalAxis1: Jolt.Vec3, mNormalAxis2: Jolt.Vec3}) => {
+      if(options['normal-axis-1'] && options['normal-axis-2']) {
+        const n1: Vector3 = options['normal-axis-1'];
+        const n2: Vector3 = options['normal-axis-2'];
+        constraintSettings.mNormalAxis1.Set(n1.x, n1.y, n1.z);
+        constraintSettings.mNormalAxis2.Set(n2.x, n2.y, n2.z);
+      }
+    }
+
+    const p1 = jointData.mainPivot;
+    const p2 = jointData.connectedPivot;
+    switch (impostorJoint.joint.type) {
+      case PhysicsJoint.DistanceJoint: {
+          let constraintSettings = new this.Jolt.DistanceConstraintSettings();
+          setPoints(constraintSettings);
+          setIfAvailable(constraintSettings, 'mMinDistance', 'min-distance');
+          setIfAvailable(constraintSettings, 'mMaxDistance', 'max-distance');
+          impostorJoint.joint.physicsJoint = this.world.AddConstraint(constraintSettings.Create(mainBody, connectedBody));
+        }
+        return;
+      case PhysicsJoint.HingeJoint: {
+          let constraintSettings = new this.Jolt.HingeConstraintSettings();
+          setPoints(constraintSettings);
+          setHindgeAxis(constraintSettings);
+          setNormalAxis(constraintSettings);
+          setIfAvailable(constraintSettings, 'mLimitsMin', 'min-limit');
+          setIfAvailable(constraintSettings, 'mLimitsMax', 'max-limit');
+          impostorJoint.joint.physicsJoint = this.world.AddConstraint(constraintSettings.Create(mainBody, connectedBody));
+        }
+        return;
+      case PhysicsJoint.SliderJoint: {
+          let constraintSettings = new this.Jolt.SliderConstraintSettings();
+          setPoints(constraintSettings);
+          setSliderAxis(constraintSettings);
+          setNormalAxis(constraintSettings);
+          setIfAvailable(constraintSettings, 'mLimitsMin', 'min-limit');
+          setIfAvailable(constraintSettings, 'mLimitsMax', 'max-limit');
+          impostorJoint.joint.physicsJoint = this.world.AddConstraint(constraintSettings.Create(mainBody, connectedBody));
+        }
+        return;
+    }
+
+
   }
 
   removeJoint(impostorJoint: PhysicsImpostorJoint): void {
@@ -549,7 +633,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   }
   getRadius(impostor: PhysicsImpostor): number {
     const extents = impostor.getObjectExtents();
-    return extents.x / 2;
+    return Math.max(extents.x, extents.y, extents.z) / 2;
   }
   getBoxSizeToRef(impostor: PhysicsImpostor, result: Vector3): void {
     const extents = impostor.getObjectExtents();
