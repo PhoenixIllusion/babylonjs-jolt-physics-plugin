@@ -7,10 +7,10 @@ type JoltNS = typeof Jolt;
 
 interface JoltCollision {
   body: PhysicsBody,
-  point: Vector3|null,
+  point: Vector3 | null,
   distance: number,
   impulse: number,
-  normal: Vector3|null
+  normal: Vector3 | null
 }
 
 type Without<T, K> = {
@@ -18,17 +18,17 @@ type Without<T, K> = {
 };
 
 interface MeshVertexData {
-  indices: IndicesArray|number[];
-  vertices: Float32Array|number[];
+  indices: IndicesArray | number[];
+  vertices: Float32Array | number[];
   faceCount: number;
 }
 
 interface PossibleMotors {
   SetMotorState(state: Jolt.EMotorState): void;
-  SetTargetAngularVelocity( val : number): void;
-  SetTargetAngle( val : number): void;
-  SetTargetVelocity( val : number): void;
-  SetTargetPosition( val : number): void;
+  SetTargetAngularVelocity(val: number): void;
+  SetTargetAngle(val: number): void;
+  SetTargetVelocity(val: number): void;
+  SetTargetPosition(val: number): void;
 }
 
 export const enum Jolt_Type {
@@ -124,7 +124,7 @@ export type FILTER_PROPS<Base, Condition> = {
 
 
 function WrapJolt<T, K, L extends keyof K>(jolt: K, key: L) {
-  return function(target: ClassAccessorDecoratorTarget<T,K[L]>, context: ClassAccessorDecoratorContext<T,K[L]>): ClassAccessorDecoratorResult<T,K[L]> {
+  return function (target: ClassAccessorDecoratorTarget<T, K[L]>, context: ClassAccessorDecoratorContext<T, K[L]>): ClassAccessorDecoratorResult<T, K[L]> {
     return {
       get(): K[L] {
         return jolt[key];
@@ -136,12 +136,12 @@ function WrapJolt<T, K, L extends keyof K>(jolt: K, key: L) {
     }
   }
 }
-function WrapJoltReversable<T, K, L extends keyof K> (jolt: K, rev: boolean, key1: L, key2: L) {
+function WrapJoltReversable<T, K, L extends keyof K>(jolt: K, rev: boolean, key1: L, key2: L) {
   type RetType = K[L];
-  return function(target: ClassAccessorDecoratorTarget<T,RetType>, context: ClassAccessorDecoratorContext<T,RetType>): ClassAccessorDecoratorResult<T,RetType> {
+  return function (target: ClassAccessorDecoratorTarget<T, RetType>, context: ClassAccessorDecoratorContext<T, RetType>): ClassAccessorDecoratorResult<T, RetType> {
     return {
       get(): RetType {
-        return (rev ?jolt[key2]: jolt[key1]);
+        return (rev ? jolt[key2] : jolt[key1]);
       },
       set(val: RetType) {
         rev ? (jolt[key2] = val) : (jolt[key1] = val);
@@ -150,8 +150,8 @@ function WrapJoltReversable<T, K, L extends keyof K> (jolt: K, rev: boolean, key
     }
   }
 }
-function WrapJoltVec3<T,K>(jolt: K, key: FILTER_PROPS<K,Jolt.Vec3>) {
-  return function(target: ClassAccessorDecoratorTarget<T,Vector3>, context: ClassAccessorDecoratorContext): ClassAccessorDecoratorResult<T,Vector3> {
+function WrapJoltVec3<T, K>(jolt: K, key: FILTER_PROPS<K, Jolt.Vec3>) {
+  return function (target: ClassAccessorDecoratorTarget<T, Vector3>, context: ClassAccessorDecoratorContext): ClassAccessorDecoratorResult<T, Vector3> {
     let v3 = new Vector3();
     return {
       get(): Vector3 {
@@ -171,10 +171,10 @@ const JoltContactSettingImpl = (jolt: Jolt.ContactSettings, rev: boolean): JoltC
   constructor() { }
   @WrapJolt(jolt, 'mCombinedFriction') accessor combinedFriction: number = 0;
   @WrapJolt(jolt, 'mCombinedRestitution') accessor combinedRestitution: number = 0;
-  @WrapJoltReversable(jolt, rev, 'mInvMassScale1','mInvMassScale2') accessor inverseMassScale1 = 0;
-  @WrapJoltReversable(jolt, rev, 'mInvMassScale2','mInvMassScale1') accessor inverseMassScale2 = 0;
-  @WrapJoltReversable(jolt, rev, 'mInvInertiaScale1','mInvInertiaScale2') accessor inverseInertiaScale1 = 0;
-  @WrapJoltReversable(jolt, rev, 'mInvInertiaScale2','mInvInertiaScale1') accessor inverseInertiaScale2 = 0;
+  @WrapJoltReversable(jolt, rev, 'mInvMassScale1', 'mInvMassScale2') accessor inverseMassScale1 = 0;
+  @WrapJoltReversable(jolt, rev, 'mInvMassScale2', 'mInvMassScale1') accessor inverseMassScale2 = 0;
+  @WrapJoltReversable(jolt, rev, 'mInvInertiaScale1', 'mInvInertiaScale2') accessor inverseInertiaScale1 = 0;
+  @WrapJoltReversable(jolt, rev, 'mInvInertiaScale2', 'mInvInertiaScale1') accessor inverseInertiaScale2 = 0;
   @WrapJolt(jolt, 'mIsSensor') accessor isSensor = false;
   relativeLinearSurfaceVelocity = new Vector3();
   relativeAngularSurfaceVelocity = new Vector3();
@@ -193,15 +193,15 @@ export interface JoltContactSetting {
 
 
 export const enum OnContactValidateResponse {
-    AcceptAllContactsForThisBodyPair = 0,							///< Accept this and any further contact points for this body pair
-    AcceptContact = 1,												///< Accept this contact only (and continue calling this callback for every contact manifold for the same body pair)
-    RejectContact = 2,												///< Reject this contact only (but process any other contact manifolds for the same body pair)
-    RejectAllContactsForThisBodyPair = 3							///< Rejects this and any further contact points for this body pair
+  AcceptAllContactsForThisBodyPair = 0,							///< Accept this and any further contact points for this body pair
+  AcceptContact = 1,												///< Accept this contact only (and continue calling this callback for every contact manifold for the same body pair)
+  RejectContact = 2,												///< Reject this contact only (but process any other contact manifolds for the same body pair)
+  RejectAllContactsForThisBodyPair = 3							///< Rejects this and any further contact points for this body pair
 }
 export type OnContactValidateCallback = (body: PhysicsImpostor) => OnContactValidateResponse;
-export type OnContactCallback = (body: PhysicsImpostor, offset: Vector3, contactSettings?: JoltContactSetting) => void;
+export type OnContactCallback = (body: PhysicsImpostor, offset: Vector3, contactSettings: JoltContactSetting) => void;
 
-interface JoltCollisionCallback<T extends OnContactValidateCallback|OnContactCallback> { callback: T, otherImpostors: Array<PhysicsImpostor> }
+interface JoltCollisionCallback<T extends OnContactValidateCallback | OnContactCallback> { callback: T, otherImpostors: Array<PhysicsImpostor> }
 
 
 interface JoltPhysicsCollideCallbacks {
@@ -210,86 +210,109 @@ interface JoltPhysicsCollideCallbacks {
   'on-contact-validate': JoltCollisionCallback<OnContactValidateCallback>[]
 }
 type JoltCollisionKey = keyof JoltPhysicsCollideCallbacks;
-type JoltCollisionGenericType<T extends JoltCollisionKey> = JoltPhysicsCollideCallbacks[T] extends JoltCollisionCallback<infer U>[]? U : never;
 
 export class JoltPhysicsImpostor extends PhysicsImpostor {
 
-  public _JoltPhysicsCallback: JoltPhysicsCollideCallbacks = { 'on-contact-add': [], 'on-contact-persist': [], 'on-contact-validate': []}
+  public _JoltPhysicsCallback: JoltPhysicsCollideCallbacks = { 'on-contact-add': [], 'on-contact-persist': [], 'on-contact-validate': [] }
 
-  public registerOnJoltPhysicsCollide( kind: 'on-contact-add'|'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactCallback): void;
-  public registerOnJoltPhysicsCollide( kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidateCallback): void;
-  public registerOnJoltPhysicsCollide( kind: JoltCollisionKey, collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>,
-      func: OnContactCallback|OnContactValidateCallback): void {
-      const collidedAgainstList: Array<PhysicsImpostor> = collideAgainst instanceof Array ?
-          <Array<PhysicsImpostor>>collideAgainst
-          : [<PhysicsImpostor>collideAgainst];
-        if(kind == 'on-contact-validate') {
-          const list: JoltPhysicsCollideCallbacks['on-contact-validate'] = this._JoltPhysicsCallback['on-contact-validate'];
-          list.push({ callback: func as OnContactValidateCallback, otherImpostors: collidedAgainstList });
-        } else {
-          const list: JoltCollisionCallback<OnContactCallback>[] = this._JoltPhysicsCallback[kind];
-          list.push({ callback: func as OnContactCallback, otherImpostors: collidedAgainstList });
-        }
-  }
-
-  public unregisterOnJoltPhysicsCollide<Key extends keyof JoltPhysicsCollideCallbacks>( kind: JoltCollisionKey, collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>,
-    func: JoltCollisionGenericType<Key>): void {
+  public registerOnJoltPhysicsCollide(kind: 'on-contact-add' | 'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactCallback): void;
+  public registerOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidateCallback): void;
+  public registerOnJoltPhysicsCollide(kind: JoltCollisionKey, collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>,
+    func: OnContactCallback | OnContactValidateCallback): void {
     const collidedAgainstList: Array<PhysicsImpostor> = collideAgainst instanceof Array ?
-          <Array<PhysicsImpostor>>collideAgainst
-          : [<PhysicsImpostor>collideAgainst];
-      let index = -1;
-
-      const found = this._JoltPhysicsCallback[kind].some((cbDef, idx) => {
-          if (cbDef.callback === func && cbDef.otherImpostors.length === collidedAgainstList.length) {
-              const sameList = cbDef.otherImpostors.every((impostor) => {
-                  return collidedAgainstList.indexOf(impostor) > -1;
-              });
-              if (sameList) {
-                  index = idx;
-              }
-              return sameList;
-          }
-          return false;
-      });
-
-      if (found) {
-        this._JoltPhysicsCallback[kind].splice(index, 1);
-      } else {
-          Logger.Warn("Function to remove was not found");
-      }
+      <Array<PhysicsImpostor>>collideAgainst
+      : [<PhysicsImpostor>collideAgainst];
+    if (kind == 'on-contact-validate') {
+      const list: JoltPhysicsCollideCallbacks['on-contact-validate'] = this._JoltPhysicsCallback['on-contact-validate'];
+      list.push({ callback: func as OnContactValidateCallback, otherImpostors: collidedAgainstList });
+    } else {
+      const list: JoltCollisionCallback<OnContactCallback>[] = this._JoltPhysicsCallback[kind];
+      list.push({ callback: func as OnContactCallback, otherImpostors: collidedAgainstList });
+    }
   }
-  public onJoltCollide<T extends keyof JoltPhysicsCollideCallbacks>(kind: T, event: { body: PhysicsImpostor, ioSettings: JoltContactSetting }): OnContactValidateResponse[] {
+  public unregisterOnJoltPhysicsCollide(kind: 'on-contact-add' | 'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactCallback): void;
+  public unregisterOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidateCallback): void;
+  public unregisterOnJoltPhysicsCollide(kind: JoltCollisionKey, collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>,
+    func: OnContactCallback | OnContactValidateCallback): void {
+    const collidedAgainstList: Array<PhysicsImpostor> = collideAgainst instanceof Array ?
+      <Array<PhysicsImpostor>>collideAgainst
+      : [<PhysicsImpostor>collideAgainst];
+    let index = -1;
+
+    const found = this._JoltPhysicsCallback[kind].some((cbDef, idx) => {
+      if (cbDef.callback === func && cbDef.otherImpostors.length === collidedAgainstList.length) {
+        const sameList = cbDef.otherImpostors.every((impostor) => {
+          return collidedAgainstList.indexOf(impostor) > -1;
+        });
+        if (sameList) {
+          index = idx;
+        }
+        return sameList;
+      }
+      return false;
+    });
+
+    if (found) {
+      this._JoltPhysicsCallback[kind].splice(index, 1);
+    } else {
+      Logger.Warn("Function to remove was not found");
+    }
+  }
+
+  public onJoltCollide(kind: 'on-contact-add' | 'on-contact-persist', event: { body: PhysicsImpostor, ioSettings: JoltContactSetting }): void;
+  public onJoltCollide(kind: 'on-contact-validate', event: { body: PhysicsImpostor }): OnContactValidateResponse | undefined;
+  public onJoltCollide(kind: JoltCollisionKey, event: { body: PhysicsImpostor, ioSettings: JoltContactSetting } | { body: PhysicsImpostor }): OnContactValidateResponse | undefined | void {
     if (!this._JoltPhysicsCallback[kind].length) {
-      return [];
+      return undefined;
     }
-    const ret: OnContactValidateResponse[] = [];
     if (event.body) {
-      this._JoltPhysicsCallback[kind]
-          .filter((obj) => {
-              return obj.otherImpostors.indexOf(event.body) !== -1;
-          })
-          .forEach((obj) => {
-              const res = obj.callback(event.body, new Vector3(), event.ioSettings);
-              if(res) {
-                ret.push(res);
-              }
-          });
+      if (kind == 'on-contact-validate') {
+        const ret: OnContactValidateResponse[] = [];
+        const list: JoltPhysicsCollideCallbacks['on-contact-validate'] = this._JoltPhysicsCallback['on-contact-validate'];
+        const e = event as { body: PhysicsImpostor };
+        list.filter((obj) => {
+          return obj.otherImpostors.indexOf(event.body) !== -1;
+        }).forEach((obj) => {
+          const r = obj.callback(e.body);
+          if(r !== undefined) {
+            ret.push(r);
+          }
+        });
+        //if you have registered multiple validate callback between A & B and they disagree, you have big problems on your hand so I'm not trying to combine
+        if(ret.length > 1) {
+          console.warn(`Warning: [${ret.length}] Validation Listeners registered between: `, this, event.body);
+        }
+        return ret[0]; 
+      } else {
+        let collisionHandlerCount = 0;
+        const list: JoltCollisionCallback<OnContactCallback>[] = this._JoltPhysicsCallback[kind];
+        const e = event as { body: PhysicsImpostor, ioSettings: JoltContactSetting };
+        list.filter((obj) => {
+          return obj.otherImpostors.indexOf(event.body) !== -1;
+        }).forEach((obj) => {
+          obj.callback(e.body, new Vector3(), e.ioSettings);
+          collisionHandlerCount++;
+        });
+        //if you have registered multiple OnContact callback between A & B and they try to modify the ioSettings, it will be a mess
+        if(collisionHandlerCount > 1) {
+          console.warn(`Warning: [${collisionHandlerCount}] OnContact Listeners registered between: `, this, event.body);
+        }
+      }
     }
-    return ret;
   }
 }
 
-type CollisionRecords = { 'on-contact-add': Record<number,boolean>, 'on-contact-persist': Record<number,boolean>,'on-contact-validate': Record<number,boolean> };
+type CollisionRecords = { 'on-contact-add': Record<number, boolean>, 'on-contact-persist': Record<number, boolean>, 'on-contact-validate': Record<number, boolean> };
 
 class ContactCollector {
 
-  private _collisionEnabled: Record<number,boolean> = {};
-  private _joltEventEnabled: CollisionRecords  = {'on-contact-add': {}, 'on-contact-persist': {}, 'on-contact-validate': {}};
+  private _collisionEnabled: Record<number, boolean> = {};
+  private _joltEventEnabled: CollisionRecords = { 'on-contact-add': {}, 'on-contact-persist': {}, 'on-contact-validate': {} };
 
-  private _imposterBodyHash: {[hash: number]: PhysicsImpostor} = {};
+  private _imposterBodyHash: { [hash: number]: PhysicsImpostor } = {};
 
   constructor(private Jolt: JoltNS, listener: Jolt.ContactListenerJS) {
-    const withChecks = (inBody1: Jolt.Body, inBody2: Jolt.Body, type: keyof CollisionRecords | 'regular', withImpostors: (body1: PhysicsImpostor, body2: PhysicsImpostor, rev: boolean)=> void) => {
+    const withChecks = (inBody1: Jolt.Body, inBody2: Jolt.Body, type: keyof CollisionRecords | 'regular', withImpostors: (body1: PhysicsImpostor, body2: PhysicsImpostor, rev: boolean) => void) => {
       inBody1 = Jolt.wrapPointer(inBody1 as any as number, Jolt.Body);
       inBody2 = Jolt.wrapPointer(inBody2 as any as number, Jolt.Body);
 
@@ -300,53 +323,59 @@ class ContactCollector {
       const body1Enabled = hash[body1Hash];
       const body2Enabled = hash[body2Hash];
 
-      if(body1Enabled || body2Enabled) {
+      if (body1Enabled || body2Enabled) {
         const body1 = this._imposterBodyHash[body1Hash];
         const body2 = this._imposterBodyHash[body2Hash];
-        if(body1Enabled) {
+        if (body1Enabled) {
           withImpostors(body1, body2, false)
         }
-        if(body2Enabled) {
+        if (body2Enabled) {
           withImpostors(body2, body1, true)
         }
       }
     }
 
-    const wrapContactSettings = ( ioSettings: Jolt.ContactSettings, rev: boolean, withSettings: (settings: JoltContactSetting)=> void) => {
+    const wrapContactSettings = (ioSettings: Jolt.ContactSettings, rev: boolean, withSettings: (settings: JoltContactSetting) => void) => {
       ioSettings = Jolt.wrapPointer(ioSettings as any as number, Jolt.ContactSettings);
       const contactSettings = JoltContactSettingImpl(ioSettings, rev);
       withSettings(contactSettings);
 
     }
-    const wrapContactValidate = (inBody1: Jolt.Body, inBody2: Jolt.Body) => {
+    const wrapContactValidate = (inBody1: Jolt.Body, inBody2: Jolt.Body): OnContactValidateResponse => {
       const kind = 'on-contact-validate'
       let ret: OnContactValidateResponse[] = [];
       withChecks(inBody1, inBody2, kind,
         (body1, body2, rev) => {
-          if(body1 instanceof JoltPhysicsImpostor) {
-              body1.onJoltCollide(kind,{body: body2});
+          if (body1 instanceof JoltPhysicsImpostor) {
+            const resp = body1.onJoltCollide(kind, { body: body2 });
+            if(resp !== undefined) {
+              ret.push(resp);
+            }
           }
         }
       );
+      if(ret[0] !== undefined) {
+        return ret[0];
+      }
+      return Jolt.AcceptAllContactsForThisBodyPair;
     }
-    const wrapContactEvent = (kind: 'on-contact-add'|'on-contact-persist', 
-                              inBody1: Jolt.Body, inBody2: Jolt.Body, inCollision: Jolt.ContactSettings) => {
+    const wrapContactEvent = (kind: 'on-contact-add' | 'on-contact-persist',
+      inBody1: Jolt.Body, inBody2: Jolt.Body, inCollision: Jolt.ContactSettings) => {
       withChecks(inBody1, inBody2, kind,
         (body1, body2, rev) => {
           wrapContactSettings(inCollision, rev, (ioSettings) => {
-            body1.onCollide({body: body2.physicsBody, point: null, distance: 0, impulse: 0, normal: null});
-            if(body1 instanceof JoltPhysicsImpostor) {
-              body1.onJoltCollide(kind,{body: body2, ioSettings});
+            body1.onCollide({ body: body2.physicsBody, point: null, distance: 0, impulse: 0, normal: null });
+            if (body1 instanceof JoltPhysicsImpostor) {
+              body1.onJoltCollide(kind, { body: body2, ioSettings });
             }
           })
         })
     }
 
-    listener.OnContactValidate = (inBody, inBody2, inBaseOffset, inCollisionResult) => {
-      const ret = wrapEvent('on-contact-add', true, inBody1, inBody2, null);
-      return Jolt.AcceptAllContactsForThisBodyPair
+    listener.OnContactValidate = (inBody1, inBody2, inBaseOffset, inCollisionResult) => {
+      return wrapContactValidate(inBody1, inBody2);
     }
-    listener.OnContactRemoved = ( shapeIdPair) => { /* do nothing */ }
+    listener.OnContactRemoved = (shapeIdPair) => { /* do nothing */ }
     listener.OnContactAdded = (inBody1, inBody2, inManifold, ioSettings) => {
       wrapContactEvent('on-contact-add', inBody1, inBody2, ioSettings);
     }
@@ -360,8 +389,8 @@ class ContactCollector {
       this._collisionEnabled[hash] = true;
     }
     if (impostor instanceof JoltPhysicsImpostor) {
-      (Object.keys(this._joltEventEnabled) as (keyof CollisionRecords & keyof JoltPhysicsCollideCallbacks)[]).forEach( (key ) => {
-        if(impostor._JoltPhysicsCallback[key].length > 0) {
+      (Object.keys(this._joltEventEnabled) as (keyof CollisionRecords & keyof JoltPhysicsCollideCallbacks)[]).forEach((key) => {
+        if (impostor._JoltPhysicsCallback[key].length > 0) {
           this._joltEventEnabled[key][hash] = true;
         }
       });
@@ -370,7 +399,7 @@ class ContactCollector {
   clear() {
     this._imposterBodyHash = {};
     this._collisionEnabled = {};
-    this._joltEventEnabled = {'on-contact-add': {}, 'on-contact-persist': {}, 'on-contact-validate': {}};
+    this._joltEventEnabled = { 'on-contact-add': {}, 'on-contact-persist': {}, 'on-contact-validate': {} };
   }
 
 }
@@ -448,18 +477,18 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       if (!impostor.soft) {
         impostor.beforeStep();
       }
-      if(impostor.physicsBody instanceof this.Jolt.Body) {
+      if (impostor.physicsBody instanceof this.Jolt.Body) {
         const body: Jolt.Body = impostor.physicsBody;
         const bodyID = body.GetID().GetIndexAndSequenceNumber();
       }
-      if(impostor instanceof JoltCharacterVirtualImpostor) {
+      if (impostor instanceof JoltCharacterVirtualImpostor) {
         virtualCharacters.push(impostor as JoltCharacterVirtualImpostor);
       }
     }
 
     this._stepSimulation(this._useDeltaForWorldStep ? delta : this._timeStep, this._maxSteps, this._fixedTimeStep,
       (timeStep) => {
-        virtualCharacters.forEach( vChar => vChar.controller?.prePhysicsUpdate(timeStep) );
+        virtualCharacters.forEach(vChar => vChar.controller?.prePhysicsUpdate(timeStep));
       });
 
     for (const impostor of impostors) {
@@ -541,11 +570,11 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       return;
     }
     if (impostor.isBodyInitRequired()) {
-      if(impostor instanceof JoltCharacterVirtualImpostor) {
+      if (impostor instanceof JoltCharacterVirtualImpostor) {
         const imp = impostor as JoltCharacterVirtualImpostor;
         const shape = this._createShape(imp);
         const char = new JoltVirtualCharacter(imp, shape, { physicsSystem: this.world, jolt: this.jolt }, this.Jolt);
-        imp.physicsBody = char.getCharacter(); 
+        imp.physicsBody = char.getCharacter();
         imp._pluginData.controller = char;
         return;
       }
@@ -568,13 +597,13 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       const isStatic = (mass === 0) ? this.Jolt.Static : this.Jolt.Dynamic;
       const layer = (mass === 0) ? this.Jolt.NON_MOVING : this.Jolt.MOVING;
       const settings = new this.Jolt.BodyCreationSettings(colShape, this._tempVec3A, this._tempQuaternion, isStatic, layer);
-      if(collisionGroup !== undefined) {
+      if (collisionGroup !== undefined) {
         settings.mCollisionGroup.SetGroupID(collisionGroup);
       }
-      if(collisionSubGroup !== undefined) {
+      if (collisionSubGroup !== undefined) {
         settings.mCollisionGroup.SetSubGroupID(collisionGroup);
       }
-      if(collisionFilter !== undefined) {
+      if (collisionFilter !== undefined) {
         settings.mCollisionGroup.SetGroupFilter(collisionFilter);
       }
       impostor._pluginData.mass = mass;
@@ -671,8 +700,8 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         //  const capRadius = impostorExtents.x / 2;
         //  returnValue = new this.Jolt.TaperedCapsuleShapeSettings(impostorExtents.y / 2 - capRadius, radiusTop, radiusBottom, new this.Jolt.PhysicsMaterial()).Create().Get();
         //} else {
-          const capRadius = impostorExtents.x / 2;
-          returnValue = new this.Jolt.CapsuleShape(impostorExtents.y / 2 - capRadius, capRadius);
+        const capRadius = impostorExtents.x / 2;
+        returnValue = new this.Jolt.CapsuleShape(impostorExtents.y / 2 - capRadius, capRadius);
         //}
         break;
       case PhysicsImpostor.CylinderImpostor:
@@ -701,24 +730,24 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
           });
         }
         returnValue = new this.Jolt.MeshShapeSettings(triangles, new this.Jolt.PhysicsMaterialList).Create().Get();
-        }
+      }
         break;
-        case PhysicsImpostor.ConvexHullImpostor:
-          const vertexData = this._getMeshVertexData(impostor);
-          const hasIndex = vertexData.indices.length > 0;
-          const hull = new this.Jolt.ConvexHullShapeSettings;
-          for (let i = 0; i < vertexData.faceCount; i++) {
-            for(let j=0;j<3;j++) {
-              const offset = i * 3 + j;
-              const index = (hasIndex ? vertexData.indices[offset] : offset * 3) * 3;
-              const x = vertexData.vertices[index + 0];
-              const y = vertexData.vertices[index + 1];
-              const z = vertexData.vertices[index + 2];
-              hull.mPoints.push_back(new this.Jolt.Vec3(x,y,z));
-            }
+      case PhysicsImpostor.ConvexHullImpostor:
+        const vertexData = this._getMeshVertexData(impostor);
+        const hasIndex = vertexData.indices.length > 0;
+        const hull = new this.Jolt.ConvexHullShapeSettings;
+        for (let i = 0; i < vertexData.faceCount; i++) {
+          for (let j = 0; j < 3; j++) {
+            const offset = i * 3 + j;
+            const index = (hasIndex ? vertexData.indices[offset] : offset * 3) * 3;
+            const x = vertexData.vertices[index + 0];
+            const y = vertexData.vertices[index + 1];
+            const z = vertexData.vertices[index + 2];
+            hull.mPoints.push_back(new this.Jolt.Vec3(x, y, z));
           }
-          returnValue = hull.Create().Get();
-          break;
+        }
+        returnValue = hull.Create().Get();
+        break;
     }
     if (returnValue === undefined) {
       throw new Error("Unsupported Shape: " + impostor.type);
@@ -731,47 +760,47 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     const connectedBody: Jolt.Body = impostorJoint.connectedImpostor.physicsBody;
     if (!mainBody || !connectedBody) {
       return;
-    } 
+    }
 
     const jointData = impostorJoint.joint.jointData;
     if (!jointData.mainPivot) {
-        jointData.mainPivot = new Vector3(0, 0, 0);
+      jointData.mainPivot = new Vector3(0, 0, 0);
     }
     if (!jointData.connectedPivot) {
-        jointData.connectedPivot = new Vector3(0, 0, 0);
+      jointData.connectedPivot = new Vector3(0, 0, 0);
     }
     if (!jointData.mainAxis) {
       jointData.mainAxis = new Vector3(0, 0, 0);
     }
     if (!jointData.connectedAxis) {
-        jointData.connectedAxis = new Vector3(0, 0, 0);
+      jointData.connectedAxis = new Vector3(0, 0, 0);
     }
     const options = jointData.nativeParams || {};
 
     const setIfAvailable = <T extends Jolt.ConstraintSettings>(setting: T, k: keyof T, key: any) => {
-      if(options[key] !== undefined) {
+      if (options[key] !== undefined) {
         setting[k] = options[key];
       }
     }
 
-    const setPoints = (constraintSettings: {mPoint1: Jolt.Vec3, mPoint2: Jolt.Vec3}) => {
+    const setPoints = (constraintSettings: { mPoint1: Jolt.Vec3, mPoint2: Jolt.Vec3 }) => {
       constraintSettings.mPoint1.Set(p1.x, p1.y, p1.z);
       constraintSettings.mPoint2.Set(p2.x, p2.y, p2.z);
     }
-    const setHindgeAxis = (constraintSettings: {mHingeAxis1: Jolt.Vec3, mHingeAxis2: Jolt.Vec3}) => {
+    const setHindgeAxis = (constraintSettings: { mHingeAxis1: Jolt.Vec3, mHingeAxis2: Jolt.Vec3 }) => {
       const h1 = jointData.mainAxis!;
       const h2 = jointData.connectedAxis!;
       constraintSettings.mHingeAxis1.Set(h1.x, h1.y, h1.z);
       constraintSettings.mHingeAxis2.Set(h2.x, h2.y, h2.z);
     }
-    const setSliderAxis = (constraintSettings: {mSliderAxis1: Jolt.Vec3, mSliderAxis2: Jolt.Vec3}) => {
+    const setSliderAxis = (constraintSettings: { mSliderAxis1: Jolt.Vec3, mSliderAxis2: Jolt.Vec3 }) => {
       const h1 = jointData.mainAxis!;
       const h2 = jointData.connectedAxis!;
       constraintSettings.mSliderAxis1.Set(h1.x, h1.y, h1.z);
       constraintSettings.mSliderAxis2.Set(h2.x, h2.y, h2.z);
     }
-    const setNormalAxis = (constraintSettings: {mNormalAxis1: Jolt.Vec3, mNormalAxis2: Jolt.Vec3}) => {
-      if(options['normal-axis-1'] && options['normal-axis-2']) {
+    const setNormalAxis = (constraintSettings: { mNormalAxis1: Jolt.Vec3, mNormalAxis2: Jolt.Vec3 }) => {
+      if (options['normal-axis-1'] && options['normal-axis-2']) {
         const n1: Vector3 = options['normal-axis-1'];
         const n2: Vector3 = options['normal-axis-2'];
         constraintSettings.mNormalAxis1.Set(n1.x, n1.y, n1.z);
@@ -781,47 +810,47 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
 
     const p1 = jointData.mainPivot;
     const p2 = jointData.connectedPivot;
-    let constraint: Jolt.Constraint|undefined = undefined;
+    let constraint: Jolt.Constraint | undefined = undefined;
     switch (impostorJoint.joint.type) {
       case PhysicsJoint.DistanceJoint: {
-          let constraintSettings = new this.Jolt.DistanceConstraintSettings();
-          setPoints(constraintSettings);
-          setIfAvailable(constraintSettings, 'mMinDistance', 'min-distance');
-          setIfAvailable(constraintSettings, 'mMaxDistance', 'max-distance');
-          constraint = constraintSettings.Create(mainBody, connectedBody);
-          constraint = this.Jolt.castObject(constraint, this.Jolt.DistanceConstraint);
-        }
+        let constraintSettings = new this.Jolt.DistanceConstraintSettings();
+        setPoints(constraintSettings);
+        setIfAvailable(constraintSettings, 'mMinDistance', 'min-distance');
+        setIfAvailable(constraintSettings, 'mMaxDistance', 'max-distance');
+        constraint = constraintSettings.Create(mainBody, connectedBody);
+        constraint = this.Jolt.castObject(constraint, this.Jolt.DistanceConstraint);
+      }
         break;
       case PhysicsJoint.HingeJoint: {
-          let constraintSettings = new this.Jolt.HingeConstraintSettings();
-          setPoints(constraintSettings);
-          setHindgeAxis(constraintSettings);
-          setNormalAxis(constraintSettings);
-          setIfAvailable(constraintSettings, 'mLimitsMin', 'min-limit');
-          setIfAvailable(constraintSettings, 'mLimitsMax', 'max-limit');
-          constraint = constraintSettings.Create(mainBody, connectedBody);
-          constraint = this.Jolt.castObject(constraint, this.Jolt.HingeConstraint);
-        }
+        let constraintSettings = new this.Jolt.HingeConstraintSettings();
+        setPoints(constraintSettings);
+        setHindgeAxis(constraintSettings);
+        setNormalAxis(constraintSettings);
+        setIfAvailable(constraintSettings, 'mLimitsMin', 'min-limit');
+        setIfAvailable(constraintSettings, 'mLimitsMax', 'max-limit');
+        constraint = constraintSettings.Create(mainBody, connectedBody);
+        constraint = this.Jolt.castObject(constraint, this.Jolt.HingeConstraint);
+      }
         break;
       case PhysicsJoint.SliderJoint: {
-          let constraintSettings = new this.Jolt.SliderConstraintSettings();
-          setPoints(constraintSettings);
-          setSliderAxis(constraintSettings);
-          setNormalAxis(constraintSettings);
-          setIfAvailable(constraintSettings, 'mLimitsMin', 'min-limit');
-          setIfAvailable(constraintSettings, 'mLimitsMax', 'max-limit');
-          constraint = constraintSettings.Create(mainBody, connectedBody);
-          constraint = this.Jolt.castObject(constraint, this.Jolt.SliderConstraint);
-        }
+        let constraintSettings = new this.Jolt.SliderConstraintSettings();
+        setPoints(constraintSettings);
+        setSliderAxis(constraintSettings);
+        setNormalAxis(constraintSettings);
+        setIfAvailable(constraintSettings, 'mLimitsMin', 'min-limit');
+        setIfAvailable(constraintSettings, 'mLimitsMax', 'max-limit');
+        constraint = constraintSettings.Create(mainBody, connectedBody);
+        constraint = this.Jolt.castObject(constraint, this.Jolt.SliderConstraint);
+      }
         break;
-      }
-      if(constraint) {
-        impostorJoint.mainImpostor._pluginData.toDispose.push(constraint);
-        this.world.AddConstraint(constraint);
-        impostorJoint.joint.physicsJoint = constraint;
-        impostorJoint.joint.jointData.nativeParams.body1 = mainBody;
-        impostorJoint.joint.jointData.nativeParams.body2 = connectedBody; 
-      }
+    }
+    if (constraint) {
+      impostorJoint.mainImpostor._pluginData.toDispose.push(constraint);
+      this.world.AddConstraint(constraint);
+      impostorJoint.joint.physicsJoint = constraint;
+      impostorJoint.joint.jointData.nativeParams.body1 = mainBody;
+      impostorJoint.joint.jointData.nativeParams.body2 = connectedBody;
+    }
 
   }
 
@@ -862,7 +891,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     position.Set(newPosition.x, newPosition.y, newPosition.z);
     rotation.Set(newRotation.x, newRotation.y, newRotation.z, newRotation.w);
 
-    if(impostor instanceof JoltCharacterVirtualImpostor) {
+    if (impostor instanceof JoltCharacterVirtualImpostor) {
       const character: Jolt.CharacterVirtual = impostor.physicsBody;
       character.SetPosition(position);
       character.SetRotation(rotation);
@@ -977,7 +1006,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     return this._raycaster.raycastToRef(from, to, result);
   }
   updateDistanceJoint(joint: PhysicsJoint, maxDistance: number, minDistance?: number | undefined): void {
-    if(joint.type !== PhysicsJoint.DistanceJoint) {
+    if (joint.type !== PhysicsJoint.DistanceJoint) {
       const constraint: Jolt.DistanceConstraint = joint.physicsJoint;
       constraint.SetDistance(minDistance || 0, maxDistance);
     } else {
@@ -986,29 +1015,29 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   }
   setMotor(joint: IMotorEnabledJoint, speed: number, maxForce?: number | undefined, motorIndex?: number | undefined): void {
     let motorMode = 'position';
-    if((joint as any).jointData) {
+    if ((joint as any).jointData) {
       const jointData: PhysicsJointData = (joint as any).jointData;
-      motorMode = (jointData.nativeParams||{})['motor-mode'] || 'position';
+      motorMode = (jointData.nativeParams || {})['motor-mode'] || 'position';
     }
-    if(joint.physicsJoint.GetMotorSettings && joint.physicsJoint.SetMotorState) {
+    if (joint.physicsJoint.GetMotorSettings && joint.physicsJoint.SetMotorState) {
       const constraint: Partial<PossibleMotors> = joint.physicsJoint;
-      if(motorMode == 'position') {
+      if (motorMode == 'position') {
         constraint.SetMotorState!(this.Jolt.EMotorState_Position);
         constraint.SetTargetAngle && constraint.SetTargetAngle(speed);
         constraint.SetTargetPosition && constraint.SetTargetPosition(speed);
-      } else if(motorMode == 'velocity') {
+      } else if (motorMode == 'velocity') {
         constraint.SetMotorState!(this.Jolt.EMotorState_Velocity);
         constraint.SetTargetAngularVelocity && constraint.SetTargetAngularVelocity(speed);
         constraint.SetTargetVelocity && constraint.SetTargetVelocity(speed);
       }
-      if(joint instanceof MotorEnabledJoint) {
+      if (joint instanceof MotorEnabledJoint) {
         const motorJoint = joint as MotorEnabledJoint;
-        const body1 : Jolt.Body= motorJoint.jointData.nativeParams?.body1;
-        const body2 : Jolt.Body = motorJoint.jointData.nativeParams?.body2;
+        const body1: Jolt.Body = motorJoint.jointData.nativeParams?.body1;
+        const body2: Jolt.Body = motorJoint.jointData.nativeParams?.body2;
         body1 && this._bodyInterface.ActivateBody(body1.GetID());
         body2 && this._bodyInterface.ActivateBody(body2.GetID());
       }
-      if(maxForce) {
+      if (maxForce) {
         this.setLimit(joint, maxForce);
       }
 
@@ -1018,21 +1047,21 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   }
   setLimit(joint: IMotorEnabledJoint, upperLimit: number, lowerLimit?: number | undefined, motorIndex?: number | undefined): void {
     let motorMode = 'position';
-    if((joint as any).jointData) {
+    if ((joint as any).jointData) {
       const jointData: PhysicsJointData = (joint as any).jointData;
-      motorMode = (jointData.nativeParams||{})['motor-mode'] || 'position';
+      motorMode = (jointData.nativeParams || {})['motor-mode'] || 'position';
     }
-    if(joint.physicsJoint.GetMotorSettings && joint.physicsJoint.SetMotorState) {
-      const motorSettings : Jolt.MotorSettings = joint.physicsJoint.GetMotorSettings();
-      if(upperLimit == 0 && lowerLimit == 0) {
+    if (joint.physicsJoint.GetMotorSettings && joint.physicsJoint.SetMotorState) {
+      const motorSettings: Jolt.MotorSettings = joint.physicsJoint.GetMotorSettings();
+      if (upperLimit == 0 && lowerLimit == 0) {
         joint.physicsJoint.SetMotorState(this.Jolt.EMotorState_Off);
       }
-      if(motorMode == 'position') {
+      if (motorMode == 'position') {
         motorSettings.mMaxForceLimit = upperLimit;
-        motorSettings.mMinForceLimit = (lowerLimit == undefined)? -upperLimit :lowerLimit;
-      } else if(motorMode == 'velocity') {
+        motorSettings.mMinForceLimit = (lowerLimit == undefined) ? -upperLimit : lowerLimit;
+      } else if (motorMode == 'velocity') {
         motorSettings.mMaxTorqueLimit = upperLimit;
-        motorSettings.mMinTorqueLimit = (lowerLimit == undefined)? -upperLimit :lowerLimit;
+        motorSettings.mMinTorqueLimit = (lowerLimit == undefined) ? -upperLimit : lowerLimit;
       }
     } else {
       throw new Error("setLimit on non-motorized constraint");
