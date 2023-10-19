@@ -1,7 +1,7 @@
-import { Scene, Vector3 } from "@babylonjs/core";
-import { SceneCallback, createBox, createCapsule, createConvexHull, createCylinder, createFloor, createMeshFloor, createSphere, getRandomQuat } from "./example";
+import { Vector3 } from '@babylonjs/core';
+import { SceneCallback, createBox, createCapsule, createConvexHull, createCylinder, createMeshFloor, createSphere, getRandomQuat } from './example';
 
-export default (scene: Scene): SceneCallback => {
+export default (): SceneCallback => {
 
     const objectTimePeriod = 0.5;
     let timeNextSpawn = objectTimePeriod;
@@ -77,7 +77,7 @@ export default (scene: Scene): SceneCallback => {
         }
       }
     }
-    return (time: number, deltaTime: number) => {
+    return (time: number, _deltaTime: number) => {
       if (meshesCreated < maxNumObjects && time > timeNextSpawn) {
         generateObject();
         timeNextSpawn = time + objectTimePeriod;

@@ -1,9 +1,8 @@
-import { MeshBuilder, PhysicsImpostor, Quaternion, Scene, Vector3 } from "@babylonjs/core";
-import { JoltNS, createBox, createCapsule, createFloor, createSphere, getMaterial } from "./example";
-import { JoltCharacterVirtualImpostor } from "../plugin/jolt-physics-virtual-character";
+import { MeshBuilder, PhysicsImpostor } from '@babylonjs/core';
+import { SceneCallback, createFloor, getMaterial } from './example';
+import { JoltCharacterVirtualImpostor } from '../plugin/jolt-physics-virtual-character';
 
-export default (Jolt: JoltNS, scene: Scene): (void|((time: number, delta: number) =>void)) => {
-
+export default (): SceneCallback => {
     createFloor();
 
     const createCharacter = () => {
@@ -18,4 +17,5 @@ export default (Jolt: JoltNS, scene: Scene): (void|((time: number, delta: number
     }
 
     const char = createCharacter();
+    console.log(char);
 }

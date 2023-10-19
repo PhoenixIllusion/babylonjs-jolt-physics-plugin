@@ -1,24 +1,11 @@
-import { Vector3, PhysicsImpostor, Quaternion, Nullable, PhysicsRaycastResult, PhysicsJoint, IMotorEnabledJoint, AbstractMesh, Epsilon, Logger, VertexBuffer, IPhysicsEnabledObject, IndicesArray, PhysicsJointData, MotorEnabledJoint, PhysicsBody } from "@babylonjs/core";
-import { IPhysicsEnginePlugin, PhysicsImpostorJoint } from "@babylonjs/core/Physics/v1/IPhysicsEnginePlugin";
-import { JoltCharacterVirtualImpostor, JoltVirtualCharacter } from "./jolt-physics-virtual-character";
-import Jolt from "./jolt-import";
-import { ContactCollector } from "./jolt-contact";
-import { RayCastUtility } from "./jolt-raycast";
-import { SetJoltVec3 } from "./jolt-util";
-
-type JoltNS = typeof Jolt;
-
-interface JoltCollision {
-  body: PhysicsBody,
-  point: Vector3 | null,
-  distance: number,
-  impulse: number,
-  normal: Vector3 | null
-}
-
-type Without<T, K> = {
-  [L in Exclude<keyof T, K>]: T[L]
-};
+import { Vector3, PhysicsImpostor, Quaternion, Nullable, PhysicsRaycastResult, PhysicsJoint, IMotorEnabledJoint,
+  AbstractMesh, Epsilon, Logger, VertexBuffer, IndicesArray, PhysicsJointData, MotorEnabledJoint } from '@babylonjs/core';
+import { IPhysicsEnginePlugin, PhysicsImpostorJoint } from '@babylonjs/core/Physics/v1/IPhysicsEnginePlugin';
+import { JoltCharacterVirtualImpostor, JoltVirtualCharacter } from './jolt-physics-virtual-character';
+import Jolt, { loadJolt } from './jolt-import';
+import { ContactCollector } from './jolt-contact';
+import { RayCastUtility } from './jolt-raycast';
+import { SetJoltVec3 } from './jolt-util';
 
 interface MeshVertexData {
   indices: IndicesArray | number[];
@@ -42,7 +29,7 @@ export const enum Jolt_Type {
 
 export class JoltJSPlugin implements IPhysicsEnginePlugin {
   public world: Jolt.PhysicsSystem;
-  public name = "JoltJSPlugin";
+  public name = 'JoltJSPlugin';
 
   private _timeStep: number = 1 / 60;
   private _fixedTimeStep: number = 1 / 60;
@@ -59,6 +46,15 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
 
   private _contactCollector: ContactCollector;
   private _contactListener: Jolt.ContactListenerJS;
+
+
+  static async loadPlugin(_useDeltaForWorldStep: boolean = true, physicsSettings?: any, importSettings?: any): Promise<JoltJSPlugin> {
+    await loadJolt(importSettings);
+    const settings = new Jolt.JoltSettings();
+    Object.assign(settings, physicsSettings);
+    const joltInterface = new Jolt.JoltInterface(settings);
+    return new JoltJSPlugin(joltInterface, _useDeltaForWorldStep);
+  }
 
   constructor(private jolt: Jolt.JoltInterface, private _useDeltaForWorldStep: boolean = true) {
     this.world = jolt.GetPhysicsSystem();
@@ -116,6 +112,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       if (impostor.physicsBody instanceof Jolt.Body) {
         const body: Jolt.Body = impostor.physicsBody;
         const bodyID = body.GetID().GetIndexAndSequenceNumber();
+        this._contactCollector.registerImpostor(bodyID, impostor);
       }
       if (impostor instanceof JoltCharacterVirtualImpostor) {
         virtualCharacters.push(impostor as JoltCharacterVirtualImpostor);
@@ -176,7 +173,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
 
       physicsBody.AddImpulse(impulse, worldPoint);
     } else {
-      Logger.Warn("Cannot be applied to a soft body");
+      Logger.Warn('Cannot be applied to a soft body');
     }
 
   }
@@ -190,7 +187,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       SetJoltVec3(contactPoint, worldPoint)
       physicsBody.AddForce(impulse, worldPoint);
     } else {
-      Logger.Warn("Cannot be applied to a soft body");
+      Logger.Warn('Cannot be applied to a soft body');
     }
   }
 
@@ -215,12 +212,12 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         return;
       }
       const colShape = this._createShape(impostor);
-      const mass = impostor.getParam("mass");
-      const friction = impostor.getParam("friction");
-      const restitution = impostor.getParam("restitution");
-      const collisionGroup: number = impostor.getParam("collision-group");
-      const collisionSubGroup: number = impostor.getParam("collision-sub-group");
-      const collisionFilter: Jolt.GroupFilter = impostor.getParam("collision-filter");
+      const mass = impostor.getParam('mass');
+      const friction = impostor.getParam('friction');
+      const restitution = impostor.getParam('restitution');
+      const collisionGroup: number = impostor.getParam('collision-group');
+      const collisionSubGroup: number = impostor.getParam('collision-sub-group');
+      const collisionFilter: Jolt.GroupFilter = impostor.getParam('collision-filter');
 
       impostor.object.computeWorldMatrix(true);
       SetJoltVec3(impostor.object.position, this._tempVec3A);
@@ -279,7 +276,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     const rawVerts = object.getVerticesData ? object.getVerticesData(VertexBuffer.PositionKind) : [];
     const indices = (object.getIndices && object.getIndices()) ? object.getIndices()! : [];
     if (!rawVerts) {
-      throw new Error("Tried to create a MeshImpostor for an object without vertices. This will fail.");
+      throw new Error('Tried to create a MeshImpostor for an object without vertices. This will fail.');
     }
     // get only scale! so the object could transform correctly.
     const oldPosition = object.position.clone();
@@ -330,9 +327,9 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         returnValue = new Jolt.SphereShape(size, new Jolt.PhysicsMaterial())
         break;
       case PhysicsImpostor.CapsuleImpostor:
-        //if(impostor.getParam("radiusTop") && impostor.getParam("radiusBottom")) {
-        //  const radiusTop: number = impostor.getParam("radiusTop");
-        //  const radiusBottom: number = impostor.getParam("radiusBottom");
+        //if(impostor.getParam('radiusTop') && impostor.getParam('radiusBottom')) {
+        //  const radiusTop: number = impostor.getParam('radiusTop');
+        //  const radiusBottom: number = impostor.getParam('radiusBottom');
         //  const capRadius = impostorExtents.x / 2;
         //  returnValue = new Jolt.TaperedCapsuleShapeSettings(impostorExtents.y / 2 - capRadius, radiusTop, radiusBottom, new Jolt.PhysicsMaterial()).Create().Get();
         //} else {
@@ -386,7 +383,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         break;
     }
     if (returnValue === undefined) {
-      throw new Error("Unsupported Shape: " + impostor.type);
+      throw new Error('Unsupported Shape: ' + impostor.type);
     }
     return returnValue;
   }
@@ -594,34 +591,34 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   }
   /*
   getBodyPressure?(impostor: PhysicsImpostor): number {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
   setBodyPressure?(impostor: PhysicsImpostor, pressure: number): void {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
   getBodyStiffness?(impostor: PhysicsImpostor): number {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
   setBodyStiffness?(impostor: PhysicsImpostor, stiffness: number): void {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
   getBodyVelocityIterations?(impostor: PhysicsImpostor): number {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
   setBodyVelocityIterations?(impostor: PhysicsImpostor, velocityIterations: number): void {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
   getBodyPositionIterations?(impostor: PhysicsImpostor): number {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
   setBodyPositionIterations?(impostor: PhysicsImpostor, positionIterations: number): void {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
   appendAnchor?(impostor: PhysicsImpostor, otherImpostor: PhysicsImpostor, width: number, height: number, influence: number, noCollisionBetweenLinkedBodies: boolean): void {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }
   appendHook?(impostor: PhysicsImpostor, otherImpostor: PhysicsImpostor, length: number, influence: number, noCollisionBetweenLinkedBodies: boolean): void {
-    throw new Error("Method not implemented.");
+    throw new Error('Method not implemented.');
   }*/
 
   sleepBody(impostor: PhysicsImpostor): void {
@@ -646,10 +643,10 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       const constraint: Jolt.DistanceConstraint = joint.physicsJoint;
       constraint.SetDistance(minDistance || 0, maxDistance);
     } else {
-      throw new Error("updateDistanceJoint on non-distance constraint");
+      throw new Error('updateDistanceJoint on non-distance constraint');
     }
   }
-  setMotor(joint: IMotorEnabledJoint, speed: number, maxForce?: number | undefined, motorIndex?: number | undefined): void {
+  setMotor(joint: IMotorEnabledJoint, speed: number, maxForce?: number | undefined): void {
     let motorMode = 'position';
     if ((joint as any).jointData) {
       const jointData: PhysicsJointData = (joint as any).jointData;
@@ -678,10 +675,10 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       }
 
     } else {
-      throw new Error("setMotor on non-motorized constraint");
+      throw new Error('setMotor on non-motorized constraint');
     }
   }
-  setLimit(joint: IMotorEnabledJoint, upperLimit: number, lowerLimit?: number | undefined, motorIndex?: number | undefined): void {
+  setLimit(joint: IMotorEnabledJoint, upperLimit: number, lowerLimit?: number | undefined): void {
     let motorMode = 'position';
     if ((joint as any).jointData) {
       const jointData: PhysicsJointData = (joint as any).jointData;
@@ -700,7 +697,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         motorSettings.mMinTorqueLimit = (lowerLimit == undefined) ? -upperLimit : lowerLimit;
       }
     } else {
-      throw new Error("setLimit on non-motorized constraint");
+      throw new Error('setLimit on non-motorized constraint');
     }
   }
   getRadius(impostor: PhysicsImpostor): number {

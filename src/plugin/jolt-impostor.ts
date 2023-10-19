@@ -1,5 +1,5 @@
-import { PhysicsImpostor, Logger, Vector3 } from "@babylonjs/core";
-import { OnContactCallback, OnContactValidateCallback, JoltCollisionKey, JoltContactSetting, OnContactValidateResponse, JoltCollisionCallback, JoltPhysicsCollideCallbacks } from "./jolt-contact";
+import { PhysicsImpostor, Logger, Vector3 } from '@babylonjs/core';
+import { OnContactCallback, OnContactValidateCallback, JoltCollisionKey, JoltContactSetting, OnContactValidateResponse, JoltCollisionCallback, JoltPhysicsCollideCallbacks } from './jolt-contact';
 
 export class JoltPhysicsImpostor extends PhysicsImpostor {
 
@@ -45,7 +45,7 @@ export class JoltPhysicsImpostor extends PhysicsImpostor {
     if (found) {
       this._JoltPhysicsCallback[kind].splice(index, 1);
     } else {
-      Logger.Warn("Function to remove was not found");
+      Logger.Warn('Function to remove was not found');
     }
   }
 

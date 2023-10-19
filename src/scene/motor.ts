@@ -1,6 +1,5 @@
-import { DistanceJoint, HingeJoint, MotorEnabledJoint, Quaternion, Scene, Vector3 } from "@babylonjs/core";
-import { JoltNS, createBox, createFloor, createSphere } from "./example";
-import type Jolt from 'jolt-physics';
+import { HingeJoint, MotorEnabledJoint, Quaternion, Vector3 } from '@babylonjs/core';
+import { SceneCallback, createBox, createFloor, createSphere } from './example';
 
 const createWindmill = () => {
   const box1 = createBox(new Vector3(0,10,0), Quaternion.Identity(), new Vector3(0.25,0.25,0.25));
@@ -35,9 +34,9 @@ const createWindmill = () => {
 }
 
 const createSlider = () => {
-    const base = createBox(new Vector3(-15, -.25, 0), Quaternion.Identity(), new Vector3(8, 0.25, 2), undefined, "#993333");
-    const box = createBox(new Vector3(-15, 0.75, 0), Quaternion.Identity(), new Vector3(.75, 0.75, .75), {mass: 10, friction: 0, restitution: 0}, "#003366");
-    const target = createBox(new Vector3(-23, 0.5, 0), Quaternion.Identity(), new Vector3(.5, 2, 2), undefined, "#666633");
+    createBox(new Vector3(-15, -.25, 0), Quaternion.Identity(), new Vector3(8, 0.25, 2), undefined, '#993333');
+    const box = createBox(new Vector3(-15, 0.75, 0), Quaternion.Identity(), new Vector3(.75, 0.75, .75), {mass: 10, friction: 0, restitution: 0}, '#003366');
+    const target = createBox(new Vector3(-23, 0.5, 0), Quaternion.Identity(), new Vector3(.5, 2, 2), undefined, '#666633');
 
     const jointConfig = { 
       mainPivot: new Vector3(-21, 0.5, 0),
@@ -68,11 +67,11 @@ const createSlider = () => {
 
 }
 
-export default (Jolt: JoltNS, scene: Scene): (void|((time: number, delta: number) =>void)) => {
+export default (): SceneCallback => {
 
     createFloor();
 
     createWindmill();
 
-    const slideMotor = createSlider();
+    createSlider();
 }

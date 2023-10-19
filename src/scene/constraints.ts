@@ -1,7 +1,7 @@
-import { Quaternion, Scene, Vector3 } from "@babylonjs/core";
-import { JoltNS, createBox, createFloor, createSphere } from "./example";
+import { createFloor } from './example';
+import Jolt from '../plugin/jolt-import';
 
-export default (Jolt: JoltNS, scene: Scene): (void|((time: number, delta: number) =>void)) => {
+export default (): (void|((time: number, delta: number) =>void)) => {
 
     createFloor();
 

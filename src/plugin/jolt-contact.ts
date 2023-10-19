@@ -1,20 +1,51 @@
-import { Vector3, PhysicsImpostor, Logger } from "@babylonjs/core";
-import { WrapJolt, WrapJoltReversable } from "./jolt-util";
-import Jolt from "./jolt-import";
-import { JoltPhysicsImpostor } from "./jolt-impostor";
-
+import { Vector3, PhysicsImpostor } from '@babylonjs/core';
+import Jolt from './jolt-import';
+import { JoltPhysicsImpostor } from './jolt-impostor';
+import { GetJoltVec3, SetJoltVec3 } from './jolt-util';
 
 export class JoltContactSetting {
-  constructor( public jolt: Jolt.ContactSettings, public rev: boolean) { }
-  @WrapJolt(Jolt.ContactSettings, 'mCombinedFriction') accessor combinedFriction: number = 0;
-  @WrapJolt(Jolt.ContactSettings, 'mCombinedRestitution') accessor combinedRestitution: number = 0;
-  @WrapJoltReversable(Jolt.ContactSettings, 'mInvMassScale1', 'mInvMassScale2') accessor inverseMassScale1 = 0;
-  @WrapJoltReversable(Jolt.ContactSettings, 'mInvMassScale2', 'mInvMassScale1') accessor inverseMassScale2 = 0;
-  @WrapJoltReversable(Jolt.ContactSettings, 'mInvInertiaScale1', 'mInvInertiaScale2') accessor inverseInertiaScale1 = 0;
-  @WrapJoltReversable(Jolt.ContactSettings, 'mInvInertiaScale2', 'mInvInertiaScale1') accessor inverseInertiaScale2 = 0;
-  @WrapJolt(Jolt.ContactSettings, 'mIsSensor') accessor isSensor = false;
+  combinedFriction: number = 0;
+  combinedRestitution: number = 0;
+  inverseMassScale1 = 0;
+  inverseMassScale2 = 0;
+  inverseInertiaScale1 = 0;
+  inverseInertiaScale2 = 0;
+  isSensor = false;
   relativeLinearSurfaceVelocity = new Vector3();
   relativeAngularSurfaceVelocity = new Vector3();
+  constructor( ) { 
+
+  }
+  marshall( jolt: Jolt.ContactSettings, rev: boolean) {
+    const { mCombinedFriction, mCombinedRestitution, mInvMassScale1, mInvMassScale2, mInvInertiaScale1, mInvInertiaScale2, mIsSensor } = jolt;
+    let [ combinedFriction, combinedRestitution, inverseMassScale1, inverseMassScale2, inverseInertiaScale1, inverseInertiaScale2, isSensor ] = 
+      [ mCombinedFriction, mCombinedRestitution, mInvMassScale1, mInvMassScale2, mInvInertiaScale1, mInvInertiaScale2, mIsSensor ];
+    if(rev) {
+      [inverseMassScale1, inverseMassScale2, inverseInertiaScale1 ,inverseInertiaScale2 ] =
+        [inverseMassScale2, inverseMassScale1, inverseInertiaScale2 ,inverseInertiaScale1]
+    }
+    Object.assign(this, {combinedFriction, combinedRestitution, inverseMassScale1, inverseMassScale2, inverseInertiaScale1, inverseInertiaScale2, isSensor});
+    GetJoltVec3(jolt.mRelativeLinearSurfaceVelocity, this.relativeLinearSurfaceVelocity);
+    GetJoltVec3(jolt.mRelativeAngularSurfaceVelocity, this.relativeAngularSurfaceVelocity);
+    if(rev) {
+
+    }
+  }
+
+  unmarshall( jolt: Jolt.ContactSettings, rev: boolean) {
+    let {combinedFriction, combinedRestitution, inverseMassScale1, inverseMassScale2, inverseInertiaScale1, inverseInertiaScale2, isSensor} = this;
+    if(rev) {
+      [inverseMassScale1, inverseMassScale2, inverseInertiaScale1 ,inverseInertiaScale2 ] =
+        [inverseMassScale2, inverseMassScale1, inverseInertiaScale2 ,inverseInertiaScale1]
+    }
+    const [ mCombinedFriction, mCombinedRestitution, mInvMassScale1, mInvMassScale2, mInvInertiaScale1, mInvInertiaScale2, mIsSensor ] = 
+    [ combinedFriction, combinedRestitution, inverseMassScale1, inverseMassScale2, inverseInertiaScale1, inverseInertiaScale2, isSensor ];
+    Object.assign(jolt, { mCombinedFriction, mCombinedRestitution, mInvMassScale1, mInvMassScale2, mInvInertiaScale1, mInvInertiaScale2, mIsSensor })
+
+    SetJoltVec3(this.relativeLinearSurfaceVelocity, jolt.mRelativeLinearSurfaceVelocity);
+    SetJoltVec3(this.relativeAngularSurfaceVelocity, jolt.mRelativeAngularSurfaceVelocity);
+  }
+
 }
 
 export const enum OnContactValidateResponse {
@@ -44,6 +75,7 @@ export class ContactCollector {
   private _joltEventEnabled: CollisionRecords = { 'on-contact-add': {}, 'on-contact-persist': {}, 'on-contact-validate': {} };
 
   private _imposterBodyHash: { [hash: number]: PhysicsImpostor } = {};
+  private _contactSettings = new JoltContactSetting();
 
   constructor(listener: Jolt.ContactListenerJS) {
     const withChecks = (inBody1: Jolt.Body, inBody2: Jolt.Body, type: keyof CollisionRecords | 'regular', withImpostors: (body1: PhysicsImpostor, body2: PhysicsImpostor, rev: boolean) => void) => {
@@ -71,15 +103,16 @@ export class ContactCollector {
 
     const wrapContactSettings = (ioSettings: Jolt.ContactSettings, rev: boolean, withSettings: (settings: JoltContactSetting) => void) => {
       ioSettings = Jolt.wrapPointer(ioSettings as any as number, Jolt.ContactSettings);
-      const contactSettings = new JoltContactSetting(ioSettings, rev);
-      withSettings(contactSettings);
+      this._contactSettings.marshall(ioSettings, rev);
+      withSettings(this._contactSettings);
+      this._contactSettings.unmarshall(ioSettings, rev);
 
     }
     const wrapContactValidate = (inBody1: Jolt.Body, inBody2: Jolt.Body): OnContactValidateResponse => {
       const kind = 'on-contact-validate'
       let ret: OnContactValidateResponse[] = [];
       withChecks(inBody1, inBody2, kind,
-        (body1, body2, rev) => {
+        (body1, body2) => {
           if (body1 instanceof JoltPhysicsImpostor) {
             const resp = body1.onJoltCollide(kind, { body: body2 });
             if(resp !== undefined) {
@@ -106,13 +139,17 @@ export class ContactCollector {
         })
     }
 
+  // @ts-ignore: Unused
     listener.OnContactValidate = (inBody1, inBody2, inBaseOffset, inCollisionResult) => {
       return wrapContactValidate(inBody1, inBody2);
     }
+    // @ts-ignore: Unused
     listener.OnContactRemoved = (shapeIdPair) => { /* do nothing */ }
+    // @ts-ignore: Unused
     listener.OnContactAdded = (inBody1, inBody2, inManifold, ioSettings) => {
       wrapContactEvent('on-contact-add', inBody1, inBody2, ioSettings);
     }
+    // @ts-ignore: Unused
     listener.OnContactPersisted = (inBody1, inBody2, inManifold, ioSettings) => {
       wrapContactEvent('on-contact-persist', inBody1, inBody2, ioSettings);
     }

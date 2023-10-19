@@ -1,7 +1,6 @@
-import { IPhysicsEnabledObject, PhysicsImpostor, PhysicsImpostorParameters, Quaternion, Scene, Vector3 } from "@babylonjs/core";
-import Jolt from "./jolt-import";
+import { IPhysicsEnabledObject, PhysicsImpostor, PhysicsImpostorParameters, Quaternion, Scene, Vector3 } from '@babylonjs/core';
+import Jolt from './jolt-import';
 
-type JoltNS = typeof Jolt;
 const JPH_PI = 3.14159265358979323846;
 const DegreesToRadians = (deg: number) => deg * (JPH_PI / 180.0);
 
@@ -54,8 +53,8 @@ interface UpdateFiltersData {
   shapeFilter: Jolt.ShapeFilter
 }
 
-const wrapVec3 = (joltVec3: Jolt.Vec3, vector3: Vector3) => vector3.set(joltVec3.GetX(), joltVec3.GetY(), joltVec3.GetZ());
-const wrapQuat = (q: Jolt.Quat) => new Quaternion(q.GetX(), q.GetY(), q.GetZ(), q.GetW());
+export const wrapVec3 = (joltVec3: Jolt.Vec3, vector3: Vector3) => vector3.set(joltVec3.GetX(), joltVec3.GetY(), joltVec3.GetZ());
+export const wrapQuat = (q: Jolt.Quat) => new Quaternion(q.GetX(), q.GetY(), q.GetZ(), q.GetW());
 
 export class JoltVirtualCharacter {
   private mCharacter: Jolt.CharacterVirtual;
@@ -64,6 +63,7 @@ export class JoltVirtualCharacter {
   private mUpdateSettings: Jolt.ExtendedUpdateSettings;
   private mUpdateFilterData: UpdateFiltersData;
 
+  // @ts-ignore: Unused
   private mDesiredVelocity: Vector3 = new Vector3();
 
   private _jolt_temp1: Jolt.Vec3;
@@ -81,9 +81,9 @@ export class JoltVirtualCharacter {
     settings.mCharacterPadding = this.impostor.sCharacterPadding;
     settings.mPenetrationRecoverySpeed = this.impostor.sPenetrationRecoverySpeed;
     settings.mPredictiveContactDistance = this.impostor.sPredictiveContactDistance;
-    settings.mSupportingVolume = new Jolt.Plane(Jolt.Vec3.prototype.sAxisY(), -1);
+    settings.mSupportingVolume = new Jolt.Plane(Jolt.Vec3.sAxisY(), -1);
 
-    this.mCharacter = new Jolt.CharacterVirtual(settings, Jolt.Vec3.prototype.sZero(), Jolt.Quat.prototype.sIdentity(), this.world.physicsSystem);
+    this.mCharacter = new Jolt.CharacterVirtual(settings, Jolt.Vec3.sZero(), Jolt.Quat.sIdentity(), this.world.physicsSystem);
     this.mDisposables.push(this.mCharacter, this.mUpdateSettings, settings);
 
 
@@ -148,6 +148,7 @@ export class JoltVirtualCharacter {
   }
 
   mAllowSliding = false;
+  /*
   handleInput = (inMovementDirection: Vector3 , inJump: boolean, inSwitchStance, inDeltaTime: number) => {
 		const player_controls_horizontal_velocity = this.impostor.sControlMovementDuringJump || this.mCharacter.IsSupported();
 		if (player_controls_horizontal_velocity) {
@@ -209,6 +210,7 @@ export class JoltVirtualCharacter {
 
 		mCharacter.SetLinearVelocity(new Jolt.Vec3(new_velocity.x, new_velocity.y, new_velocity.z));
 	}
+  */
 
   getCharacter(): Jolt.CharacterVirtual {
     return this.mCharacter;

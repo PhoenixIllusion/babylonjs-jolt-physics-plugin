@@ -6,7 +6,7 @@ export default defineConfig({
       external: ['@babylonjs/core'],
       output: {
         paths: {
-          "@babylonjs/core": "https://unpkg.com/browse/@babylonjs/core@6.23.0/index.js"
+          '@babylonjs/core': 'https://unpkg.com/browse/@babylonjs/core@6.23.0/index.js'
         }
       }
     }

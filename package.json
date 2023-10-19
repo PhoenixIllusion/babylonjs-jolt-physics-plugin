@@ -10,8 +10,8 @@
   },
   "devDependencies": {
     "@babylonjs/inspector": "6.23.0",
-    "typescript": "^5.0.2",
-    "vite": "^4.4.5"
+    "typescript": "5.2.2",
+    "vite": "4.5.0"
   },
   "dependencies": {
     "@babylonjs/core": "6.23.0",

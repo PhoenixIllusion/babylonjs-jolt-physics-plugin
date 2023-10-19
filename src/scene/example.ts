@@ -1,14 +1,12 @@
-import { Color3, Material, Mesh, MeshBuilder, PhysicsImpostor, PhysicsImpostorParameters, Quaternion, Scene, StandardMaterial, Vector3, VertexData } from "@babylonjs/core";
+import { Color3,  Mesh, MeshBuilder, PhysicsImpostor, PhysicsImpostorParameters, Quaternion, StandardMaterial, Vector3, VertexData } from '@babylonjs/core';
 import QuickHull from 'quickhull3d'
-import type Jolt from 'jolt-physics';
-export type JoltNS = typeof Jolt;
 
 interface PhysicsOptions {
   mass: number, friction: number, restitution: number
 }
 
 export type SceneCallback = (void|((time: number, delta: number) =>void))
-export type SceneFunction = (Jolt: JoltNS, scene: Scene) => SceneCallback;
+export type SceneFunction = () => SceneCallback;
 
 const NullPhysics: PhysicsOptions = {
   mass: 0,
@@ -17,7 +15,7 @@ const NullPhysics: PhysicsOptions = {
 }
 
 export const createFloor = (physicsOptions: PhysicsOptions = NullPhysics, color: string = '#FFFFFF') => {
-  const ground = MeshBuilder.CreateGround("ground", { width: 100, height: 100 });
+  const ground = MeshBuilder.CreateGround('ground', { width: 100, height: 100 });
   ground.position.y = -0.5;
   ground.material = getMaterial(color);
   const physics = new PhysicsImpostor(ground, PhysicsImpostor.BoxImpostor, physicsOptions);
@@ -37,14 +35,14 @@ export const getMaterial = (color: string) => {
 
 
 export const createSphere = (position: Vector3, radius: number, physicsOptions: PhysicsOptions = NullPhysics, color: string = '#FFFFFF') => {
-  const sphere = MeshBuilder.CreateSphere("sphere", { diameter: radius, segments: 32 });
+  const sphere = MeshBuilder.CreateSphere('sphere', { diameter: radius, segments: 32 });
   sphere.position.copyFrom(position);
   sphere.material = getMaterial(color);
   const physics = new PhysicsImpostor(sphere, PhysicsImpostor.SphereImpostor, physicsOptions);
   return { sphere, physics };
 }
 export const createCylinder = (position: Vector3, radius: number, height: number, physicsOptions: PhysicsOptions = NullPhysics, color: string = '#FFFFFF') => {
-  const cylinder = MeshBuilder.CreateCylinder("cylinder", { diameter: radius, height, tessellation: 16 });
+  const cylinder = MeshBuilder.CreateCylinder('cylinder', { diameter: radius, height, tessellation: 16 });
   cylinder.position.copyFrom(position);
   cylinder.material = getMaterial(color);
   const physics = new PhysicsImpostor(cylinder, PhysicsImpostor.CylinderImpostor, physicsOptions);
@@ -98,7 +96,7 @@ export const createConvexHull = (position: Vector3, points: Vector3[], physicsOp
   vertexData.indices = indices;	
   vertexData.normals = normals;
   
-  const mesh = new Mesh("convex-hull");
+  const mesh = new Mesh('convex-hull');
   vertexData.applyToMesh(mesh);
   mesh.position.copyFrom(position);
   mesh.material = getMaterial(color);
@@ -113,7 +111,7 @@ export const getRandomQuat = () => {
 }
 
 export const createMeshFloor = (n: number, cell_size: number, amp: number, position: Vector3, physicsOptions: PhysicsOptions = NullPhysics, color = '#FFFFFF') => {
-  const mesh = new Mesh("mesh-floor");
+  const mesh = new Mesh('mesh-floor');
   const height = function (x: number, y: number) { return Math.sin(x / 2) * Math.cos(y / 3)*amp; };
   const positions: number[] = [];
   const indices: number[] = [];
