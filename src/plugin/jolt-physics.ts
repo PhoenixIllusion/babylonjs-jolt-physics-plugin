@@ -1,11 +1,12 @@
-import { Vector3, PhysicsImpostor, Quaternion, Nullable, PhysicsRaycastResult, PhysicsJoint, IMotorEnabledJoint, AbstractMesh, Epsilon, Logger, VertexBuffer, IPhysicsEnabledObject, IndicesArray, PhysicsJointData } from "@babylonjs/core";
+import { Vector3, PhysicsImpostor, Quaternion, Nullable, PhysicsRaycastResult, PhysicsJoint, IMotorEnabledJoint, AbstractMesh, Epsilon, Logger, VertexBuffer, IPhysicsEnabledObject, IndicesArray, PhysicsJointData, MotorEnabledJoint, PhysicsBody } from "@babylonjs/core";
 import { IPhysicsEnginePlugin, PhysicsImpostorJoint } from "@babylonjs/core/Physics/v1/IPhysicsEnginePlugin";
 import type Jolt from 'jolt-physics';
+import { JoltCharacterVirtualImpostor, JoltVirtualCharacter } from "./jolt-physics-virtual-character";
 
 type JoltNS = typeof Jolt;
 
 interface JoltCollision {
-  bodyHash: number,
+  body: PhysicsBody,
   point: Vector3|null,
   distance: number,
   impulse: number,
@@ -30,6 +31,17 @@ interface PossibleMotors {
   SetTargetPosition( val : number): void;
 }
 
+export const enum Jolt_Type {
+  CHARACTER = 200,
+  VIRTUAL_CHARACTER = 201,
+}
+
+const SetJoltVec3 = (vec3: Vector3, jVec3: Jolt.Vec3) => {
+  jVec3.Set(vec3.x, vec3.y, vec3.z)
+}
+const GetJoltVec3 = (jVec3: Jolt.Vec3, vec3: Vector3) => {
+  vec3.set(jVec3.GetX(), jVec3.GetY(), jVec3.GetZ())
+}
 
 class RayCastUtility {
 
@@ -63,8 +75,8 @@ class RayCastUtility {
 
   raycastToRef(from: Vector3, to: Vector3, result: PhysicsRaycastResult): void {
     const delta = to.subtract(from);
-    this._ray.mOrigin.Set(from.x, from.y, from.z);
-    this._ray.mDirection.Set(delta.x, delta.y, delta.z);
+    SetJoltVec3(from, this._ray.mOrigin);
+    SetJoltVec3(delta, this._ray.mDirection);
 
     let body: Jolt.Body;
 
@@ -82,9 +94,9 @@ class RayCastUtility {
         closestResult.mFraction = inRayCastResult.mFraction;
 
         let hitPoint = this._ray.GetPointOnRay(inRayCastResult.mFraction);
-        closestResult.hitPoint.set(hitPoint.GetX(), hitPoint.GetY(), hitPoint.GetZ());
+        GetJoltVec3(hitPoint, closestResult.hitPoint)
         let hitNormal = body.GetWorldSpaceSurfaceNormal(inRayCastResult.mSubShapeID2, hitPoint);
-        closestResult.hitNormal.set(hitNormal.GetX(), hitNormal.GetY(), hitNormal.GetZ());
+        GetJoltVec3(hitNormal, closestResult.hitNormal)
       }
     }
     result.reset(from, to);
@@ -106,37 +118,259 @@ class RayCastUtility {
   }
 }
 
+export type FILTER_PROPS<Base, Condition> = {
+  [Key in keyof Base]: Base[Key] extends Condition ? Key : never;
+}[keyof Base]; // <- gets all keys of specified types.
+
+
+function WrapJolt<T, K, L extends keyof K>(jolt: K, key: L) {
+  return function(target: ClassAccessorDecoratorTarget<T,K[L]>, context: ClassAccessorDecoratorContext<T,K[L]>): ClassAccessorDecoratorResult<T,K[L]> {
+    return {
+      get(): K[L] {
+        return jolt[key];
+      },
+      set(val: K[L]) {
+        jolt[key] = val;
+      },
+      init(this: T, initialValue: K[L]) { return initialValue; }
+    }
+  }
+}
+function WrapJoltReversable<T, K, L extends keyof K> (jolt: K, rev: boolean, key1: L, key2: L) {
+  type RetType = K[L];
+  return function(target: ClassAccessorDecoratorTarget<T,RetType>, context: ClassAccessorDecoratorContext<T,RetType>): ClassAccessorDecoratorResult<T,RetType> {
+    return {
+      get(): RetType {
+        return (rev ?jolt[key2]: jolt[key1]);
+      },
+      set(val: RetType) {
+        rev ? (jolt[key2] = val) : (jolt[key1] = val);
+      },
+      init(this: T, initialValue: RetType) { return initialValue; }
+    }
+  }
+}
+function WrapJoltVec3<T,K>(jolt: K, key: FILTER_PROPS<K,Jolt.Vec3>) {
+  return function(target: ClassAccessorDecoratorTarget<T,Vector3>, context: ClassAccessorDecoratorContext): ClassAccessorDecoratorResult<T,Vector3> {
+    let v3 = new Vector3();
+    return {
+      get(): Vector3 {
+        GetJoltVec3(jolt[key] as Jolt.Vec3, v3);
+        return v3;
+      },
+      set(val: Vector3) {
+        v3 = val;
+        SetJoltVec3(val, jolt[key] as Jolt.Vec3);
+      },
+      init(this: T, initialValue: Vector3) { return initialValue; }
+    }
+  }
+}
+
+const JoltContactSettingImpl = (jolt: Jolt.ContactSettings, rev: boolean): JoltContactSetting => new class {
+  constructor() { }
+  @WrapJolt(jolt, 'mCombinedFriction') accessor combinedFriction: number = 0;
+  @WrapJolt(jolt, 'mCombinedRestitution') accessor combinedRestitution: number = 0;
+  @WrapJoltReversable(jolt, rev, 'mInvMassScale1','mInvMassScale2') accessor inverseMassScale1 = 0;
+  @WrapJoltReversable(jolt, rev, 'mInvMassScale2','mInvMassScale1') accessor inverseMassScale2 = 0;
+  @WrapJoltReversable(jolt, rev, 'mInvInertiaScale1','mInvInertiaScale2') accessor inverseInertiaScale1 = 0;
+  @WrapJoltReversable(jolt, rev, 'mInvInertiaScale2','mInvInertiaScale1') accessor inverseInertiaScale2 = 0;
+  @WrapJolt(jolt, 'mIsSensor') accessor isSensor = false;
+  relativeLinearSurfaceVelocity = new Vector3();
+  relativeAngularSurfaceVelocity = new Vector3();
+}
+export interface JoltContactSetting {
+  combinedFriction: number;
+  combinedRestitution: number;
+  inverseMassScale1: number;
+  inverseMassScale2: number;
+  inverseInertiaScale1: number;
+  inverseInertiaScale2: number;
+  isSensor: boolean;
+  relativeLinearSurfaceVelocity: Vector3;
+  relativeAngularSurfaceVelocity: Vector3;
+};
+
+
+export const enum OnContactValidateResponse {
+    AcceptAllContactsForThisBodyPair = 0,							///< Accept this and any further contact points for this body pair
+    AcceptContact = 1,												///< Accept this contact only (and continue calling this callback for every contact manifold for the same body pair)
+    RejectContact = 2,												///< Reject this contact only (but process any other contact manifolds for the same body pair)
+    RejectAllContactsForThisBodyPair = 3							///< Rejects this and any further contact points for this body pair
+}
+export type OnContactValidateCallback = (body: PhysicsImpostor) => OnContactValidateResponse;
+export type OnContactCallback = (body: PhysicsImpostor, offset: Vector3, contactSettings?: JoltContactSetting) => void;
+
+interface JoltCollisionCallback<T extends OnContactValidateCallback|OnContactCallback> { callback: T, otherImpostors: Array<PhysicsImpostor> }
+
+
+interface JoltPhysicsCollideCallbacks {
+  'on-contact-add': JoltCollisionCallback<OnContactCallback>[],
+  'on-contact-persist': JoltCollisionCallback<OnContactCallback>[],
+  'on-contact-validate': JoltCollisionCallback<OnContactValidateCallback>[]
+}
+type JoltCollisionKey = keyof JoltPhysicsCollideCallbacks;
+type JoltCollisionGenericType<T extends JoltCollisionKey> = JoltPhysicsCollideCallbacks[T] extends JoltCollisionCallback<infer U>[]? U : never;
+
+export class JoltPhysicsImpostor extends PhysicsImpostor {
+
+  public _JoltPhysicsCallback: JoltPhysicsCollideCallbacks = { 'on-contact-add': [], 'on-contact-persist': [], 'on-contact-validate': []}
+
+  public registerOnJoltPhysicsCollide( kind: 'on-contact-add'|'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactCallback): void;
+  public registerOnJoltPhysicsCollide( kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidateCallback): void;
+  public registerOnJoltPhysicsCollide( kind: JoltCollisionKey, collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>,
+      func: OnContactCallback|OnContactValidateCallback): void {
+      const collidedAgainstList: Array<PhysicsImpostor> = collideAgainst instanceof Array ?
+          <Array<PhysicsImpostor>>collideAgainst
+          : [<PhysicsImpostor>collideAgainst];
+        if(kind == 'on-contact-validate') {
+          const list: JoltPhysicsCollideCallbacks['on-contact-validate'] = this._JoltPhysicsCallback['on-contact-validate'];
+          list.push({ callback: func as OnContactValidateCallback, otherImpostors: collidedAgainstList });
+        } else {
+          const list: JoltCollisionCallback<OnContactCallback>[] = this._JoltPhysicsCallback[kind];
+          list.push({ callback: func as OnContactCallback, otherImpostors: collidedAgainstList });
+        }
+  }
+
+  public unregisterOnJoltPhysicsCollide<Key extends keyof JoltPhysicsCollideCallbacks>( kind: JoltCollisionKey, collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>,
+    func: JoltCollisionGenericType<Key>): void {
+    const collidedAgainstList: Array<PhysicsImpostor> = collideAgainst instanceof Array ?
+          <Array<PhysicsImpostor>>collideAgainst
+          : [<PhysicsImpostor>collideAgainst];
+      let index = -1;
+
+      const found = this._JoltPhysicsCallback[kind].some((cbDef, idx) => {
+          if (cbDef.callback === func && cbDef.otherImpostors.length === collidedAgainstList.length) {
+              const sameList = cbDef.otherImpostors.every((impostor) => {
+                  return collidedAgainstList.indexOf(impostor) > -1;
+              });
+              if (sameList) {
+                  index = idx;
+              }
+              return sameList;
+          }
+          return false;
+      });
+
+      if (found) {
+        this._JoltPhysicsCallback[kind].splice(index, 1);
+      } else {
+          Logger.Warn("Function to remove was not found");
+      }
+  }
+  public onJoltCollide<T extends keyof JoltPhysicsCollideCallbacks>(kind: T, event: { body: PhysicsImpostor, ioSettings: JoltContactSetting }): OnContactValidateResponse[] {
+    if (!this._JoltPhysicsCallback[kind].length) {
+      return [];
+    }
+    const ret: OnContactValidateResponse[] = [];
+    if (event.body) {
+      this._JoltPhysicsCallback[kind]
+          .filter((obj) => {
+              return obj.otherImpostors.indexOf(event.body) !== -1;
+          })
+          .forEach((obj) => {
+              const res = obj.callback(event.body, new Vector3(), event.ioSettings);
+              if(res) {
+                ret.push(res);
+              }
+          });
+    }
+    return ret;
+  }
+}
+
+type CollisionRecords = { 'on-contact-add': Record<number,boolean>, 'on-contact-persist': Record<number,boolean>,'on-contact-validate': Record<number,boolean> };
+
 class ContactCollector {
-  public collisions: {[key: number]: JoltCollision[]} = {};
+
+  private _collisionEnabled: Record<number,boolean> = {};
+  private _joltEventEnabled: CollisionRecords  = {'on-contact-add': {}, 'on-contact-persist': {}, 'on-contact-validate': {}};
+
+  private _imposterBodyHash: {[hash: number]: PhysicsImpostor} = {};
+
   constructor(private Jolt: JoltNS, listener: Jolt.ContactListenerJS) {
-    listener.OnContactValidate = (inBody, inBody2, inBaseOffset, inCollisionResult) => { return Jolt.AcceptAllContactsForThisBodyPair }
-    listener.OnContactRemoved = ( shapeIdPair) => { /* do nothing */ }
-    listener.OnContactAdded = listener.OnContactPersisted = (inBody1, inBody2, inManifold, ioSettings) => {
+    const withChecks = (inBody1: Jolt.Body, inBody2: Jolt.Body, type: keyof CollisionRecords | 'regular', withImpostors: (body1: PhysicsImpostor, body2: PhysicsImpostor, rev: boolean)=> void) => {
       inBody1 = Jolt.wrapPointer(inBody1 as any as number, Jolt.Body);
       inBody2 = Jolt.wrapPointer(inBody2 as any as number, Jolt.Body);
 
       const body1Hash = inBody1.GetID().GetIndexAndSequenceNumber();
       const body2Hash = inBody2.GetID().GetIndexAndSequenceNumber();
-      const event: Without<JoltCollision, 'bodyHash'> = {
-        normal: null,
-        point: null,
-        distance: 0,
-        impulse: 0
-      };
-      let collection;
-      if(collection = this.collisions[body1Hash]) {
-        collection.push({ bodyHash: body2Hash, ... event});
-      }
-      if(collection = this.collisions[body2Hash]) {
-        collection.push({ bodyHash: body1Hash, ... event});
+      const hash = type === 'regular' ? this._collisionEnabled : this._joltEventEnabled[type];
+
+      const body1Enabled = hash[body1Hash];
+      const body2Enabled = hash[body2Hash];
+
+      if(body1Enabled || body2Enabled) {
+        const body1 = this._imposterBodyHash[body1Hash];
+        const body2 = this._imposterBodyHash[body2Hash];
+        if(body1Enabled) {
+          withImpostors(body1, body2, false)
+        }
+        if(body2Enabled) {
+          withImpostors(body2, body1, true)
+        }
       }
     }
+
+    const wrapContactSettings = ( ioSettings: Jolt.ContactSettings, rev: boolean, withSettings: (settings: JoltContactSetting)=> void) => {
+      ioSettings = Jolt.wrapPointer(ioSettings as any as number, Jolt.ContactSettings);
+      const contactSettings = JoltContactSettingImpl(ioSettings, rev);
+      withSettings(contactSettings);
+
+    }
+    const wrapContactValidate = (inBody1: Jolt.Body, inBody2: Jolt.Body) => {
+      const kind = 'on-contact-validate'
+      let ret: OnContactValidateResponse[] = [];
+      withChecks(inBody1, inBody2, kind,
+        (body1, body2, rev) => {
+          if(body1 instanceof JoltPhysicsImpostor) {
+              body1.onJoltCollide(kind,{body: body2});
+          }
+        }
+      );
+    }
+    const wrapContactEvent = (kind: 'on-contact-add'|'on-contact-persist', 
+                              inBody1: Jolt.Body, inBody2: Jolt.Body, inCollision: Jolt.ContactSettings) => {
+      withChecks(inBody1, inBody2, kind,
+        (body1, body2, rev) => {
+          wrapContactSettings(inCollision, rev, (ioSettings) => {
+            body1.onCollide({body: body2.physicsBody, point: null, distance: 0, impulse: 0, normal: null});
+            if(body1 instanceof JoltPhysicsImpostor) {
+              body1.onJoltCollide(kind,{body: body2, ioSettings});
+            }
+          })
+        })
+    }
+
+    listener.OnContactValidate = (inBody, inBody2, inBaseOffset, inCollisionResult) => {
+      const ret = wrapEvent('on-contact-add', true, inBody1, inBody2, null);
+      return Jolt.AcceptAllContactsForThisBodyPair
+    }
+    listener.OnContactRemoved = ( shapeIdPair) => { /* do nothing */ }
+    listener.OnContactAdded = (inBody1, inBody2, inManifold, ioSettings) => {
+      wrapContactEvent('on-contact-add', inBody1, inBody2, ioSettings);
+    }
+    listener.OnContactPersisted = (inBody1, inBody2, inManifold, ioSettings) => {
+      wrapContactEvent('on-contact-persist', inBody1, inBody2, ioSettings);
+    }
   }
-  saveCollisionForHash(hash: number) {
-    this.collisions[hash] = [];
+  registerImpostor(hash: number, impostor: PhysicsImpostor) {
+    this._imposterBodyHash[hash] = impostor;
+    if (impostor._onPhysicsCollideCallbacks.length > 0) {
+      this._collisionEnabled[hash] = true;
+    }
+    if (impostor instanceof JoltPhysicsImpostor) {
+      (Object.keys(this._joltEventEnabled) as (keyof CollisionRecords & keyof JoltPhysicsCollideCallbacks)[]).forEach( (key ) => {
+        if(impostor._JoltPhysicsCallback[key].length > 0) {
+          this._joltEventEnabled[key][hash] = true;
+        }
+      });
+    }
   }
   clear() {
-    this.collisions = {};
+    this._imposterBodyHash = {};
+    this._collisionEnabled = {};
+    this._joltEventEnabled = {'on-contact-add': {}, 'on-contact-persist': {}, 'on-contact-validate': {}};
   }
 
 }
@@ -207,44 +441,32 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   }
 
   executeStep(delta: number, impostors: PhysicsImpostor[]): void {
-    const imposterBodyHash: {[hash: number]: PhysicsImpostor} = {};
     this._contactCollector.clear();
+    const virtualCharacters: JoltCharacterVirtualImpostor[] = [];
     for (const impostor of impostors) {
       // Update physics world objects to match babylon world
       if (!impostor.soft) {
         impostor.beforeStep();
       }
-      const body: Jolt.Body = impostor.physicsBody;
-      const bodyID = body.GetID().GetIndexAndSequenceNumber();
-      imposterBodyHash[bodyID] = impostor;
-      if (impostor._onPhysicsCollideCallbacks.length > 0) {
-        this._contactCollector.saveCollisionForHash(bodyID);
+      if(impostor.physicsBody instanceof this.Jolt.Body) {
+        const body: Jolt.Body = impostor.physicsBody;
+        const bodyID = body.GetID().GetIndexAndSequenceNumber();
+      }
+      if(impostor instanceof JoltCharacterVirtualImpostor) {
+        virtualCharacters.push(impostor as JoltCharacterVirtualImpostor);
       }
     }
 
-    this._stepSimulation(this._useDeltaForWorldStep ? delta : this._timeStep, this._maxSteps, this._fixedTimeStep);
+    this._stepSimulation(this._useDeltaForWorldStep ? delta : this._timeStep, this._maxSteps, this._fixedTimeStep,
+      (timeStep) => {
+        virtualCharacters.forEach( vChar => vChar.controller?.prePhysicsUpdate(timeStep) );
+      });
 
     for (const impostor of impostors) {
       // Update physics world objects to match babylon world
       if (!impostor.soft) {
         impostor.afterStep();
       }
-
-      // Handle collision event
-      if (impostor._onPhysicsCollideCallbacks.length > 0) {
-        const body: Jolt.Body = impostor.physicsBody;
-        const bodyID = body.GetID().GetIndexAndSequenceNumber();
-        const collisions = this._contactCollector.collisions[bodyID];
-
-        impostor._onPhysicsCollideCallbacks.forEach(listener => {
-          if(collisions && collisions.length > 0 ) {
-            collisions.forEach( event => {
-              listener.callback(impostor, imposterBodyHash[event.bodyHash], event.point, event.distance, event.impulse, event.normal);
-            })
-          }
-        })
-      }
-
     }
   }
 
@@ -254,16 +476,19 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   // When maxSteps is 0 do the entire simulation in one step
   // When maxSteps is > 0, run up to maxStep times, if on the last step the (remaining step - fixedTimeStep) is < fixedTimeStep, the remainder will be used for the step. (eg. if remainder is 1.001 and fixedTimeStep is 1 the last step will be 1.001, if instead it did 2 steps (1, 0.001) issues occuered when having a tiny step in ammo)
   // Note: To get deterministic physics, timeStep would always need to be divisible by fixedTimeStep
-  private _stepSimulation(timeStep: number = 1 / 60, maxSteps: number = 10, fixedTimeStep: number = 1 / 60) {
+  private _stepSimulation(timeStep: number = 1 / 60, maxSteps: number = 10, fixedTimeStep: number = 1 / 60, perStep: (timeStep: number) => void) {
     if (maxSteps == 0) {
+      perStep(timeStep);
       this.jolt.Step(timeStep, 1);
     } else {
       while (maxSteps > 0 && timeStep > 0) {
         if (timeStep - fixedTimeStep < fixedTimeStep) {
+          perStep(timeStep);
           this.jolt.Step(timeStep, 1);
           timeStep = 0;
         } else {
           timeStep -= fixedTimeStep;
+          perStep(fixedTimeStep);
           this.jolt.Step(fixedTimeStep, 1);
         }
         maxSteps--;
@@ -281,9 +506,9 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
 
       const worldPoint = this._tempVec3A;
       const impulse = this._tempVec3B;
-      impulse.Set(force.x, force.y, force.z);
+      SetJoltVec3(force, impulse)
+      SetJoltVec3(contactPoint, worldPoint)
 
-      worldPoint.Set(contactPoint.x, contactPoint.y, contactPoint.z);
       physicsBody.AddImpulse(impulse, worldPoint);
     } else {
       Logger.Warn("Cannot be applied to a soft body");
@@ -296,8 +521,8 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       const physicsBody: Jolt.Body = impostor.physicsBody;
       const worldPoint = this._tempVec3A;
       const impulse = this._tempVec3B;
-      impulse.Set(force.x, force.y, force.z);
-      worldPoint.Set(contactPoint.x, contactPoint.y, contactPoint.z);
+      SetJoltVec3(force, impulse)
+      SetJoltVec3(contactPoint, worldPoint)
       physicsBody.AddForce(impulse, worldPoint);
     } else {
       Logger.Warn("Cannot be applied to a soft body");
@@ -316,6 +541,14 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       return;
     }
     if (impostor.isBodyInitRequired()) {
+      if(impostor instanceof JoltCharacterVirtualImpostor) {
+        const imp = impostor as JoltCharacterVirtualImpostor;
+        const shape = this._createShape(imp);
+        const char = new JoltVirtualCharacter(imp, shape, { physicsSystem: this.world, jolt: this.jolt }, this.Jolt);
+        imp.physicsBody = char.getCharacter(); 
+        imp._pluginData.controller = char;
+        return;
+      }
       const colShape = this._createShape(impostor);
       const mass = impostor.getParam("mass");
       const friction = impostor.getParam("friction");
@@ -325,7 +558,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       const collisionFilter: Jolt.GroupFilter = impostor.getParam("collision-filter");
 
       impostor.object.computeWorldMatrix(true);
-      this._tempVec3A.Set(impostor.object.position.x, impostor.object.position.y, impostor.object.position.z);
+      SetJoltVec3(impostor.object.position, this._tempVec3A);
       this._tempQuaternion.Set(
         impostor.object.rotationQuaternion!.x,
         impostor.object.rotationQuaternion!.y,
@@ -418,8 +651,6 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   }
 
   private _createShape(impostor: PhysicsImpostor): Jolt.Shape {
-    const object = impostor.object;
-
     const impostorExtents = impostor.getObjectExtents();
     const checkWithEpsilon = (value: number): number => {
       return Math.max(value, Epsilon);
@@ -588,6 +819,8 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         impostorJoint.mainImpostor._pluginData.toDispose.push(constraint);
         this.world.AddConstraint(constraint);
         impostorJoint.joint.physicsJoint = constraint;
+        impostorJoint.joint.jointData.nativeParams.body1 = mainBody;
+        impostorJoint.joint.jointData.nativeParams.body2 = connectedBody; 
       }
 
   }
@@ -624,12 +857,19 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   }
 
   setPhysicsBodyTransformation(impostor: PhysicsImpostor, newPosition: Vector3, newRotation: Quaternion): void {
-    const physicsBody: Jolt.Body = impostor.physicsBody;
+    const position = this._tempVec3A;
+    const rotation = this._tempQuaternion;
+    position.Set(newPosition.x, newPosition.y, newPosition.z);
+    rotation.Set(newRotation.x, newRotation.y, newRotation.z, newRotation.w);
 
-    this._tempVec3A.Set(newPosition.x, newPosition.y, newPosition.z);
-    this._tempQuaternion.Set(newRotation.x, newRotation.y, newRotation.z, newRotation.w);
-
-    this._bodyInterface.SetPositionAndRotationWhenChanged(physicsBody.GetID(), this._tempVec3A, this._tempQuaternion, this.Jolt.Activate);
+    if(impostor instanceof JoltCharacterVirtualImpostor) {
+      const character: Jolt.CharacterVirtual = impostor.physicsBody;
+      character.SetPosition(position);
+      character.SetRotation(rotation);
+    } else {
+      const physicsBody: Jolt.Body = impostor.physicsBody;
+      this._bodyInterface.SetPositionAndRotationWhenChanged(physicsBody.GetID(), position, rotation, this.Jolt.Activate);
+    }
   }
 
   /**
@@ -760,6 +1000,13 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         constraint.SetMotorState!(this.Jolt.EMotorState_Velocity);
         constraint.SetTargetAngularVelocity && constraint.SetTargetAngularVelocity(speed);
         constraint.SetTargetVelocity && constraint.SetTargetVelocity(speed);
+      }
+      if(joint instanceof MotorEnabledJoint) {
+        const motorJoint = joint as MotorEnabledJoint;
+        const body1 : Jolt.Body= motorJoint.jointData.nativeParams?.body1;
+        const body2 : Jolt.Body = motorJoint.jointData.nativeParams?.body2;
+        body1 && this._bodyInterface.ActivateBody(body1.GetID());
+        body2 && this._bodyInterface.ActivateBody(body2.GetID());
       }
       if(maxForce) {
         this.setLimit(joint, maxForce);

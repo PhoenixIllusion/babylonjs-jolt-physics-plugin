@@ -26,7 +26,7 @@ export const createFloor = (physicsOptions: PhysicsOptions = NullPhysics, color:
 
 
 const COLOR_HASH: {[key: string]: StandardMaterial} = {};
-const getMaterial = (color: string) => {
+export const getMaterial = (color: string) => {
   if(!COLOR_HASH[color]){
     const material = COLOR_HASH[color] = new StandardMaterial('Color_'+color);
     material.alpha = 1;

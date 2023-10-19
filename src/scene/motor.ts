@@ -1,6 +1,6 @@
 import { DistanceJoint, HingeJoint, MotorEnabledJoint, Quaternion, Scene, Vector3 } from "@babylonjs/core";
 import { JoltNS, createBox, createFloor, createSphere } from "./example";
-import { Slider } from "@babylonjs/gui";
+import type Jolt from 'jolt-physics';
 
 const createWindmill = () => {
   const box1 = createBox(new Vector3(0,10,0), Quaternion.Identity(), new Vector3(0.25,0.25,0.25));
@@ -42,25 +42,27 @@ const createSlider = () => {
     const jointConfig = { 
       mainPivot: new Vector3(-21, 0.5, 0),
       connectedPivot: new Vector3(-16, 0.75, 0),
-      mainAxis: new Vector3(-1, 0, 0),
-      connectedAxis: new Vector3(-1, 0, 0),
+      mainAxis: new Vector3(1, 0, 0),
+      connectedAxis: new Vector3(1, 0, 0),
       nativeParams: {
         'normal-axis-1': new Vector3(0, 0, 1),
-        'normal-axis-2': new Vector3(0, 0, 1),
-        'motor-mode': 'velocity'
+        'normal-axis-2': new Vector3(0, 0, 1)
       }
     };
     const joint = new MotorEnabledJoint(MotorEnabledJoint.SliderJoint, jointConfig);
     target.physics.addJoint(box.physics, joint);
 
-    const initialPos = new Vector3(-15,0.75, 0);
-    const motorStart = new Vector3(-5, 0.75, 0);
-    const motorEnd = new Vector3(-13, 0.75, 0);
-    const sliderAxis = new Vector3(-1, 0, 0);
-
-    const setStart = () => joint.setMotor(Vector3.Dot(motorStart.subtract(jointConfig.mainPivot), sliderAxis));
-    const setEnd = () => joint.setMotor(Vector3.Dot(motorEnd.subtract(jointConfig.mainPivot), sliderAxis));
-    joint.setMotor(4);
+    const setStart = () => joint.setMotor(0);
+    const setEnd = () => joint.setMotor(10);
+    
+    let i = 0;
+    setInterval(() => {
+      if(i++ % 2 == 0) {
+        setEnd();
+      } else {
+        setStart();
+      }
+    }, 1000)
 
     return { joint, box };
 
@@ -73,14 +75,4 @@ export default (Jolt: JoltNS, scene: Scene): (void|((time: number, delta: number
     createWindmill();
 
     const slideMotor = createSlider();
-
-    return (time, delta) => {
-      time = time / 1000.0;
-      if(slideMotor.box.box.position.x < -18) {
-        slideMotor.joint.setMotor(-4);
-      }
-      if(slideMotor.box.box.position.x > -8) {
-        slideMotor.joint.setMotor(4);
-      }
-    }
 }

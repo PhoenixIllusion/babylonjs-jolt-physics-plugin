@@ -32,7 +32,7 @@ export class App {
         scene.enablePhysics(new Vector3(0, -9.8, 0), new JoltJSPlugin(Jolt, joltInterface))
         const camera = new FlyCamera("camera1", new Vector3(0, 15, 30), scene);
         // This targets the camera to scene origin
-        camera.setTarget(Vector3.Zero());
+        camera.setTarget(new Vector3(0,10,0));
 
         // This attaches the camera to the canvas
         camera.attachControl(true);
