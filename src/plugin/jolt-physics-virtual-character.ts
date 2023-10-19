@@ -1,6 +1,5 @@
 import { IPhysicsEnabledObject, PhysicsImpostor, PhysicsImpostorParameters, Quaternion, Scene, Vector3 } from "@babylonjs/core";
-import type Jolt from 'jolt-physics';
-import { Jolt_Type } from "./jolt-physics";
+import Jolt from "./jolt-import";
 
 type JoltNS = typeof Jolt;
 const JPH_PI = 3.14159265358979323846;
@@ -68,13 +67,13 @@ export class JoltVirtualCharacter {
   private mDesiredVelocity: Vector3 = new Vector3();
 
   private _jolt_temp1: Jolt.Vec3;
-  constructor(private impostor: JoltCharacterVirtualImpostor, private shape: Jolt.Shape, private world: WorldData, private Jolt: JoltNS) {
+  constructor(private impostor: JoltCharacterVirtualImpostor, private shape: Jolt.Shape, private world: WorldData) {
     this.mDisposables = impostor._pluginData.toDispose;
 
 
     this.mUpdateSettings = new Jolt.ExtendedUpdateSettings();
 
-    const settings = new this.Jolt.CharacterVirtualSettings();
+    const settings = new Jolt.CharacterVirtualSettings();
     settings.mMass = 1000;
     settings.mMaxSlopeAngle = this.impostor.sMaxSlopeAngle;
     settings.mMaxStrength = this.impostor.sMaxStrength;
@@ -82,9 +81,9 @@ export class JoltVirtualCharacter {
     settings.mCharacterPadding = this.impostor.sCharacterPadding;
     settings.mPenetrationRecoverySpeed = this.impostor.sPenetrationRecoverySpeed;
     settings.mPredictiveContactDistance = this.impostor.sPredictiveContactDistance;
-    settings.mSupportingVolume = new this.Jolt.Plane(this.Jolt.Vec3.prototype.sAxisY(), -1);
+    settings.mSupportingVolume = new Jolt.Plane(Jolt.Vec3.prototype.sAxisY(), -1);
 
-    this.mCharacter = new this.Jolt.CharacterVirtual(settings, this.Jolt.Vec3.prototype.sZero(), this.Jolt.Quat.prototype.sIdentity(), this.world.physicsSystem);
+    this.mCharacter = new Jolt.CharacterVirtual(settings, Jolt.Vec3.prototype.sZero(), Jolt.Quat.prototype.sIdentity(), this.world.physicsSystem);
     this.mDisposables.push(this.mCharacter, this.mUpdateSettings, settings);
 
 

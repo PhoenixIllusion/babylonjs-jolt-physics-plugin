@@ -5,7 +5,6 @@ import "@babylonjs/inspector";
 import { Engine, Scene,  Vector3, HemisphericLight,  MeshBuilder, FreeCamera, PhysicsAggregate, PhysicsShapeType, PhysicsImpostor, DirectionalLight, FlyCamera } from "@babylonjs/core";
 import { JoltJSPlugin } from './plugin/jolt-physics';
 
-import initJolt from 'https://www.unpkg.com/jolt-physics/dist/jolt-physics.wasm-compat.js';
 import { SceneFunction } from './scene/example';
 
 export class App {
