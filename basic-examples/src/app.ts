@@ -2,8 +2,8 @@ import './style.css';
 
 import '@babylonjs/core/Debug/debugLayer';
 import '@babylonjs/inspector';
+import { JoltJSPlugin } from '@phoenixillusion/babylonjs-jolt-plugin';
 import { Engine, Scene,  Vector3, DirectionalLight, FlyCamera, Camera } from '@babylonjs/core';
-import { JoltJSPlugin } from './plugin/jolt-physics';
 
 import { SceneFunction } from './scene/example';
 

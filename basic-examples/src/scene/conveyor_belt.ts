@@ -1,7 +1,7 @@
 import { Matrix, PhysicsImpostor, Quaternion, Vector3 } from '@babylonjs/core';
-import { DegreesToRadians, createBox, createCylinder, createFloor, createSphere } from './example';
-import { JoltPhysicsImpostor } from '../plugin/jolt-impostor';
-import { JoltContactSetting } from '../plugin/jolt-contact';
+import { DegreesToRadians, createBox, createCylinder, createFloor } from './example';
+import { JoltPhysicsImpostor } from '@phoenixillusion/babylonjs-jolt-plugin/impostor';
+import { JoltContactSetting } from '@phoenixillusion/babylonjs-jolt-plugin/contact';
 
 export default (): (void | ((time: number, delta: number) => void)) => {
 

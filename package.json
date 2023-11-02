@@ -1,26 +1,46 @@
 {
-  "name": "babylonjs-jolt",
+  "name": "@phoenixillusion/babylonjs-jolt-plugin",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "preview": "vite preview"
+    "build": "mkdir -p dist && cp src/jolt-import.js ./dist/. && tsc"
   },
   "devDependencies": {
-    "@babylonjs/inspector": "6.23.0",
-    "typescript": "5.2.2",
-    "vite": "4.5.0"
+    "typescript": "5.2.2"
   },
+  "keywords": [
+    "jolt-physics",
+    "babylonjs"
+  ],
+  "author": "Phoenix Illusion",
   "dependencies": {
     "@babylonjs/core": "6.23.0",
-    "@babylonjs/gui": "6.24.0",
-    "@babylonjs/gui-editor": "6.24.0",
-    "@babylonjs/loaders": "6.24.0",
-    "@babylonjs/materials": "6.24.0",
-    "@babylonjs/serializers": "6.24.0",
-    "jolt-physics": "0.6.2",
-    "quickhull3d": "2.1.0"
-  }
+    "jolt-physics": "0.6.3"
+  },
+  "exports": {
+    ".": "./dist/index.js",
+    "./impostor": "./dist/jolt-impostor.js",
+    "./contact": "./dist/jolt-contact.js",
+    "./character-virtual": "./dist/jolt-physics-character-virtual.js",
+    "./util": "./dist/jolt-util.js"
+  },
+  "files": [
+    "README.md",
+   "./dist/index.d.ts",
+   "./dist/index.js",
+   "./dist/jolt-contact.d.ts",
+   "./dist/jolt-contact.js",
+   "./dist/jolt-import.js",
+   "./dist/jolt-impostor.d.ts",
+   "./dist/jolt-impostor.js",
+   "./dist/jolt-physics-character-virtual.d.ts",
+   "./dist/jolt-physics-character-virtual.js",
+   "./dist/jolt-physics.d.ts",
+   "./dist/jolt-physics.js",
+   "./dist/jolt-raycast.d.ts",
+   "./dist/jolt-raycast.js",
+   "./dist/jolt-util.d.ts",
+   "./dist/jolt-util.js"
+  ]
 }

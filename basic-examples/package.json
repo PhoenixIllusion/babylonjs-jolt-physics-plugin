@@ -1,0 +1,26 @@
+{
+  "name": "babylonjs-jolt",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@babylonjs/inspector": "6.23.0",
+    "typescript": "5.2.2",
+    "vite": "4.5.0"
+  },
+  "dependencies": {
+    "@babylonjs/core": "6.23.0",
+    "@babylonjs/gui": "6.24.0",
+    "@babylonjs/gui-editor": "6.24.0",
+    "@babylonjs/loaders": "6.24.0",
+    "@babylonjs/materials": "6.24.0",
+    "@babylonjs/serializers": "6.24.0",
+    "@phoenixillusion/babylonjs-jolt-plugin": "file:..",
+    "quickhull3d": "2.1.0"
+  }
+}

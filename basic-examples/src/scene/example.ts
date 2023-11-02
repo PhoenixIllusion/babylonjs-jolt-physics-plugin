@@ -1,6 +1,6 @@
 import { Color3,  Mesh, MeshBuilder, PhysicsImpostor, PhysicsImpostorParameters, Quaternion, StandardMaterial, Vector3, VertexData } from '@babylonjs/core';
 import QuickHull from 'quickhull3d'
-import { JoltPhysicsImpostor } from '../plugin/jolt-impostor';
+import { JoltPhysicsImpostor } from '@phoenixillusion/babylonjs-jolt-plugin/impostor';
 
 interface PhysicsOptions {
   mass: number, friction: number, restitution: number

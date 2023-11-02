@@ -1,6 +1,6 @@
 import { Camera, FollowCamera, MeshBuilder, PhysicsImpostor, StandardMaterial, Texture, Vector3 } from '@babylonjs/core';
 import { SceneCallback, createFloor, getMaterial } from './example';
-import { JoltCharacterVirtualImpostor, StandardCharacterVirtualHandler } from '../plugin/jolt-physics-character-virtual';
+import { JoltCharacterVirtualImpostor, StandardCharacterVirtualHandler } from '@phoenixillusion/babylonjs-jolt-plugin/character-virtual';
 import { SceneConfig } from '../app';
 
 
