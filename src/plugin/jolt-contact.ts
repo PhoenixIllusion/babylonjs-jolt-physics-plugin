@@ -1,7 +1,7 @@
-import { Vector3, PhysicsImpostor } from '@babylonjs/core';
+import { Vector3, PhysicsImpostor, Quaternion } from '@babylonjs/core';
 import Jolt from './jolt-import';
 import { JoltPhysicsImpostor } from './jolt-impostor';
-import { GetJoltVec3, SetJoltVec3 } from './jolt-util';
+import { GetJoltQuat, GetJoltVec3, SetJoltVec3 } from './jolt-util';
 
 export class JoltContactSetting {
   combinedFriction: number = 0;
@@ -79,8 +79,7 @@ export class ContactCollector {
 
   constructor(listener: Jolt.ContactListenerJS) {
     const withChecks = (inBody1: Jolt.Body, inBody2: Jolt.Body, type: keyof CollisionRecords | 'regular', withImpostors: (body1: PhysicsImpostor, body2: PhysicsImpostor, rev: boolean) => void) => {
-      inBody1 = Jolt.wrapPointer(inBody1 as any as number, Jolt.Body);
-      inBody2 = Jolt.wrapPointer(inBody2 as any as number, Jolt.Body);
+
 
       const body1Hash = inBody1.GetID().GetIndexAndSequenceNumber();
       const body2Hash = inBody2.GetID().GetIndexAndSequenceNumber();
@@ -126,14 +125,40 @@ export class ContactCollector {
       }
       return Jolt.AcceptAllContactsForThisBodyPair;
     }
+    const _quat1 = new Quaternion();
+    const _quat2 = new Quaternion();
+    const _com1 = new Vector3();
+    const _com2 = new Vector3();
     const wrapContactEvent = (kind: 'on-contact-add' | 'on-contact-persist',
       inBody1: Jolt.Body, inBody2: Jolt.Body, inCollision: Jolt.ContactSettings) => {
+      const rotation1 = GetJoltQuat(inBody1.GetRotation(), _quat1);
+      const rotation2 = GetJoltQuat(inBody2.GetRotation(), _quat2);
       withChecks(inBody1, inBody2, kind,
         (body1, body2, rev) => {
           wrapContactSettings(inCollision, rev, (ioSettings) => {
             body1.onCollide({ body: body2.physicsBody, point: null, distance: 0, impulse: 0, normal: null });
             if (body1 instanceof JoltPhysicsImpostor) {
               body1.onJoltCollide(kind, { body: body2, ioSettings });
+              if(ioSettings.relativeLinearSurfaceVelocity.length() > 0) {
+                const cLocalSpaceVelocity = ioSettings.relativeLinearSurfaceVelocity;
+                const body1_linear_surface_velocity = !rev ? cLocalSpaceVelocity.applyRotationQuaternion(rotation1) : new Vector3(0, 0, 0);
+                const body2_linear_surface_velocity = rev ? cLocalSpaceVelocity.applyRotationQuaternion(rotation2) : new Vector3(0, 0, 0);
+                ioSettings.relativeLinearSurfaceVelocity.copyFrom(body2_linear_surface_velocity.subtract(body1_linear_surface_velocity));
+              }
+              if(ioSettings.relativeAngularSurfaceVelocity.length() > 0) {
+                const cLocalSpaceAngularVelocity = ioSettings.relativeAngularSurfaceVelocity;
+                const body1_angular_surface_velocity = !rev ? cLocalSpaceAngularVelocity.applyRotationQuaternion(rotation1) : new Vector3(0, 0, 0);
+                const body2_angular_surface_velocity = rev ? cLocalSpaceAngularVelocity.applyRotationQuaternion(rotation2) : new Vector3(0, 0, 0);
+    
+                // Note that the angular velocity is the angular velocity around body 1's center of mass, so we need to add the linear velocity of body 2's center of mass
+                const COM1 = GetJoltVec3(inBody1.GetCenterOfMassPosition(), _com1);
+                const COM2 = GetJoltVec3(inBody2.GetCenterOfMassPosition(), _com2);
+                const body2_linear_surface_velocity = rev ?
+                body2_angular_surface_velocity.cross(COM1.subtract(COM2)) : new Vector3(0, 0, 0);
+
+                ioSettings.relativeLinearSurfaceVelocity.copyFrom(body2_linear_surface_velocity);
+                ioSettings.relativeAngularSurfaceVelocity.copyFrom(body2_angular_surface_velocity.subtract(body1_angular_surface_velocity));
+              }
             }
           })
         })
@@ -141,16 +166,22 @@ export class ContactCollector {
 
   // @ts-ignore: Unused
     listener.OnContactValidate = (inBody1, inBody2, inBaseOffset, inCollisionResult) => {
+      inBody1 = Jolt.wrapPointer(inBody1 as any as number, Jolt.Body);
+      inBody2 = Jolt.wrapPointer(inBody2 as any as number, Jolt.Body);
       return wrapContactValidate(inBody1, inBody2);
     }
     // @ts-ignore: Unused
     listener.OnContactRemoved = (shapeIdPair) => { /* do nothing */ }
     // @ts-ignore: Unused
     listener.OnContactAdded = (inBody1, inBody2, inManifold, ioSettings) => {
+      inBody1 = Jolt.wrapPointer(inBody1 as any as number, Jolt.Body);
+      inBody2 = Jolt.wrapPointer(inBody2 as any as number, Jolt.Body);
       wrapContactEvent('on-contact-add', inBody1, inBody2, ioSettings);
     }
     // @ts-ignore: Unused
     listener.OnContactPersisted = (inBody1, inBody2, inManifold, ioSettings) => {
+      inBody1 = Jolt.wrapPointer(inBody1 as any as number, Jolt.Body);
+      inBody2 = Jolt.wrapPointer(inBody2 as any as number, Jolt.Body);
       wrapContactEvent('on-contact-persist', inBody1, inBody2, ioSettings);
     }
   }

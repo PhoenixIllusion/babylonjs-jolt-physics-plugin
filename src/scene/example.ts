@@ -1,5 +1,6 @@
 import { Color3,  Mesh, MeshBuilder, PhysicsImpostor, PhysicsImpostorParameters, Quaternion, StandardMaterial, Vector3, VertexData } from '@babylonjs/core';
 import QuickHull from 'quickhull3d'
+import { JoltPhysicsImpostor } from '../plugin/jolt-impostor';
 
 interface PhysicsOptions {
   mass: number, friction: number, restitution: number
@@ -7,6 +8,8 @@ interface PhysicsOptions {
 
 export type SceneCallback = (void|((time: number, delta: number) =>void))
 export type SceneFunction = () => SceneCallback;
+
+export const DegreesToRadians = (deg: number) => deg * (Math.PI / 180.0);
 
 const NullPhysics: PhysicsOptions = {
   mass: 0,
@@ -18,7 +21,7 @@ export const createFloor = (physicsOptions: PhysicsOptions = NullPhysics, color:
   const ground = MeshBuilder.CreateGround('ground', { width: 100, height: 100 });
   ground.position.y = -0.5;
   ground.material = getMaterial(color);
-  const physics = new PhysicsImpostor(ground, PhysicsImpostor.BoxImpostor, physicsOptions);
+  const physics =new JoltPhysicsImpostor(ground, PhysicsImpostor.BoxImpostor, physicsOptions);
   return { ground, physics };
 }
 
@@ -38,14 +41,14 @@ export const createSphere = (position: Vector3, radius: number, physicsOptions: 
   const sphere = MeshBuilder.CreateSphere('sphere', { diameter: radius, segments: 32 });
   sphere.position.copyFrom(position);
   sphere.material = getMaterial(color);
-  const physics = new PhysicsImpostor(sphere, PhysicsImpostor.SphereImpostor, physicsOptions);
+  const physics =new JoltPhysicsImpostor(sphere, PhysicsImpostor.SphereImpostor, physicsOptions);
   return { sphere, physics };
 }
 export const createCylinder = (position: Vector3, radius: number, height: number, physicsOptions: PhysicsOptions = NullPhysics, color: string = '#FFFFFF') => {
   const cylinder = MeshBuilder.CreateCylinder('cylinder', { diameter: radius, height, tessellation: 16 });
   cylinder.position.copyFrom(position);
   cylinder.material = getMaterial(color);
-  const physics = new PhysicsImpostor(cylinder, PhysicsImpostor.CylinderImpostor, physicsOptions);
+  const physics =new JoltPhysicsImpostor(cylinder, PhysicsImpostor.CylinderImpostor, physicsOptions);
   return { cylinder, physics };
 }
 
@@ -54,7 +57,7 @@ export const createBox = (position: Vector3, rotation: Quaternion, halfExtent: V
   box.position.copyFrom(position);
   box.rotationQuaternion = rotation;
   box.material = getMaterial(color);
-  const physics = new PhysicsImpostor(box, PhysicsImpostor.BoxImpostor, physicsOptions);
+  const physics = new JoltPhysicsImpostor(box, PhysicsImpostor.BoxImpostor, physicsOptions);
   return { box, physics };
 }
 
@@ -65,7 +68,7 @@ export const createCapsule = (position: Vector3, radiusTop: number, radiusBottom
               : MeshBuilder.CreateCapsule('capsule', { radius: radiusBottom, ... capsuleProps })
   box.position.copyFrom(position);
   box.material = getMaterial(color);
-  const physics = new PhysicsImpostor(box, PhysicsImpostor.CapsuleImpostor, {
+  const physics =new JoltPhysicsImpostor(box, PhysicsImpostor.CapsuleImpostor, {
     radiusTop: radiusTop !== radiusBottom ? radiusBottom: undefined,
     radiusBottom: radiusTop !== radiusBottom ? radiusBottom: undefined,
     ... physicsOptions
@@ -101,7 +104,7 @@ export const createConvexHull = (position: Vector3, points: Vector3[], physicsOp
   mesh.position.copyFrom(position);
   mesh.material = getMaterial(color);
   mesh.material.wireframe = true;
-  const physics = new PhysicsImpostor(mesh, PhysicsImpostor.ConvexHullImpostor, physicsOptions);
+  const physics =new JoltPhysicsImpostor(mesh, PhysicsImpostor.ConvexHullImpostor, physicsOptions);
   return { mesh, physics };
 }
 
@@ -150,6 +153,6 @@ export const createMeshFloor = (n: number, cell_size: number, amp: number, posit
     vertexData.applyToMesh(mesh);
     mesh.position.copyFrom(position);
     mesh.material = getMaterial(color);
-    const physics = new PhysicsImpostor(mesh, PhysicsImpostor.MeshImpostor, physicsOptions);
+    const physics =new JoltPhysicsImpostor(mesh, PhysicsImpostor.MeshImpostor, physicsOptions);
     return { mesh, physics };
 }

@@ -2,14 +2,18 @@ import './style.css';
 
 import '@babylonjs/core/Debug/debugLayer';
 import '@babylonjs/inspector';
-import { Engine, Scene,  Vector3, DirectionalLight, FlyCamera } from '@babylonjs/core';
+import { Engine, Scene,  Vector3, DirectionalLight, FlyCamera, Camera } from '@babylonjs/core';
 import { JoltJSPlugin } from './plugin/jolt-physics';
 
 import { SceneFunction } from './scene/example';
 
+export interface SceneConfig {
+    getCamera(): Camera|undefined;
+}
+
 export class App {
     private canvas: HTMLCanvasElement;
-    constructor(private createScene: SceneFunction) {
+    constructor(private createScene: SceneFunction, private config?: SceneConfig) {
         // create the canvas html element and attach it to the webpage
         const canvas = this.canvas = document.createElement('canvas');
         canvas.style.width = '100%';
@@ -25,12 +29,16 @@ export class App {
         var scene = new Scene(engine);
 
         scene.enablePhysics(new Vector3(0, -9.8, 0), await JoltJSPlugin.loadPlugin())
-        const camera = new FlyCamera('camera1', new Vector3(0, 15, 30), scene);
-        // This targets the camera to scene origin
-        camera.setTarget(new Vector3(0,10,0));
 
-        // This attaches the camera to the canvas
-        camera.attachControl(true);
+        if(!(this.config && this.config.getCamera())) {
+            const camera = new FlyCamera('camera1', new Vector3(0, 15, 30), scene);
+            // This targets the camera to scene origin
+            camera.setTarget(new Vector3(0,10,0));
+    
+            // This attaches the camera to the canvas
+            camera.attachControl(true);
+        }
+
 
         // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
         const light = new DirectionalLight('light', new Vector3(-1, -3, 0), scene);

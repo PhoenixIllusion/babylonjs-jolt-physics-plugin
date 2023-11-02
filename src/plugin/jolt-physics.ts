@@ -1,7 +1,7 @@
 import { Vector3, PhysicsImpostor, Quaternion, Nullable, PhysicsRaycastResult, PhysicsJoint, IMotorEnabledJoint,
   AbstractMesh, Epsilon, Logger, VertexBuffer, IndicesArray, PhysicsJointData, MotorEnabledJoint } from '@babylonjs/core';
 import { IPhysicsEnginePlugin, PhysicsImpostorJoint } from '@babylonjs/core/Physics/v1/IPhysicsEnginePlugin';
-import { JoltCharacterVirtualImpostor, JoltVirtualCharacter } from './jolt-physics-virtual-character';
+import { JoltCharacterVirtualImpostor, JoltCharacterVirtual } from './jolt-physics-character-virtual';
 import Jolt, { loadJolt } from './jolt-import';
 import { ContactCollector } from './jolt-contact';
 import { RayCastUtility } from './jolt-raycast';
@@ -65,6 +65,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     this._raycaster = new RayCastUtility(jolt);
     this._contactListener = new Jolt.ContactListenerJS();
     this._contactCollector = new ContactCollector(this._contactListener);
+    this.world.SetContactListener(this._contactListener);
 
   }
 
@@ -103,7 +104,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
 
   executeStep(delta: number, impostors: PhysicsImpostor[]): void {
     this._contactCollector.clear();
-    const virtualCharacters: JoltCharacterVirtualImpostor[] = [];
+    const characterVirtuals: JoltCharacterVirtualImpostor[] = [];
     for (const impostor of impostors) {
       // Update physics world objects to match babylon world
       if (!impostor.soft) {
@@ -115,13 +116,13 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         this._contactCollector.registerImpostor(bodyID, impostor);
       }
       if (impostor instanceof JoltCharacterVirtualImpostor) {
-        virtualCharacters.push(impostor as JoltCharacterVirtualImpostor);
+        characterVirtuals.push(impostor as JoltCharacterVirtualImpostor);
       }
     }
 
     this._stepSimulation(this._useDeltaForWorldStep ? delta : this._timeStep, this._maxSteps, this._fixedTimeStep,
       (timeStep) => {
-        virtualCharacters.forEach(vChar => vChar.controller?.prePhysicsUpdate(timeStep));
+        characterVirtuals.forEach(vChar => vChar.controller?.prePhysicsUpdate(timeStep));
       });
 
     for (const impostor of impostors) {
@@ -206,7 +207,8 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       if (impostor instanceof JoltCharacterVirtualImpostor) {
         const imp = impostor as JoltCharacterVirtualImpostor;
         const shape = this._createShape(imp);
-        const char = new JoltVirtualCharacter(imp, shape, { physicsSystem: this.world, jolt: this.jolt });
+        const char = new JoltCharacterVirtual(imp, shape, { physicsSystem: this.world, jolt: this.jolt });
+        char.init();
         imp.physicsBody = char.getCharacter();
         imp._pluginData.controller = char;
         return;
@@ -259,7 +261,8 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   public removePhysicsBody(impostor: PhysicsImpostor) {
     if (this.world) {
       if (impostor.soft) {
-        this._bodyInterface.RemoveBody(impostor.physicsBody);
+        this._bodyInterface.RemoveBody(impostor.physicsBody.GetID());
+        this._bodyInterface.DestroyBody(impostor.physicsBody.GetID());
       }
 
       if (impostor._pluginData) {
