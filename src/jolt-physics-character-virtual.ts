@@ -97,7 +97,7 @@ export class StandardCharacterVirtualHandler implements CharacterVirtualInputHan
 			// While in air we allow sliding
 			this.allowSliding = true;
 		}
-		const character_up_rotation = Jolt.Quat.prototype.sEulerAngles(new Jolt.Vec3(this.upRotationX, 0, this.upRotationZ));
+		const character_up_rotation = Jolt.Quat.sEulerAngles(new Jolt.Vec3(this.upRotationX, 0, this.upRotationZ));
 		character.SetUp(character_up_rotation.RotateAxisY());
 		character.SetRotation(character_up_rotation);
 		const upRotation = GetJoltQuat(character_up_rotation, this._charUpRot);
@@ -182,9 +182,9 @@ export class JoltCharacterVirtual {
     settings.mCharacterPadding = this.config.sCharacterPadding;
     settings.mPenetrationRecoverySpeed = this.config.sPenetrationRecoverySpeed;
     settings.mPredictiveContactDistance = this.config.sPredictiveContactDistance;
-    settings.mSupportingVolume = new Jolt.Plane(Jolt.Vec3.prototype.sAxisY(), -1);
+    settings.mSupportingVolume = new Jolt.Plane(Jolt.Vec3.sAxisY(), -1);
 
-    this.mCharacter = new Jolt.CharacterVirtual(settings, Jolt.Vec3.prototype.sZero(), Jolt.Quat.prototype.sIdentity(), this.world.physicsSystem);
+    this.mCharacter = new Jolt.CharacterVirtual(settings, Jolt.Vec3.sZero(), Jolt.Quat.sIdentity(), this.world.physicsSystem);
     this.mDisposables.push(this.mCharacter, this.mUpdateSettings, settings);
 
 
