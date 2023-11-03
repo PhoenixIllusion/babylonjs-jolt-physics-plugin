@@ -4,6 +4,8 @@ import '@babylonjs/core/Debug/debugLayer';
 import '@babylonjs/inspector';
 import { JoltJSPlugin } from '@phoenixillusion/babylonjs-jolt-plugin';
 import { Engine, Scene,  Vector3, DirectionalLight } from '@babylonjs/core';
+import { HemisphericLight } from '@babylonjs/core/Lights';
+import { Color3 } from '@babylonjs/core/Maths';
  
 export type SceneCallback = (void|((time: number, delta: number) =>void))
 export type SceneFunction = (scene: Scene) => Promise<SceneCallback>;
@@ -30,9 +32,12 @@ export class App {
         // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
         const light = new DirectionalLight('light', new Vector3(-1, -3, 0), scene);
         light.position.set(10, 10, 5);
-
+        const hemi = new HemisphericLight("HemiLight", new Vector3(0, 1, 0), scene);
+        hemi.intensity = 0.8;
+        hemi.specular = Color3.Black();
         // Default intensity is 1. Let's dim the light a small amount
-        light.intensity = 0.7;
+        light.intensity = .5;
+        light.specular = new Color3(0.1,0.1,0.1);
 
         const callback = await this.createScene(scene);
   

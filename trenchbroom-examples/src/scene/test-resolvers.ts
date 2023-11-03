@@ -17,6 +17,18 @@ export class TestMaterialResolver implements MaterialResolver {
       material.diffuseColor = Color3.FromHexString('#'+texture.replace('Color_',''));
       return material;
     }
+    if(texture.match('checker')) {
+      const tiledTexture = new Texture('data:image/gif;base64,R0lGODdhAgACAIABAERERP///ywAAAAAAgACAAACA0QCBQA7');
+      tiledTexture.onLoadObservable.add(() => {
+        tiledTexture.wrapU = 1;
+        tiledTexture.wrapV = 1;
+        tiledTexture.vScale = 6;
+        tiledTexture.uScale = 6;
+        tiledTexture.updateSamplingMode(Texture.NEAREST_NEAREST);
+      })
+      material.diffuseTexture = tiledTexture;
+      return material;
+    }
     material.diffuseTexture = new Texture('textures/'+texture+".jpg");
     material.bumpTexture = new Texture('textures/'+texture+"_NormalGL.jpg");
     material.bumpTexture.level = .2;
