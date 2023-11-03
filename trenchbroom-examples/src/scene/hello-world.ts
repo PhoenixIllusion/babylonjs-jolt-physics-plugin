@@ -1,24 +1,15 @@
 import { AbstractMesh, FlyCamera, Mesh, PhysicsImpostor, Quaternion, Scene, Vector3 } from '@babylonjs/core';
 import { MapLoader, MapSceneBuilder } from '@phoenixillusion/babylonjs-trenchbroom-loader';
-import { Entity, EntityGeometry, BrushGeometry, FaceGeometry } from '@phoenixillusion/babylonjs-trenchbroom-loader/hxlibmap';
+import { Entity, EntityGeometry } from '@phoenixillusion/babylonjs-trenchbroom-loader/hxlibmap';
 import { SceneFunction } from '../app';
 import { TestMaterialResolver, TestMeshResolver } from './test-resolvers';
 import { createConvexHull, createSphere } from './example';
+import { GeometryUtil } from '../util/geometry';
 
 let ball: {sphere: Mesh, physics: PhysicsImpostor};
 class HelloWorldMeshResolver extends TestMeshResolver {
     shouldRenderEntity(_entity: Entity, _geometry: EntityGeometry): boolean {
-        const hulls: Vector3[][] = [];
-        _geometry.forEach( (brushGeo: BrushGeometry) => {
-            const brushPoints: Vector3[] = [];
-            brushGeo.forEach( (faceGeo: FaceGeometry) => {
-                faceGeo.indices.forEach((index: number) => {
-                    const pos = faceGeo.vertices[index].vertex;
-                    brushPoints.push(new Vector3(-pos.y, pos.z, pos.x));
-                })
-            });
-            hulls.push(brushPoints);
-        });
+        const hulls = GeometryUtil.HullsFromGeometry(_geometry);
         hulls.forEach(hull => {
             const cHull = createConvexHull(new Vector3(), hull, undefined, '#FF00FF');
             cHull.mesh.freezeWorldMatrix();
