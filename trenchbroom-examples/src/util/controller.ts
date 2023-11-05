@@ -1,8 +1,7 @@
-import { ArcRotateCamera, BaseCameraPointersInput, Camera, FollowCamera } from "@babylonjs/core/Cameras";
+import { ArcRotateCamera, BaseCameraPointersInput, Camera } from "@babylonjs/core/Cameras";
 import { EngineStore } from "@babylonjs/core/Engines";
 import { IPointerEvent } from "@babylonjs/core/Events";
 import { PointerTouch } from "@babylonjs/core/Events";
-import { Matrix, Vector3 } from "@babylonjs/core/Maths";
 import { Vector2 } from "@babylonjs/core/Maths";
 import { Nullable } from "@babylonjs/core/types";
 

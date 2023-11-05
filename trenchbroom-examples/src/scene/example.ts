@@ -1,6 +1,10 @@
-import { Color3,  Mesh, MeshBuilder, PhysicsImpostor, PhysicsImpostorParameters, Quaternion, StandardMaterial, Vector3, VertexData } from '@babylonjs/core';
+import { Color3,  Mesh, MeshBuilder, PhysicsImpostor, PhysicsImpostorParameters, Quaternion, StandardMaterial, TransformNode, Vector3, VertexData } from '@babylonjs/core';
 import QuickHull from 'quickhull3d'
 import { JoltPhysicsImpostor } from '@phoenixillusion/babylonjs-jolt-plugin/impostor';
+import { StandardCharacterVirtualHandler } from '@phoenixillusion/babylonjs-jolt-plugin/character-virtual';
+import { CameraSetup } from '../util/camera';
+import { CameraCombinedInput } from '../util/controller';
+import { FreeCamera } from '@babylonjs/core/Cameras';
 
 export interface PhysicsOptions {
   mass: number, friction: number, restitution: number
@@ -92,4 +96,39 @@ export const createConvexHull = (position: Vector3, points: Vector3[], physicsOp
   mesh.material.wireframe = true;
   const physics =new JoltPhysicsImpostor(mesh, PhysicsImpostor.ConvexHullImpostor, physicsOptions);
   return { mesh, physics };
+}
+
+
+export const createStandardControls = (inputHandler: StandardCharacterVirtualHandler, mesh: TransformNode) => {
+  const input = {
+    direction: new Vector3(),
+    jump: false,
+    crouched: false
+  }
+
+  const camera =  new CameraSetup();
+  const listener = new CameraCombinedInput<FreeCamera>((camera, joystick, keyboard) => {
+      input.direction.set(0,0,0);
+      if(keyboard.KEY_PRESSED) {
+          if(keyboard.LEFT) input.direction.x -= 1;
+          if(keyboard.RIGHT) input.direction.x += 1;
+          if(keyboard.FORWARD) input.direction.z += 1;
+          if(keyboard.BACKWARD) input.direction.z -= 1;
+      }
+      input.jump = keyboard.JUMP;
+      if(joystick.length() > 0) {
+          input.direction.x = joystick.x;
+          input.direction.z = -joystick.y;
+      }
+      const rotation = camera.getWorldMatrix().getRotationMatrix();
+      const cameraDirectioNV = Vector3.TransformCoordinates(input.direction, rotation);
+      cameraDirectioNV.y = 0;
+      cameraDirectioNV.normalize();
+      if(input.direction.length()) {
+          mesh.lookAt(mesh.position.add(cameraDirectioNV));
+      }
+      inputHandler.updateInput(cameraDirectioNV, input.jump);
+  }, camera);
+  camera.setController(listener);
+  return camera;
 }

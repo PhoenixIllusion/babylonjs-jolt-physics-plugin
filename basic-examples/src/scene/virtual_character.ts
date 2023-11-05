@@ -1,5 +1,5 @@
-import { Camera, FollowCamera, MeshBuilder, PhysicsImpostor, StandardMaterial, Texture, Vector3 } from '@babylonjs/core';
-import { SceneCallback, createFloor, getMaterial } from './example';
+import { Camera, Color3, FollowCamera, MeshBuilder, PhysicsImpostor, Quaternion, StandardMaterial, Texture, Vector3 } from '@babylonjs/core';
+import { SceneCallback, createBox, createFloor, getMaterial } from './example';
 import { JoltCharacterVirtualImpostor, StandardCharacterVirtualHandler } from '@phoenixillusion/babylonjs-jolt-plugin/character-virtual';
 import { SceneConfig } from '../app';
 
@@ -45,6 +45,57 @@ export default (): SceneCallback => {
     const inputHandler = new StandardCharacterVirtualHandler();
     inputHandler.jumpSpeed = 6;
     char.phyics.controller.inputHandler = inputHandler;
+
+    const sensorBox = createBox(new Vector3(5,0,-5), Quaternion.Identity(), new Vector3(2,2,2), {mass: 10, restitution: 0, friction: 0}, '#FF6666');
+
+    char.phyics.controller.registerOnJoltPhysicsCollide('on-contact-validate', [sensorBox.physics], 
+      (body: PhysicsImpostor): boolean => {
+        return false;
+      })
+
+    const treadMills: { physics: PhysicsImpostor }[] = [];
+    treadMills.push( createBox(new Vector3(-15, 0.5, -15), Quaternion.Identity(), new Vector3(8, 0.25, 2), undefined, '#6666ff')); 
+    treadMills.push( createBox(new Vector3(-5, 0.5, -10), Quaternion.Identity(), new Vector3(2, 0.25, 8), undefined, '#6666ff')); 
+    treadMills.push( createBox(new Vector3(-25, 0.5, -10), Quaternion.Identity(), new Vector3(2, 0.25, 8), undefined, '#6666ff')); 
+    treadMills.push( createBox(new Vector3(-15, 0.5, -5), Quaternion.Identity(), new Vector3(8, 0.25, 2), undefined, '#6666ff')); 
+
+    const physObjs = treadMills.map( obj => obj.physics); 
+
+    char.phyics.controller.registerOnJoltPhysicsCollide('on-adjust-velocity', physObjs,
+      (body, lVelocity, aVelocity): void => {
+        switch(physObjs.indexOf(body)) {
+          case 0: 
+          lVelocity.x +=2;break;
+        case 1: 
+          lVelocity.z +=2;break;
+        case 2: 
+        lVelocity.z -=2;break;
+        case 3: 
+        lVelocity.x -=2;break;
+        }
+      })
+
+    const toggleBox = createBox(new Vector3(15, 0.5, -10), Quaternion.Identity(), new Vector3(2,2,2), undefined, '#FF0000');
+
+    let colorIndex = 0;
+    let lastColorChange = 0;
+    const rotateColors = [
+      Color3.FromHexString('#FF0000'),
+      Color3.FromHexString('#00FF00'),
+      Color3.FromHexString('#0000FF'),
+      Color3.FromHexString('#FFFF00'),
+      Color3.FromHexString('#00FFFF'),
+      Color3.FromHexString('#FF00FF'),
+    ]  
+
+    const boxMaterial: StandardMaterial = toggleBox.box.material as StandardMaterial;
+    char.phyics.controller.registerOnJoltPhysicsCollide('on-contact-add', [toggleBox.physics], (body: PhysicsImpostor) => {
+      if(performance.now() - lastColorChange > 1000) {
+        boxMaterial.diffuseColor = rotateColors[colorIndex++ % rotateColors.length];
+        lastColorChange = performance.now();
+      }
+    })
+
 
     const input = {
       direction: new Vector3(),

@@ -1,5 +1,5 @@
 import { Vector3, PhysicsImpostor, Quaternion, Nullable, PhysicsRaycastResult, PhysicsJoint, IMotorEnabledJoint,
-  AbstractMesh, Epsilon, Logger, VertexBuffer, IndicesArray, PhysicsJointData, MotorEnabledJoint } from '@babylonjs/core';
+  AbstractMesh, Epsilon, Logger, VertexBuffer, IndicesArray, PhysicsJointData, MotorEnabledJoint, IPhysicsEnabledObject } from '@babylonjs/core';
 import { IPhysicsEnginePlugin, PhysicsImpostorJoint } from '@babylonjs/core/Physics/v1/IPhysicsEnginePlugin';
 import { JoltCharacterVirtualImpostor, JoltCharacterVirtual } from './jolt-physics-character-virtual';
 import Jolt, { loadJolt } from './jolt-import';
@@ -46,6 +46,8 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
 
   private _contactCollector: ContactCollector;
   private _contactListener: Jolt.ContactListenerJS;
+
+  private _impostorLookup: Record<number, PhysicsImpostor> = {};
 
 
   static async loadPlugin(_useDeltaForWorldStep: boolean = true, physicsSettings?: any, importSettings?: any): Promise<JoltJSPlugin> {
@@ -207,7 +209,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       if (impostor instanceof JoltCharacterVirtualImpostor) {
         const imp = impostor as JoltCharacterVirtualImpostor;
         const shape = this._createShape(imp);
-        const char = new JoltCharacterVirtual(imp, shape, { physicsSystem: this.world, jolt: this.jolt });
+        const char = new JoltCharacterVirtual(imp, shape, { physicsSystem: this.world, jolt: this.jolt }, this);
         char.init();
         imp.physicsBody = char.getCharacter();
         imp._pluginData.controller = char;
@@ -251,19 +253,25 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         settings.mMassPropertiesOverride.mMass = mass;
       }
       const body = impostor.physicsBody = this._bodyInterface.CreateBody(settings);
-      this._bodyInterface.AddBody(body.GetID(), Jolt.Activate)
+      this._bodyInterface.AddBody(body.GetID(), Jolt.Activate);
+      this._impostorLookup[body.GetID().GetIndexAndSequenceNumber()] = impostor;
     }
   }
+
+  public GetImpostorForBodyId(id: number) {
+    return this._impostorLookup[id];
+  }
+
   /**
   * Removes the physics body from the imposter and disposes of the body's memory
   * @param impostor imposter to remove the physics body from
   */
   public removePhysicsBody(impostor: PhysicsImpostor) {
     if (this.world) {
-      if (impostor.soft) {
-        this._bodyInterface.RemoveBody(impostor.physicsBody.GetID());
-        this._bodyInterface.DestroyBody(impostor.physicsBody.GetID());
-      }
+      delete this._impostorLookup[impostor.physicsBody.GetID().GetIndexAndSequenceNumber()];
+      this._bodyInterface.RemoveBody(impostor.physicsBody.GetID());
+      this._bodyInterface.DestroyBody(impostor.physicsBody.GetID());
+
 
       if (impostor._pluginData) {
         impostor._pluginData.toDispose.forEach((d: any) => {
@@ -275,7 +283,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   }
 
   private _getMeshVertexData(impostor: PhysicsImpostor): MeshVertexData {
-    const object = impostor.object;
+    const object = (impostor.getParam('mesh') as IPhysicsEnabledObject)||impostor.object;
     const rawVerts = object.getVerticesData ? object.getVerticesData(VertexBuffer.PositionKind) : [];
     const indices = (object.getIndices && object.getIndices()) ? object.getIndices()! : [];
     if (!rawVerts) {
@@ -316,7 +324,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   }
 
   private _createShape(impostor: PhysicsImpostor): Jolt.Shape {
-    const impostorExtents = impostor.getObjectExtents();
+    const impostorExtents = impostor.getParam('extents') as Vector3 || impostor.getObjectExtents();
     const checkWithEpsilon = (value: number): number => {
       return Math.max(value, Epsilon);
     };
@@ -704,11 +712,11 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     }
   }
   getRadius(impostor: PhysicsImpostor): number {
-    const extents = impostor.getObjectExtents();
+    const extents =  impostor.getParam('extents') as Vector3 || impostor.getObjectExtents();
     return Math.max(extents.x, extents.y, extents.z) / 2;
   }
   getBoxSizeToRef(impostor: PhysicsImpostor, result: Vector3): void {
-    const extents = impostor.getObjectExtents();
+    const extents =  impostor.getParam('extents') as Vector3 || impostor.getObjectExtents();
     result.x = extents.x;
     result.y = extents.y;
     result.z = extents.z;
