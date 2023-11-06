@@ -9,12 +9,12 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@babylonjs/inspector": "6.23.0",
+    "@babylonjs/inspector": "6.24.0",
     "typescript": "5.2.2",
     "vite": "4.5.0"
   },
   "dependencies": {
-    "@babylonjs/core": "6.23.0",
+    "@babylonjs/core": "6.24.0",
     "@babylonjs/gui": "6.24.0",
     "@babylonjs/gui-editor": "6.24.0",
     "@babylonjs/loaders": "6.24.0",

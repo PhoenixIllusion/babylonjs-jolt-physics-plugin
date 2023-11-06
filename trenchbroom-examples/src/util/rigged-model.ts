@@ -1,6 +1,9 @@
 import { AnimationGroup } from "@babylonjs/core/Animations/animationGroup";
 import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
 import '@babylonjs/loaders/glTF/2.0/glTFLoader';
+import '@babylonjs/loaders/glTF/2.0/Extensions/KHR_mesh_quantization';
+import '@babylonjs/loaders/glTF/2.0/Extensions/EXT_meshopt_compression';
+import '@babylonjs/core/Animations/animatable'
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
 
 export class RiggedModel {
