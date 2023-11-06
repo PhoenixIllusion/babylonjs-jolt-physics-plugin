@@ -1,6 +1,6 @@
-import { FreeCamera, UniversalCamera } from "@babylonjs/core/Cameras";
-import { Matrix, Vector3 } from "@babylonjs/core/Maths";
-import { TransformNode } from "@babylonjs/core/Meshes";
+import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
+import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import { CameraCombinedInput } from "./controller";
 
 export class CameraSetup {
@@ -10,7 +10,6 @@ export class CameraSetup {
 
   private camera: FreeCamera;
   
-  private static readonly DOWN_TILT: Vector3 = new Vector3(0.8290313946973066, 0, 0);
   private static readonly ORIGINAL_TILT: Vector3 = new Vector3(0.3934119456780721, 0, 0);
 
   constructor() {

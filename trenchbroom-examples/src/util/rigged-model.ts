@@ -1,6 +1,7 @@
-import { AnimationGroup } from "@babylonjs/core";
-import { SceneLoader } from "@babylonjs/core/Loading";
-import { Mesh } from "@babylonjs/core/Meshes";
+import { AnimationGroup } from "@babylonjs/core/Animations/animationGroup";
+import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
+import '@babylonjs/loaders/glTF/2.0/glTFLoader';
+import { Mesh } from "@babylonjs/core/Meshes/mesh";
 
 export class RiggedModel {
   static async forFile(file: string) {

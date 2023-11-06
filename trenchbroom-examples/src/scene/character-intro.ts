@@ -1,15 +1,20 @@
-import { AbstractMesh, ArcRotateCamera, FlyCamera, FollowCamera, FreeCamera, Mesh, MeshBuilder, PhysicsImpostor, Quaternion, Scene, TransformNode, UniversalCamera, Vector3 } from '@babylonjs/core';
+
 import { MapLoader, MapSceneBuilder } from '@phoenixillusion/babylonjs-trenchbroom-loader';
 import { Entity, EntityGeometry } from '@phoenixillusion/babylonjs-trenchbroom-loader/hxlibmap';
 import { JoltCharacterVirtualImpostor, StandardCharacterVirtualHandler } from '@phoenixillusion/babylonjs-jolt-plugin/character-virtual';
 import { SceneFunction } from '../app';
 import { TestMaterialResolver, TestMeshResolver } from './test-resolvers';
-import { createConvexHull, getMaterial } from './example';
+import { MeshBuilder, createConvexHull, getMaterial } from './example';
 import { GeometryUtil } from '../util/geometry';
 import { CameraCombinedInput } from '../util/controller';
 import { CameraSetup } from '../util/camera';
+import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import { AbstractMesh } from '@babylonjs/core/Meshes';
+import { Vector3,Quaternion } from '@babylonjs/core/Maths/math.vector';
+import { Scene } from '@babylonjs/core/scene';
+import { FreeCamera } from '@babylonjs/core/Cameras/freeCamera';
 
-let ball: {sphere: Mesh, physics: PhysicsImpostor};
+
 class HelloWorldMeshResolver extends TestMeshResolver {
     shouldRenderEntity(_entity: Entity, _geometry: EntityGeometry): boolean {
         const hulls = GeometryUtil.HullsFromGeometry(_geometry);
@@ -20,7 +25,7 @@ class HelloWorldMeshResolver extends TestMeshResolver {
         })
         return true;
     }
-    async forClassName(modelName: string): Promise<AbstractMesh | undefined> {
+    async forClassName(_modelName: string): Promise<AbstractMesh | undefined> {
         return undefined;
     }
 } 
@@ -29,7 +34,7 @@ class HelloWorldMeshResolver extends TestMeshResolver {
 const run: SceneFunction = async (scene: Scene) => {
 
     const mapLoader = new MapLoader();
-    const map = await mapLoader.parseMap('levels/character-intro.map', {forTexture: (s) => ({ width: 512, height: 512} )});
+    const map = await mapLoader.parseMap('levels/character-intro.map', {forTexture: (_s) => ({ width: 512, height: 512} )});
     const spawn = map.player.position;
 
     const mapBuilder = new MapSceneBuilder(scene, new TestMaterialResolver(), new HelloWorldMeshResolver());
@@ -91,7 +96,7 @@ const run: SceneFunction = async (scene: Scene) => {
     camera.rotate(1.1);
     camera.changeTiltY(-.1);
 
-    return (time, delta) => {
+    return (_time, _delta) => {
         char.model.position.copyFrom(char.mesh.position);
         camera.setTarget(char.mesh.position);
     };

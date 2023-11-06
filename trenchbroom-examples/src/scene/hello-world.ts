@@ -1,10 +1,16 @@
-import { AbstractMesh, FlyCamera, Mesh, PhysicsImpostor, Quaternion, Scene, Vector3 } from '@babylonjs/core';
+
 import { MapLoader, MapSceneBuilder } from '@phoenixillusion/babylonjs-trenchbroom-loader';
 import { Entity, EntityGeometry } from '@phoenixillusion/babylonjs-trenchbroom-loader/hxlibmap';
 import { SceneFunction } from '../app';
 import { TestMaterialResolver, TestMeshResolver } from './test-resolvers';
 import { createConvexHull, createSphere } from './example';
 import { GeometryUtil } from '../util/geometry';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
+import { Scene } from '@babylonjs/core/scene';
+import { FlyCamera } from '@babylonjs/core/Cameras/flyCamera';
 
 let ball: {sphere: Mesh, physics: PhysicsImpostor};
 class HelloWorldMeshResolver extends TestMeshResolver {
@@ -36,7 +42,7 @@ const run: SceneFunction = async (scene: Scene) => {
     camera.attachControl(true);
 
     const mapLoader = new MapLoader();
-    const map = await mapLoader.parseMap('levels/hello-world.map', {forTexture: (s) => ({ width: 512, height: 512} )});
+    const map = await mapLoader.parseMap('levels/hello-world.map', {forTexture: (_s) => ({ width: 512, height: 512} )});
 
     const mapBuilder = new MapSceneBuilder(scene, new TestMaterialResolver(), new HelloWorldMeshResolver());
     mapBuilder.build(map);

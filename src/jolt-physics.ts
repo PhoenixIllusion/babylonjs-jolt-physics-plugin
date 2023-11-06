@@ -1,11 +1,18 @@
-import { Vector3, PhysicsImpostor, Quaternion, Nullable, PhysicsRaycastResult, PhysicsJoint, IMotorEnabledJoint,
-  AbstractMesh, Epsilon, Logger, VertexBuffer, IndicesArray, PhysicsJointData, MotorEnabledJoint, IPhysicsEnabledObject } from '@babylonjs/core';
+
 import { IPhysicsEnginePlugin, PhysicsImpostorJoint } from '@babylonjs/core/Physics/v1/IPhysicsEnginePlugin';
 import { JoltCharacterVirtualImpostor, JoltCharacterVirtual } from './jolt-physics-character-virtual';
 import Jolt, { loadJolt } from './jolt-import';
 import { ContactCollector } from './jolt-contact';
 import { RayCastUtility } from './jolt-raycast';
 import { SetJoltVec3 } from './jolt-util';
+import { Epsilon, Quaternion, Vector3 } from '@babylonjs/core/Maths/math';
+import { IPhysicsEnabledObject, PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import { Logger } from '@babylonjs/core/Misc/logger';
+import { VertexBuffer } from '@babylonjs/core/Buffers/buffer';
+import { IMotorEnabledJoint, MotorEnabledJoint, PhysicsJoint, PhysicsJointData } from '@babylonjs/core/Physics/v1/physicsJoint';
+import { IndicesArray, Nullable } from '@babylonjs/core/types';
+import { PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResult';
+import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 
 interface MeshVertexData {
   indices: IndicesArray | number[];

@@ -1,5 +1,5 @@
-import { IPointerEvent } from "@babylonjs/core/Events";
-import { Vector2 } from "@babylonjs/core/Maths";
+import type { IPointerEvent } from "@babylonjs/core/Events";
+import { Vector2 } from "@babylonjs/core/Maths/math.vector";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
 import { Container } from "@babylonjs/gui/2D/controls/container";
 import { Control } from "@babylonjs/gui/2D/controls/control";
@@ -18,17 +18,17 @@ export class JoystickControl {
   public joystickDelta: Vector2 = new Vector2();
   public speed = 10;
 
-  private joystickButtonDownPosOffset: Vector2;
-  private joystickButtonDownPos: Vector2;
+  private joystickButtonDownPosOffset!: Vector2;
+  private joystickButtonDownPos!: Vector2;
 
-  private ui: AdvancedDynamicTexture;
-  private joystickCircleRadius: number;
-  private joystickPuckRadius: number;
-  private joystickContainer: Container;
+  private ui!: AdvancedDynamicTexture;
+  private joystickCircleRadius!: number;
+  private joystickPuckRadius!: number;
+  private joystickContainer!: Container;
 
-  private joystickOuterCirce: Ellipse;
-  private joystickInnerCircle: Ellipse;
-  private joystickPuck: Ellipse;
+  private joystickOuterCirce!: Ellipse;
+  private joystickInnerCircle!: Ellipse;
+  private joystickPuck!: Ellipse;
 
   constructor() {
 

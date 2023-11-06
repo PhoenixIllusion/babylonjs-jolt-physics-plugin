@@ -1,7 +1,11 @@
-import { IPhysicsEnabledObject, Logger, PhysicsImpostor, PhysicsImpostorParameters, Quaternion, Scene, Vector3 } from '@babylonjs/core';
+
 import Jolt from './jolt-import';
 import { GetJoltQuat, GetJoltVec3, SetJoltVec3 } from './jolt-util';
 import { JoltJSPlugin } from '.';
+import { IPhysicsEnabledObject, PhysicsImpostor, PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import { Scene } from '@babylonjs/core/scene';
+import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Logger } from '@babylonjs/core/Misc/logger';
 
 
 class CharacterVirtualConfig {

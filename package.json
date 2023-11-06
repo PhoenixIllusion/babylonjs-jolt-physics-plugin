@@ -14,8 +14,10 @@
     "babylonjs"
   ],
   "author": "Phoenix Illusion",
+  "peerDependencies": {
+    "@babylonjs/core": "6.x"
+  },
   "dependencies": {
-    "@babylonjs/core": "6.23.0",
     "jolt-physics": "0.6.3"
   },
   "exports": {
@@ -27,20 +29,20 @@
   },
   "files": [
     "README.md",
-   "./dist/index.d.ts",
-   "./dist/index.js",
-   "./dist/jolt-contact.d.ts",
-   "./dist/jolt-contact.js",
-   "./dist/jolt-import.js",
-   "./dist/jolt-impostor.d.ts",
-   "./dist/jolt-impostor.js",
-   "./dist/jolt-physics-character-virtual.d.ts",
-   "./dist/jolt-physics-character-virtual.js",
-   "./dist/jolt-physics.d.ts",
-   "./dist/jolt-physics.js",
-   "./dist/jolt-raycast.d.ts",
-   "./dist/jolt-raycast.js",
-   "./dist/jolt-util.d.ts",
-   "./dist/jolt-util.js"
+    "./dist/index.d.ts",
+    "./dist/index.js",
+    "./dist/jolt-contact.d.ts",
+    "./dist/jolt-contact.js",
+    "./dist/jolt-import.js",
+    "./dist/jolt-impostor.d.ts",
+    "./dist/jolt-impostor.js",
+    "./dist/jolt-physics-character-virtual.d.ts",
+    "./dist/jolt-physics-character-virtual.js",
+    "./dist/jolt-physics.d.ts",
+    "./dist/jolt-physics.js",
+    "./dist/jolt-raycast.d.ts",
+    "./dist/jolt-raycast.js",
+    "./dist/jolt-util.d.ts",
+    "./dist/jolt-util.js"
   ]
 }

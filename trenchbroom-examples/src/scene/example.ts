@@ -1,10 +1,23 @@
-import { Color3,  Mesh, MeshBuilder, PhysicsImpostor, PhysicsImpostorParameters, Quaternion, StandardMaterial, TransformNode, Vector3, VertexData } from '@babylonjs/core';
+
 import QuickHull from 'quickhull3d'
 import { JoltPhysicsImpostor } from '@phoenixillusion/babylonjs-jolt-plugin/impostor';
 import { StandardCharacterVirtualHandler } from '@phoenixillusion/babylonjs-jolt-plugin/character-virtual';
 import { CameraSetup } from '../util/camera';
 import { CameraCombinedInput } from '../util/controller';
-import { FreeCamera } from '@babylonjs/core/Cameras';
+import { FreeCamera } from '@babylonjs/core/Cameras/freeCamera';
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
+import { Color3 } from '@babylonjs/core/Maths/math.color';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
+import { Quaternion } from '@babylonjs/core/Maths/math.vector';
+import { PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
+import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder';
+import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder';
+import { CreateCapsule } from '@babylonjs/core/Meshes/Builders/capsuleBuilder';
 
 export interface PhysicsOptions {
   mass: number, friction: number, restitution: number
@@ -14,6 +27,14 @@ const NullPhysics: PhysicsOptions = {
   mass: 0,
   friction: 0,
   restitution: 0
+}
+
+//help tree-shake
+export const MeshBuilder = {
+  CreateSphere,
+  CreateCylinder,
+  CreateBox,
+  CreateCapsule
 }
 
 const COLOR_HASH: {[key: string]: StandardMaterial} = {};

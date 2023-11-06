@@ -1,8 +1,8 @@
-import { EngineStore } from "@babylonjs/core/Engines";
-import { Engine } from "@babylonjs/core/Engines";
-import { KeyboardEventTypes } from "@babylonjs/core/Events";
-import { KeyboardInfo } from "@babylonjs/core/Events";
-import { Observer } from "@babylonjs/core/Misc";
+import { EngineStore } from "@babylonjs/core/Engines/engineStore";
+import type { Engine } from "@babylonjs/core/Engines/engine";
+import { KeyboardEventTypes } from "@babylonjs/core/Events/keyboardEvents";
+import type { KeyboardInfo } from "@babylonjs/core/Events";
+import { Observer } from "@babylonjs/core/Misc/observable";
 import { Scene } from "@babylonjs/core/scene";
 import { Nullable } from "@babylonjs/core/types";
 
@@ -46,13 +46,13 @@ export class KeyState implements IKeyState<boolean> {
   ROTATE_UP: boolean = false;
   ROTATE_DOWN: boolean = false;
   JUMP: boolean = false;
-  KEY_PRESSED: boolean;
+  KEY_PRESSED: boolean = false;
 }
 
 export class KeyboardControl {
   private _keys = new Array<number>();
-  private _onCanvasBlurObserver: Nullable<Observer<Engine>>;
-  private _onKeyboardObserver: Nullable<Observer<KeyboardInfo>>;
+  private _onCanvasBlurObserver?: Nullable<Observer<Engine>>;
+  private _onKeyboardObserver?: Nullable<Observer<KeyboardInfo>>;
 
   public state = new KeyState();
   private keys = new KeyCodesState();
@@ -67,7 +67,7 @@ export class KeyboardControl {
         this._keys.length = 0;
       });
     }
-    const stateKeys = Object.keys(this.keys) as (keyof KeyState)[];
+    const stateKeys = Object.keys(this.keys) as (keyof KeyState & keyof KeyCodesState)[];
     this._onKeyboardObserver = scene.onKeyboardObservable.add((info) => {
       const evt = info.event;
       const key = evt.key as KEY;

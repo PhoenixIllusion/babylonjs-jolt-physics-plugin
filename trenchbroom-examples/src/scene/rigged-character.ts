@@ -1,4 +1,4 @@
-import { Mesh, PhysicsImpostor, Quaternion, Scene, TransformNode, Vector3 } from '@babylonjs/core';
+
 import { MapLoader, MapSceneBuilder } from '@phoenixillusion/babylonjs-trenchbroom-loader';
 import { Entity, EntityGeometry } from '@phoenixillusion/babylonjs-trenchbroom-loader/hxlibmap';
 import { JoltCharacterVirtualImpostor, StandardCharacterVirtualHandler, CharacterState, GroundState } from '@phoenixillusion/babylonjs-jolt-plugin/character-virtual';
@@ -7,8 +7,13 @@ import { TestMaterialResolver, TestMeshResolver } from './test-resolvers';
 import { createBox, createConvexHull, createStandardControls } from './example';
 import { GeometryUtil } from '../util/geometry';
 import { RiggedModel } from '../util/rigged-model';
+import { Scene } from '@babylonjs/core'
+import '@babylonjs/core/Physics/physicsEngineComponent';
+import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
+import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Quaternion } from '@babylonjs/core/Maths/math.vector';
 
-let ball: { sphere: Mesh, physics: PhysicsImpostor };
 class HelloWorldMeshResolver extends TestMeshResolver {
   shouldRenderEntity(_entity: Entity, _geometry: EntityGeometry): boolean {
     const hulls = GeometryUtil.HullsFromGeometry(_geometry);
@@ -25,7 +30,7 @@ class HelloWorldMeshResolver extends TestMeshResolver {
 const run: SceneFunction = async (scene: Scene) => {
 
   const mapLoader = new MapLoader();
-  const map = await mapLoader.parseMap('levels/rigged-character.map', { forTexture: (s) => ({ width: 512, height: 512 }) });
+  const map = await mapLoader.parseMap('levels/rigged-character.map', { forTexture: (_s) => ({ width: 512, height: 512 }) });
   const spawn = map.player.position;
 
   const meshResolver = new HelloWorldMeshResolver();
@@ -47,14 +52,15 @@ const run: SceneFunction = async (scene: Scene) => {
       model,
       root: root_transform,
       mesh: mesh,
-      phyics: new JoltCharacterVirtualImpostor(root_transform, PhysicsImpostor.CapsuleImpostor, { extents, mass: 10 })
+      phyics: new JoltCharacterVirtualImpostor(root_transform as any, PhysicsImpostor.CapsuleImpostor, { extents, mass: 10 } as any)
     }
   }
 
   const char = await createCharacter();
   const inputHandler = new StandardCharacterVirtualHandler();
   inputHandler.characterSpeed = 12;
-  inputHandler.jumpSpeed = 6;
+  inputHandler.jumpSpeed = 12;
+  scene.getPhysicsEngine()?.setGravity(new Vector3(0,-18,0));
   char.phyics.controller.inputHandler = inputHandler;
 
   const camera = createStandardControls(inputHandler, char.mesh);
@@ -69,7 +75,7 @@ const run: SceneFunction = async (scene: Scene) => {
   })
 
   let jumpStarted = false;
-  return (time, delta) => {
+  return (_time, _delta) => {
     if (inputHandler.userState == CharacterState.IDLE) {
       char.model.setAnimation('Idle');
     }

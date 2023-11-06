@@ -1,13 +1,14 @@
-import { ArcRotateCamera, BaseCameraPointersInput, Camera } from "@babylonjs/core/Cameras";
-import { EngineStore } from "@babylonjs/core/Engines";
-import { IPointerEvent } from "@babylonjs/core/Events";
-import { PointerTouch } from "@babylonjs/core/Events";
-import { Vector2 } from "@babylonjs/core/Maths";
+
+import { EngineStore } from "@babylonjs/core/Engines/engineStore";
+import type { IPointerEvent, PointerTouch } from "@babylonjs/core/Events";
+import { Vector2 } from "@babylonjs/core/Maths/math.vector";
 import { Nullable } from "@babylonjs/core/types";
 
 import { JoystickControl } from "./controller/joystick";
 import { KeyState, KeyboardControl } from "./controller/keyboard";
 import { CameraSetup } from "./camera";
+import { BaseCameraPointersInput } from "@babylonjs/core/Cameras/Inputs/BaseCameraPointersInput";
+import { Camera } from "@babylonjs/core/Cameras/camera";
 
 type OnInputCheck<T> = (camera: T, joystickState: Vector2, keyboardState: KeyState) => void;
 
@@ -15,10 +16,10 @@ export class CameraCombinedInput<T extends Camera> extends BaseCameraPointersInp
   SWIPE_SENSIBILITY = 1;
 
 
-  public camera: T;
+  public camera!: T;
 
-  private screenSize: Vector2;
-  private joystickPointerId: number | null;
+  private screenSize!: Vector2;
+  private joystickPointerId: number | null = null;
   private joystick: JoystickControl = new JoystickControl();
   private keyboard: KeyboardControl = new KeyboardControl();
 

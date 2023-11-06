@@ -1,5 +1,8 @@
-import { PhysicsImpostor, Logger, Vector3 } from '@babylonjs/core';
+
+import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { OnContactCallback, OnContactValidateCallback, JoltCollisionKey, JoltContactSetting, OnContactValidateResponse, JoltCollisionCallback, JoltPhysicsCollideCallbacks } from './jolt-contact';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Logger } from '@babylonjs/core/Misc/logger';
 
 export class JoltPhysicsImpostor extends PhysicsImpostor {
 

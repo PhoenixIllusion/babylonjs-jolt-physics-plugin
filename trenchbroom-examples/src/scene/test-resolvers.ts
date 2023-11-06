@@ -1,8 +1,15 @@
-import { Color3, StandardMaterial, Texture, Material, AbstractMesh, Matrix, Mesh, SceneLoader } from '@babylonjs/core';
 
 import '@babylonjs/core/Materials/standardMaterial';
 import { Entity, EntityGeometry } from '@phoenixillusion/babylonjs-trenchbroom-loader/hxlibmap'
-import { MapLoader, MapSceneBuilder, MaterialResolver, MeshResolver  } from '@phoenixillusion/babylonjs-trenchbroom-loader';
+import { MaterialResolver, MeshResolver  } from '@phoenixillusion/babylonjs-trenchbroom-loader';
+import type { Material } from '@babylonjs/core/Materials/material';
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
+import { Color3 } from '@babylonjs/core/Maths/math.color';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
+import { SceneLoader } from '@babylonjs/core/Loading/sceneLoader';
+import { Matrix } from '@babylonjs/core/Maths/math.vector';
 
 export class TestMaterialResolver implements MaterialResolver {
   private _materials: Record<string,Material> = {};

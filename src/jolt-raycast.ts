@@ -1,6 +1,8 @@
-import { PhysicsRaycastResult, Vector3 } from '@babylonjs/core';
+
+import { PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResult';
 import Jolt from './jolt-import';
 import { SetJoltVec3, GetJoltVec3 } from './jolt-util';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 
 export class RayCastUtility {
 

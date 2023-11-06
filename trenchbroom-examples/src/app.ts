@@ -1,11 +1,15 @@
 import './style.css';
 
-import '@babylonjs/core/Debug/debugLayer';
-import '@babylonjs/inspector';
+//import '@babylonjs/core/Debug/debugLayer';
+//import '@babylonjs/inspector';
 import { JoltJSPlugin } from '@phoenixillusion/babylonjs-jolt-plugin';
-import { Engine, Scene,  Vector3, DirectionalLight } from '@babylonjs/core';
-import { HemisphericLight } from '@babylonjs/core/Lights';
-import { Color3 } from '@babylonjs/core/Maths';
+import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
+import { Color3 } from '@babylonjs/core/Maths/math.color';
+import { Engine } from '@babylonjs/core/Engines/engine';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Scene } from '@babylonjs/core/scene';
+import '@babylonjs/core/Physics/physicsEngineComponent';
+import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight';
  
 export type SceneCallback = (void|((time: number, delta: number) =>void))
 export type SceneFunction = (scene: Scene) => Promise<SceneCallback>;
@@ -41,6 +45,7 @@ export class App {
 
         const callback = await this.createScene(scene);
   
+        /*
         // hide/show the Inspector
         window.addEventListener('keydown', (ev) => {
             // Shift+Ctrl+Alt+I
@@ -51,7 +56,7 @@ export class App {
                     scene.debugLayer.show();
                 }
             }
-        });
+        });*/
 
         let last = performance.now();
         // run the main render loop
