@@ -1,11 +1,15 @@
 import './style.css';
 
-import '@babylonjs/core/Debug/debugLayer';
-import '@babylonjs/inspector';
 import { JoltJSPlugin } from '@phoenixillusion/babylonjs-jolt-plugin';
-import { Engine, Scene,  Vector3, DirectionalLight, FlyCamera, Camera } from '@babylonjs/core';
 
 import { SceneFunction } from './scene/example';
+import { Engine } from '@babylonjs/core/Engines/engine';
+import { FlyCamera } from '@babylonjs/core/Cameras/flyCamera';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight';
+import "@babylonjs/core/Physics/physicsEngineComponent";
+import { Scene } from '@babylonjs/core/scene';
+import { Camera } from '@babylonjs/core/Cameras/camera';
 
 export interface SceneConfig {
     getCamera(): Camera|undefined;
@@ -49,6 +53,7 @@ export class App {
 
         const callback = this.createScene();
   
+        /*
         // hide/show the Inspector
         window.addEventListener('keydown', (ev) => {
             // Shift+Ctrl+Alt+I
@@ -59,7 +64,7 @@ export class App {
                     scene.debugLayer.show();
                 }
             }
-        });
+        });*/
 
         let last = performance.now();
         // run the main render loop

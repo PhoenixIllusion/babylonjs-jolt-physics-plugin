@@ -5,9 +5,9 @@ export default defineConfig({
     minify: 'terser',
     rollupOptions: {
       input: {
-        'character_intro': 'character-intro.html',
-        'hello_world': 'hello-world.html',
-        'rigged_character': 'rigged-character.html'
+        'character_intro': 'character_intro.html',
+        'hello_world': 'hello_world.html',
+        'rigged_character': 'rigged_character.html'
       }
     }
   },

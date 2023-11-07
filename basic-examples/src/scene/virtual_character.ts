@@ -1,7 +1,13 @@
-import { Camera, Color3, FollowCamera, MeshBuilder, PhysicsImpostor, Quaternion, StandardMaterial, Texture, Vector3 } from '@babylonjs/core';
-import { SceneCallback, createBox, createFloor, getMaterial } from './example';
+import { MeshBuilder, SceneCallback, createBox, createFloor, getMaterial } from './example';
 import { JoltCharacterVirtualImpostor, StandardCharacterVirtualHandler } from '@phoenixillusion/babylonjs-jolt-plugin/character-virtual';
 import { SceneConfig } from '../app';
+import { FollowCamera } from '@babylonjs/core/Cameras/followCamera';
+import { Camera } from '@babylonjs/core/Cameras/camera';
+import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture';
+import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
+import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import { Color3 } from '@babylonjs/core/Maths/math.color';
 
 
 let camera: FollowCamera;
@@ -49,7 +55,7 @@ export default (): SceneCallback => {
     const sensorBox = createBox(new Vector3(5,0,-5), Quaternion.Identity(), new Vector3(2,2,2), {mass: 10, restitution: 0, friction: 0}, '#FF6666');
 
     char.phyics.controller.registerOnJoltPhysicsCollide('on-contact-validate', [sensorBox.physics], 
-      (body: PhysicsImpostor): boolean => {
+      (_body: PhysicsImpostor): boolean => {
         return false;
       })
 
@@ -62,7 +68,7 @@ export default (): SceneCallback => {
     const physObjs = treadMills.map( obj => obj.physics); 
 
     char.phyics.controller.registerOnJoltPhysicsCollide('on-adjust-velocity', physObjs,
-      (body, lVelocity, aVelocity): void => {
+      (body, lVelocity, _aVelocity): void => {
         switch(physObjs.indexOf(body)) {
           case 0: 
           lVelocity.x +=2;break;
@@ -89,7 +95,7 @@ export default (): SceneCallback => {
     ]  
 
     const boxMaterial: StandardMaterial = toggleBox.box.material as StandardMaterial;
-    char.phyics.controller.registerOnJoltPhysicsCollide('on-contact-add', [toggleBox.physics], (body: PhysicsImpostor) => {
+    char.phyics.controller.registerOnJoltPhysicsCollide('on-contact-add', [toggleBox.physics], (_body: PhysicsImpostor) => {
       if(performance.now() - lastColorChange > 1000) {
         boxMaterial.diffuseColor = rotateColors[colorIndex++ % rotateColors.length];
         lastColorChange = performance.now();
@@ -146,7 +152,7 @@ export default (): SceneCallback => {
       }
     };
 
-    return (time: number, delta: number) => {
+    return (_time: number, _delta: number) => {
       inputHandler.updateInput(input.direction, input.jump);
     }
 }

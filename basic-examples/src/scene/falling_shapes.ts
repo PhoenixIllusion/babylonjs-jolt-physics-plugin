@@ -1,4 +1,4 @@
-import { Vector3 } from '@babylonjs/core';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { SceneCallback, createBox, createCapsule, createConvexHull, createCylinder, createMeshFloor, createSphere, getRandomQuat } from './example';
 
 export default (): SceneCallback => {

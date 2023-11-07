@@ -1,4 +1,4 @@
-import { Quaternion, Vector3 } from '@babylonjs/core';
+import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { SceneCallback, createBox, createFloor } from './example';
 
 export default (): SceneCallback => {

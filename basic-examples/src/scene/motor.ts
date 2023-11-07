@@ -1,5 +1,6 @@
-import { HingeJoint, MotorEnabledJoint, Quaternion, Vector3 } from '@babylonjs/core';
+import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { SceneCallback, createBox, createFloor, createSphere } from './example';
+import { HingeJoint, MotorEnabledJoint } from '@babylonjs/core/Physics/v1/physicsJoint';
 
 const createWindmill = () => {
   const box1 = createBox(new Vector3(0,10,0), Quaternion.Identity(), new Vector3(0.25,0.25,0.25));

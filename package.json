@@ -4,9 +4,11 @@
   "version": "1.0.1",
   "type": "module",
   "scripts": {
-    "build": "mkdir -p dist && cp src/jolt-import.js ./dist/. && tsc"
+    "build": "mkdir -p dist && cp src/jolt-import.js ./dist/. && tsc",
+    "git-pages": "cd .git-pages && sh build.sh"
   },
   "devDependencies": {
+    "@babylonjs/core": "6.28.1",
     "typescript": "5.2.2"
   },
   "keywords": [
