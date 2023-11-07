@@ -17,7 +17,7 @@ export default defineConfig({
       }
     }
   },
-  base: 'basic-examples',
+  base: '/babylonjs-jolt-physics-plugin/basic-examples',
   server: {
     host: 'localhost',
     port: 8080

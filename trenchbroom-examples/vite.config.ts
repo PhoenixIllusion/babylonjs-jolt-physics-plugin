@@ -14,7 +14,7 @@ export default defineConfig({
       }
     }
   },
-  base: 'trenchbroom-examples',
+  base: '/babylonjs-jolt-physics-plugin/trenchbroom-examples',
   plugins: [splitVendorChunkPlugin()],
   server: {
     host: 'localhost',
