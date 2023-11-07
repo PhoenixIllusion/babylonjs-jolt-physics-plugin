@@ -9,11 +9,15 @@ export default defineConfig({
         "conveyor_belt": "conveyor_belt.html",
         "falling_shapes": "falling_shapes.html",
         "friction": "friction.html",
-        "bounce_sphere": "index.html",
+        "bounce_sphere": "bounce_sphere.html",
         "motor": "motor.html"
       },
+      output: {
+        dir: '../.git-pages/basic-examples/'
+      }
     }
   },
+  base: 'basic-examples',
   server: {
     host: 'localhost',
     port: 8080
