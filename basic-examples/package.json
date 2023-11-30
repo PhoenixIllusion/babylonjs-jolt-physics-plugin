@@ -20,7 +20,7 @@
     "@babylonjs/loaders": "6.24.0",
     "@babylonjs/materials": "6.24.0",
     "@babylonjs/serializers": "6.24.0",
-    "@phoenixillusion/babylonjs-jolt-plugin": "https://github.com/PhoenixIllusion/babylonjs-jolt-physics-plugin#v1.0.2",
+    "@phoenixillusion/babylonjs-jolt-plugin": "PhoenixIllusion/babylonjs-jolt-physics-plugin#v1.0.2",
     "quickhull3d": "2.1.0"
   }
 }
