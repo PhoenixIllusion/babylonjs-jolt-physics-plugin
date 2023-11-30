@@ -13,7 +13,7 @@ import { Camera } from "@babylonjs/core/Cameras/camera";
 type OnInputCheck<T> = (camera: T, joystickState: Vector2, keyboardState: KeyState) => void;
 
 export class CameraCombinedInput<T extends Camera> extends BaseCameraPointersInput {
-  SWIPE_SENSIBILITY = 1;
+  SWIPE_SENSIBILITY = 1.5;
 
 
   public camera!: T;
@@ -66,6 +66,10 @@ export class CameraCombinedInput<T extends Camera> extends BaseCameraPointersInp
         if(this.keyboard.state.ROTATE_UP) this.cameraSetup.changeTiltY(-this.SWIPE_SENSIBILITY * engine.getDeltaTime()/500);
         if(this.keyboard.state.ROTATE_DOWN) this.cameraSetup.changeTiltY(this.SWIPE_SENSIBILITY * engine.getDeltaTime()/500);
       }
+      this.joystick.checkInput();
+      if(this.joystick.isActive) {
+        this.keyboard.state.JUMP = this.joystick.actionButton;
+      }
       this._onInputCheck(this.camera, this.joystick.joystickDelta, this.keyboard.state)
   }
 
@@ -87,7 +91,7 @@ export class CameraCombinedInput<T extends Camera> extends BaseCameraPointersInp
   }
 
   onButtonDown(evt: IPointerEvent) {
-      if (evt.offsetX < this.screenSize.x * this.joystick.JOYSTICK_TOUCH_AREA_HORIZONTAL_SCREEN_SHARE) {
+      if (evt.offsetY > this.screenSize.y * this.joystick.JOYSTICK_TOUCH_AREA_SCREEN_SHARE) {
         this.joystickPointerId = evt.pointerId;
         this.joystick.onButtonDownJoystick(evt);
       }

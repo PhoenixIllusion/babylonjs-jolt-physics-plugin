@@ -8,7 +8,7 @@ import { Ellipse } from "@babylonjs/gui/2D/controls/ellipse";
 
 export class JoystickControl {
   private JOYSTICK_COLOR = "LightGray";
-  public JOYSTICK_TOUCH_AREA_HORIZONTAL_SCREEN_SHARE = 0.5;
+  public JOYSTICK_TOUCH_AREA_SCREEN_SHARE = 0.75;
   public JOYSTICK_CIRCLE_SIZE_VERTICAL_SCREEN_SHARE = 0.1;
   public JOYSTICK_PUCK_SIZE_VERTICAL_SCREEN_SHARE = 0.05;
   public JOYSTICK_OUTER_CIRCLE_THICKNESS_RATIO = 0.01;
@@ -30,12 +30,33 @@ export class JoystickControl {
   private joystickInnerCircle!: Ellipse;
   private joystickPuck!: Ellipse;
 
+  private firstTouch = 0;
+  private lastTouch = 0;
+  public isActive = true;
+  public actionButton = false;
+
   constructor() {
 
   }
 
   attachControl() {
     this.ui = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+  }
+
+
+  checkInput() {
+    if(this.lastTouch > this.firstTouch) {
+      if(this.lastTouch - this.firstTouch < 200) {
+        this.firstTouch = 0;
+        this.actionButton = true;
+      } else {
+        this.actionButton = false;
+      }
+      if(performance.now() - this.lastTouch > 200) {
+        this.actionButton = false;
+        this.isActive = false;
+      }
+    }
   }
 
   prepareImages(screenSize: Vector2) {
@@ -83,6 +104,8 @@ export class JoystickControl {
 
   onButtonDownJoystick(evt: IPointerEvent) {
     let point = new Vector2(evt.offsetX, evt.offsetY);
+    this.firstTouch = performance.now();
+    this.isActive = true;
     this.joystickButtonDownPos = point;
     this.joystickButtonDownPosOffset = new Vector2(evt.clientX - point.x, evt.clientY - point.y);
     this.joystickContainer.left = point.x - this.joystickContainer.widthInPixels / 2;
@@ -91,12 +114,15 @@ export class JoystickControl {
   }
 
   onButtonUpJoystick() {
+    this.lastTouch = performance.now();
+    this.isActive = true;
     this.joystickDelta.scaleInPlace(0);
     this.joystickContainer.isVisible = false;
   }
 
   onTouchJoystick(touchPoint: Vector2) {
     touchPoint.subtractInPlace(this.joystickButtonDownPosOffset)
+    this.isActive = true;
     const joystickVector = touchPoint.subtract(this.joystickButtonDownPos);
     if (joystickVector.length() > this.joystickCircleRadius)
         joystickVector.scaleInPlace(this.joystickCircleRadius / joystickVector.length());
