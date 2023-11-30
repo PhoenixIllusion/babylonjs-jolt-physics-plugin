@@ -1,6 +1,8 @@
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import Jolt from './jolt-import';
 
+export const LAYER_NON_MOVING = 0;
+export const LAYER_MOVING = 1;
 
 export const SetJoltVec3 = (vec3: Vector3, jVec3: Jolt.Vec3) => {
   jVec3.Set(vec3.x, vec3.y, vec3.z)

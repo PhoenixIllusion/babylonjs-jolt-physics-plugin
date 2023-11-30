@@ -1,4 +1,4 @@
-import Jolt from 'https://www.unpkg.com/jolt-physics/dist/jolt-physics.wasm-compat.js';
+import Jolt from 'https://www.unpkg.com/jolt-physics@0.10.2/dist/jolt-physics.wasm-compat.js';
 
 const _jolt = {};
 export const loadJolt = async (importSettings) => {

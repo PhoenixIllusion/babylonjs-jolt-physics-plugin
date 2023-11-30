@@ -1,4 +1,4 @@
-import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math';
+import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import Jolt from './jolt-import';
 import { JoltPhysicsImpostor } from './jolt-impostor';
 import { GetJoltQuat, GetJoltVec3, SetJoltVec3 } from './jolt-util';
@@ -89,7 +89,7 @@ export class ContactCollector {
             if (ret[0] !== undefined) {
                 return ret[0];
             }
-            return Jolt.AcceptAllContactsForThisBodyPair;
+            return Jolt.ValidateResult_AcceptAllContactsForThisBodyPair;
         };
         const _quat1 = new Quaternion();
         const _quat2 = new Quaternion();

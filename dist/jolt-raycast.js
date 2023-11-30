@@ -1,14 +1,14 @@
 import { PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResult';
 import Jolt from './jolt-import';
-import { SetJoltVec3, GetJoltVec3 } from './jolt-util';
-import { Vector3 } from '@babylonjs/core/Maths/math';
+import { SetJoltVec3, GetJoltVec3, LAYER_MOVING } from './jolt-util';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 export class RayCastUtility {
     constructor(jolt) {
         this._raycastResult = new PhysicsRaycastResult();
         this._ray_settings = new Jolt.RayCastSettings();
         this._ray_collector = new Jolt.CastRayCollectorJS();
-        this._bp_filter = new Jolt.DefaultBroadPhaseLayerFilter(jolt.GetObjectVsBroadPhaseLayerFilter(), Jolt.MOVING);
-        this._object_filter = new Jolt.DefaultObjectLayerFilter(jolt.GetObjectLayerPairFilter(), Jolt.MOVING);
+        this._bp_filter = new Jolt.DefaultBroadPhaseLayerFilter(jolt.GetObjectVsBroadPhaseLayerFilter(), LAYER_MOVING);
+        this._object_filter = new Jolt.DefaultObjectLayerFilter(jolt.GetObjectLayerPairFilter(), LAYER_MOVING);
         this._body_filter = new Jolt.BodyFilter(); // We don't want to filter out any bodies
         this._shape_filter = new Jolt.ShapeFilter(); // We don't want to filter out any shapes
         this._ray = new Jolt.RRayCast();

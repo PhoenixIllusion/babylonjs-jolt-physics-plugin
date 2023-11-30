@@ -125,7 +125,7 @@ export class ContactCollector {
       if(ret[0] !== undefined) {
         return ret[0];
       }
-      return Jolt.AcceptAllContactsForThisBodyPair;
+      return Jolt.ValidateResult_AcceptAllContactsForThisBodyPair;
     }
     const _quat1 = new Quaternion();
     const _quat2 = new Quaternion();

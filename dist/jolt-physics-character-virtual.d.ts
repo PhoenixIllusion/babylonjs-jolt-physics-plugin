@@ -2,7 +2,7 @@ import Jolt from './jolt-import';
 import { JoltJSPlugin } from '.';
 import { IPhysicsEnabledObject, PhysicsImpostor, PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Scene } from '@babylonjs/core/scene';
-import { Vector3 } from '@babylonjs/core/Maths/math';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 declare class CharacterVirtualConfig {
     sMaxSlopeAngle: number;
     sMaxStrength: number;

@@ -1,4 +1,4 @@
-import { Vector3 } from '@babylonjs/core/Maths/math';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import Jolt from './jolt-import';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 export declare class JoltContactSetting {
@@ -9,8 +9,8 @@ export declare class JoltContactSetting {
     inverseInertiaScale1: number;
     inverseInertiaScale2: number;
     isSensor: boolean;
-    relativeLinearSurfaceVelocity: any;
-    relativeAngularSurfaceVelocity: any;
+    relativeLinearSurfaceVelocity: Vector3;
+    relativeAngularSurfaceVelocity: Vector3;
     constructor();
     marshall(jolt: Jolt.ContactSettings, rev: boolean): void;
     unmarshall(jolt: Jolt.ContactSettings, rev: boolean): void;

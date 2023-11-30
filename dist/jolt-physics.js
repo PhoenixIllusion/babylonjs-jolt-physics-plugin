@@ -2,7 +2,7 @@ import { JoltCharacterVirtualImpostor, JoltCharacterVirtual } from './jolt-physi
 import Jolt, { loadJolt } from './jolt-import';
 import { ContactCollector } from './jolt-contact';
 import { RayCastUtility } from './jolt-raycast';
-import { SetJoltVec3 } from './jolt-util';
+import { LAYER_MOVING, LAYER_NON_MOVING, SetJoltVec3 } from './jolt-util';
 import { Epsilon, Quaternion, Vector3 } from '@babylonjs/core/Maths/math';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Logger } from '@babylonjs/core/Misc/logger';
@@ -18,6 +18,19 @@ export class JoltJSPlugin {
         await loadJolt(importSettings);
         const settings = new Jolt.JoltSettings();
         Object.assign(settings, physicsSettings);
+        let object_filter = new Jolt.ObjectLayerPairFilterTable(2);
+        object_filter.EnableCollision(LAYER_NON_MOVING, LAYER_MOVING);
+        object_filter.EnableCollision(LAYER_MOVING, LAYER_MOVING);
+        // We use a 1-to-1 mapping between object layers and broadphase layers
+        const BP_LAYER_NON_MOVING = new Jolt.BroadPhaseLayer(0);
+        const BP_LAYER_MOVING = new Jolt.BroadPhaseLayer(1);
+        let bp_interface = new Jolt.BroadPhaseLayerInterfaceTable(2, 2);
+        bp_interface.MapObjectToBroadPhaseLayer(LAYER_NON_MOVING, BP_LAYER_NON_MOVING);
+        bp_interface.MapObjectToBroadPhaseLayer(LAYER_MOVING, BP_LAYER_MOVING);
+        // Initialize Jolt
+        settings.mObjectLayerPairFilter = object_filter;
+        settings.mBroadPhaseLayerInterface = bp_interface;
+        settings.mObjectVsBroadPhaseLayerFilter = new Jolt.ObjectVsBroadPhaseLayerFilterTable(settings.mBroadPhaseLayerInterface, 2, settings.mObjectLayerPairFilter, 2);
         const joltInterface = new Jolt.JoltInterface(settings);
         return new JoltJSPlugin(joltInterface, _useDeltaForWorldStep);
     }
@@ -181,8 +194,8 @@ export class JoltJSPlugin {
             impostor.object.computeWorldMatrix(true);
             SetJoltVec3(impostor.object.position, this._tempVec3A);
             this._tempQuaternion.Set(impostor.object.rotationQuaternion.x, impostor.object.rotationQuaternion.y, impostor.object.rotationQuaternion.z, impostor.object.rotationQuaternion.w);
-            const isStatic = (mass === 0) ? Jolt.Static : Jolt.Dynamic;
-            const layer = (mass === 0) ? Jolt.NON_MOVING : Jolt.MOVING;
+            const isStatic = (mass === 0) ? Jolt.EMotionType_Static : Jolt.EMotionType_Dynamic;
+            const layer = (mass === 0) ? LAYER_NON_MOVING : LAYER_MOVING;
             const settings = new Jolt.BodyCreationSettings(colShape, this._tempVec3A, this._tempQuaternion, isStatic, layer);
             if (collisionGroup !== undefined) {
                 settings.mCollisionGroup.SetGroupID(collisionGroup);
@@ -199,11 +212,11 @@ export class JoltJSPlugin {
             settings.mRestitution = restitution;
             settings.mFriction = friction;
             if (mass !== 0) {
-                settings.mOverrideMassProperties = Jolt.CalculateInertia;
+                settings.mOverrideMassProperties = Jolt.EOverrideMassProperties_CalculateInertia;
                 settings.mMassPropertiesOverride.mMass = mass;
             }
             const body = impostor.physicsBody = this._bodyInterface.CreateBody(settings);
-            this._bodyInterface.AddBody(body.GetID(), Jolt.Activate);
+            this._bodyInterface.AddBody(body.GetID(), Jolt.EActivation_Activate);
             this._impostorLookup[body.GetID().GetIndexAndSequenceNumber()] = impostor;
         }
     }
@@ -472,7 +485,7 @@ export class JoltJSPlugin {
         }
         else {
             const physicsBody = impostor.physicsBody;
-            this._bodyInterface.SetPositionAndRotationWhenChanged(physicsBody.GetID(), position, rotation, Jolt.Activate);
+            this._bodyInterface.SetPositionAndRotationWhenChanged(physicsBody.GetID(), position, rotation, Jolt.EActivation_Activate);
         }
     }
     /**

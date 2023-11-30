@@ -1,5 +1,5 @@
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
-import { Vector3 } from '@babylonjs/core/Maths/math';
+import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Logger } from '@babylonjs/core/Misc/logger';
 export class JoltPhysicsImpostor extends PhysicsImpostor {
     constructor() {

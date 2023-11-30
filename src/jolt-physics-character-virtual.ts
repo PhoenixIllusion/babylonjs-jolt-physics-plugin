@@ -1,6 +1,6 @@
 
 import Jolt from './jolt-import';
-import { GetJoltQuat, GetJoltVec3, SetJoltVec3 } from './jolt-util';
+import { GetJoltQuat, GetJoltVec3, LAYER_MOVING, SetJoltVec3 } from './jolt-util';
 import { JoltJSPlugin } from '.';
 import { IPhysicsEnabledObject, PhysicsImpostor, PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Scene } from '@babylonjs/core/scene';
@@ -131,7 +131,7 @@ export class StandardCharacterVirtualHandler implements CharacterVirtualInputHan
 
 		const moving_towards_ground = (current_vertical_velocity.y - ground_velocity.y) < 0.1;
     const groundState = character.GetGroundState();
-    if(groundState == Jolt.OnGround) {
+    if(groundState == Jolt.EGroundState_OnGround) {
       this.groundState = GroundState.ON_GROUND;
       if(this.mDesiredVelocity.length() < 0.01) {
         this.userState = CharacterState.IDLE;
@@ -145,7 +145,7 @@ export class StandardCharacterVirtualHandler implements CharacterVirtualInputHan
         this.groundState = GroundState.RISING;
       }
     }
-		if (groundState == Jolt.OnGround	// If on ground
+		if (groundState == Jolt.EGroundState_OnGround	// If on ground
 			&& (this.enableCharacterInertia ?
 				moving_towards_ground													// Inertia enabled: And not moving away from ground
 				: !character.IsSlopeTooSteep(character.GetGroundNormal())))			// Inertia disabled: And not on a slope that is too steep
@@ -229,8 +229,8 @@ export class JoltCharacterVirtual {
     const objectVsBroadPhaseLayerFilter = world.jolt.GetObjectVsBroadPhaseLayerFilter();
     const objectLayerPairFilter = world.jolt.GetObjectLayerPairFilter();
     const filter = this.mUpdateFilterData = {
-      movingBPFilter: new Jolt.DefaultBroadPhaseLayerFilter(objectVsBroadPhaseLayerFilter, Jolt.MOVING),
-      movingLayerFilter: new Jolt.DefaultObjectLayerFilter(objectLayerPairFilter, Jolt.MOVING),
+      movingBPFilter: new Jolt.DefaultBroadPhaseLayerFilter(objectVsBroadPhaseLayerFilter, LAYER_MOVING),
+      movingLayerFilter: new Jolt.DefaultObjectLayerFilter(objectLayerPairFilter, LAYER_MOVING),
       bodyFilter: new Jolt.BodyFilter(),
       shapeFilter: new Jolt.ShapeFilter()
     };
