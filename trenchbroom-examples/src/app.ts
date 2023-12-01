@@ -19,9 +19,8 @@ export class App {
     constructor(private createScene: SceneFunction) {
         // create the canvas html element and attach it to the webpage
         const canvas = this.canvas = document.createElement('canvas');
-        canvas.style.width = '100%';
-        canvas.style.height = '100%';
         canvas.id = 'gameCanvas';
+        document.body.style.height = window.innerHeight+'px';
         document.body.appendChild(canvas);
         this.init();
     }

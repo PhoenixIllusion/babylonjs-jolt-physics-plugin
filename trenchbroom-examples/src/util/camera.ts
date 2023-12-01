@@ -51,8 +51,9 @@ export class CameraSetup {
 
   public setController(input: CameraCombinedInput<FreeCamera>) {
     this.camera.inputs.clear();
-    this.camera.attachControl(true);
+    this.camera.attachControl();
     this.camera.inputs.add(input);
+    document.body.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
   }
   getRoot() {
     return this._camRoot;
