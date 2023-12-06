@@ -10,7 +10,9 @@ export default defineConfig({
         "falling_shapes": "falling_shapes.html",
         "friction": "friction.html",
         "bounce_sphere": "bounce_sphere.html",
-        "motor": "motor.html"
+        "motor": "motor.html",
+        "vehicle_wheeled": "vehicle_wheeled.html",
+        "vehicle_motorcycle": "vehicle_motorcycle.html"
       },
       output: {
         dir: '../.git-pages/basic-examples/'
