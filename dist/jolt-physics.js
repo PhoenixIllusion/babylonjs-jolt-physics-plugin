@@ -43,6 +43,7 @@ export class JoltJSPlugin {
         this._maxSteps = 10;
         this._tempQuaternionBJS = new Quaternion();
         this._impostorLookup = {};
+        this._perPhysicsStepCallbacks = [];
         this.world = jolt.GetPhysicsSystem();
         this._bodyInterface = this.world.GetBodyInterface();
         this._tempVec3A = new Jolt.Vec3();
@@ -81,6 +82,15 @@ export class JoltJSPlugin {
     getTimeStep() {
         return this._timeStep;
     }
+    registerPerPhysicsStepCallback(listener) {
+        this._perPhysicsStepCallbacks.push(listener);
+    }
+    unregisterPerPhysicsStepCallback(listener) {
+        const index = this._perPhysicsStepCallbacks.indexOf(listener);
+        if (index > 0) {
+            this._perPhysicsStepCallbacks.splice(index, 1);
+        }
+    }
     executeStep(delta, impostors) {
         this._contactCollector.clear();
         const characterVirtuals = [];
@@ -100,6 +110,7 @@ export class JoltJSPlugin {
         }
         this._stepSimulation(this._useDeltaForWorldStep ? delta : this._timeStep, this._maxSteps, this._fixedTimeStep, (timeStep) => {
             characterVirtuals.forEach(vChar => vChar.controller?.prePhysicsUpdate(timeStep));
+            this._perPhysicsStepCallbacks.forEach(listener => listener(timeStep));
         });
         for (const impostor of impostors) {
             // Update physics world objects to match babylon world
@@ -209,6 +220,7 @@ export class JoltJSPlugin {
             impostor._pluginData.mass = mass;
             impostor._pluginData.friction = friction;
             impostor._pluginData.restitution = restitution;
+            impostor._pluginData.plugin = this;
             settings.mRestitution = restitution;
             settings.mFriction = friction;
             if (mass !== 0) {

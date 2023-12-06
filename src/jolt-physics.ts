@@ -128,6 +128,17 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     return this._timeStep;
   }
 
+  private _perPhysicsStepCallbacks: ((timeStep: number) => void)[] = [];
+  registerPerPhysicsStepCallback(listener: (timeStep: number) => void): void {
+    this._perPhysicsStepCallbacks.push(listener);
+  }
+  unregisterPerPhysicsStepCallback(listener: (timeStep: number) => void): void {
+    const index = this._perPhysicsStepCallbacks.indexOf(listener);
+    if(index > 0) {
+      this._perPhysicsStepCallbacks.splice(index, 1);
+    }
+  }
+
   executeStep(delta: number, impostors: PhysicsImpostor[]): void {
     this._contactCollector.clear();
     const characterVirtuals: JoltCharacterVirtualImpostor[] = [];
@@ -149,6 +160,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     this._stepSimulation(this._useDeltaForWorldStep ? delta : this._timeStep, this._maxSteps, this._fixedTimeStep,
       (timeStep) => {
         characterVirtuals.forEach(vChar => vChar.controller?.prePhysicsUpdate(timeStep));
+        this._perPhysicsStepCallbacks.forEach(listener => listener(timeStep));
       });
 
     for (const impostor of impostors) {
@@ -270,6 +282,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       impostor._pluginData.mass = mass;
       impostor._pluginData.friction = friction;
       impostor._pluginData.restitution = restitution;
+      impostor._pluginData.plugin = this;
       settings.mRestitution = restitution;
       settings.mFriction = friction;
       if (mass !== 0) {

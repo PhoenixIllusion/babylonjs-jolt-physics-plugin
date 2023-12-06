@@ -14,7 +14,7 @@
     "vite": "4.5.0"
   },
   "dependencies": {
-    "@babylonjs/core": "6.24.0",
+    "@babylonjs/core": "6.28.1",
     "@babylonjs/gui": "6.24.0",
     "@babylonjs/gui-editor": "6.24.0",
     "@babylonjs/loaders": "6.24.0",

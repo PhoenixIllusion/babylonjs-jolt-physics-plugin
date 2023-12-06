@@ -1,7 +1,7 @@
 {
   "name": "@phoenixillusion/babylonjs-jolt-plugin",
   "private": true,
-  "version": "1.0.2",
+  "version": "1.0.3",
   "type": "module",
   "scripts": {
     "build": "mkdir -p dist && cp src/jolt-import.js ./dist/. && tsc",
@@ -27,7 +27,8 @@
     "./impostor": "./dist/jolt-impostor.js",
     "./contact": "./dist/jolt-contact.js",
     "./character-virtual": "./dist/jolt-physics-character-virtual.js",
-    "./util": "./dist/jolt-util.js"
+    "./util": "./dist/jolt-util.js",
+    "./vehicle": "./dist/jolt-physics-vehicle-controller.js"
   },
   "files": [
     "README.md",
@@ -40,6 +41,8 @@
     "./dist/jolt-impostor.js",
     "./dist/jolt-physics-character-virtual.d.ts",
     "./dist/jolt-physics-character-virtual.js",
+    "./dist/jolt-physics-vehicle-controller.d.ts",
+    "./dist/jolt-physics-vehicle-controller.js",
     "./dist/jolt-physics.d.ts",
     "./dist/jolt-physics.js",
     "./dist/jolt-raycast.d.ts",

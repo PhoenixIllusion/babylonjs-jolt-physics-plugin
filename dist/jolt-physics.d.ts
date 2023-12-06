@@ -46,6 +46,9 @@ export declare class JoltJSPlugin implements IPhysicsEnginePlugin {
      * @returns the current timestep in seconds
      */
     getTimeStep(): number;
+    private _perPhysicsStepCallbacks;
+    registerPerPhysicsStepCallback(listener: (timeStep: number) => void): void;
+    unregisterPerPhysicsStepCallback(listener: (timeStep: number) => void): void;
     executeStep(delta: number, impostors: PhysicsImpostor[]): void;
     private _stepSimulation;
     getPluginVersion(): number;
