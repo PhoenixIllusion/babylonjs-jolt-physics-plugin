@@ -85,7 +85,7 @@ export class StandardCharacterVirtualHandler implements CharacterVirtualInputHan
   public userState: CharacterState = CharacterState.IDLE;
 
 
-  updateInput(inMovementDirection: Vector3 , inJump: boolean) {
+  updateInput(inMovementDirection: Vector3, inJump: boolean) {
     this.inMovementDirection.copyFrom(inMovementDirection);
     this.inJump = inJump;
   }
@@ -99,84 +99,84 @@ export class StandardCharacterVirtualHandler implements CharacterVirtualInputHan
   private _gravity: Vector3 = new Vector3();
   processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number) {
 
-		const player_controls_horizontal_velocity = this.controlMovementDuringJump || character.IsSupported();
-		if (player_controls_horizontal_velocity) {
-			// True if the player intended to move
-			this.allowSliding = !(this.inMovementDirection.length() < 1.0e-12);
-			// Smooth the player input
-			if (this.enableCharacterInertia) {
+    const player_controls_horizontal_velocity = this.controlMovementDuringJump || character.IsSupported();
+    if (player_controls_horizontal_velocity) {
+      // True if the player intended to move
+      this.allowSliding = !(this.inMovementDirection.length() < 1.0e-12);
+      // Smooth the player input
+      if (this.enableCharacterInertia) {
         const s = 0.25 * this.characterSpeed;
-				this.mDesiredVelocity = this.mDesiredVelocity.multiplyByFloats(0.75,0.75,0.75).add(this.inMovementDirection.multiplyByFloats(s,s,s))
-			} else {
+        this.mDesiredVelocity = this.mDesiredVelocity.multiplyByFloats(0.75, 0.75, 0.75).add(this.inMovementDirection.multiplyByFloats(s, s, s))
+      } else {
         const s = this.characterSpeed;
-				this.mDesiredVelocity = this.inMovementDirection.multiplyByFloats(s,s,s);
-			}
-		}
-		else {
-			// While in air we allow sliding
-			this.allowSliding = true;
-		}
-		const character_up_rotation = Jolt.Quat.sEulerAngles(new Jolt.Vec3(this.upRotationX, 0, this.upRotationZ));
-		character.SetUp(character_up_rotation.RotateAxisY());
-		character.SetRotation(character_up_rotation);
-		const upRotation = GetJoltQuat(character_up_rotation, this._charUpRot);
+        this.mDesiredVelocity = this.inMovementDirection.multiplyByFloats(s, s, s);
+      }
+    }
+    else {
+      // While in air we allow sliding
+      this.allowSliding = true;
+    }
+    const character_up_rotation = Jolt.Quat.sEulerAngles(new Jolt.Vec3(this.upRotationX, 0, this.upRotationZ));
+    character.SetUp(character_up_rotation.RotateAxisY());
+    character.SetRotation(character_up_rotation);
+    const upRotation = GetJoltQuat(character_up_rotation, this._charUpRot);
 
-		character.UpdateGroundVelocity();
-		const characterUp = GetJoltVec3(character.GetUp(), this._charUp);
-		const linearVelocity = GetJoltVec3(character.GetLinearVelocity(), this._linVelocity);
+    character.UpdateGroundVelocity();
+    const characterUp = GetJoltVec3(character.GetUp(), this._charUp);
+    const linearVelocity = GetJoltVec3(character.GetLinearVelocity(), this._linVelocity);
     const vVel = Vector3.Dot(linearVelocity, characterUp);
-		const current_vertical_velocity = characterUp.multiplyByFloats(vVel,vVel,vVel);
-		const ground_velocity = GetJoltVec3(character.GetGroundVelocity(), this._groundVelocity);
-		const gravity = GetJoltVec3(physicsSys.GetGravity(), this._gravity);
+    const current_vertical_velocity = characterUp.multiplyByFloats(vVel, vVel, vVel);
+    const ground_velocity = GetJoltVec3(character.GetGroundVelocity(), this._groundVelocity);
+    const gravity = GetJoltVec3(physicsSys.GetGravity(), this._gravity);
 
-		const moving_towards_ground = (current_vertical_velocity.y - ground_velocity.y) < 0.1;
+    const moving_towards_ground = (current_vertical_velocity.y - ground_velocity.y) < 0.1;
     const groundState = character.GetGroundState();
-    if(groundState == Jolt.EGroundState_OnGround) {
+    if (groundState == Jolt.EGroundState_OnGround) {
       this.groundState = GroundState.ON_GROUND;
-      if(this.mDesiredVelocity.length() < 0.01) {
+      if (this.mDesiredVelocity.length() < 0.01) {
         this.userState = CharacterState.IDLE;
       } else {
         this.userState = CharacterState.MOVING;
       }
     } else {
-      if(moving_towards_ground) {
+      if (moving_towards_ground) {
         this.groundState = GroundState.FALLING;
       } else {
         this.groundState = GroundState.RISING;
       }
     }
-		if (groundState == Jolt.EGroundState_OnGround	// If on ground
-			&& (this.enableCharacterInertia ?
-				moving_towards_ground													// Inertia enabled: And not moving away from ground
-				: !character.IsSlopeTooSteep(character.GetGroundNormal())))			// Inertia disabled: And not on a slope that is too steep
-		{
-			// Assume velocity of ground when on ground
-			this._new_velocity.copyFrom(ground_velocity);
+    if (groundState == Jolt.EGroundState_OnGround	// If on ground
+      && (this.enableCharacterInertia ?
+        moving_towards_ground													// Inertia enabled: And not moving away from ground
+        : !character.IsSlopeTooSteep(character.GetGroundNormal())))			// Inertia disabled: And not on a slope that is too steep
+    {
+      // Assume velocity of ground when on ground
+      this._new_velocity.copyFrom(ground_velocity);
 
-			// Jump
-			if (this.inJump && moving_towards_ground) {
-        this._new_velocity.addInPlace(characterUp.multiplyByFloats(this.jumpSpeed,this.jumpSpeed,this.jumpSpeed));
+      // Jump
+      if (this.inJump && moving_towards_ground) {
+        this._new_velocity.addInPlace(characterUp.multiplyByFloats(this.jumpSpeed, this.jumpSpeed, this.jumpSpeed));
         this.userState = CharacterState.JUMPING;
       }
-		}
-		else
+    }
+    else
       this._new_velocity.copyFrom(current_vertical_velocity);
 
 
-		// Gravity
-		this._new_velocity.addInPlace(gravity.multiplyByFloats(inDeltaTime,inDeltaTime,inDeltaTime).applyRotationQuaternion(upRotation));
+    // Gravity
+    this._new_velocity.addInPlace(gravity.multiplyByFloats(inDeltaTime, inDeltaTime, inDeltaTime).applyRotationQuaternion(upRotation));
 
-		if (player_controls_horizontal_velocity) {
-			// Player input
-			this._new_velocity.addInPlace(this.mDesiredVelocity.applyRotationQuaternion(upRotation));
-		}
-		else {
-			// Preserve horizontal velocity
-			const current_horizontal_velocity = linearVelocity.subtract(current_vertical_velocity);
-			this._new_velocity.addInPlace(current_horizontal_velocity);
-		}
+    if (player_controls_horizontal_velocity) {
+      // Player input
+      this._new_velocity.addInPlace(this.mDesiredVelocity.applyRotationQuaternion(upRotation));
+    }
+    else {
+      // Preserve horizontal velocity
+      const current_horizontal_velocity = linearVelocity.subtract(current_vertical_velocity);
+      this._new_velocity.addInPlace(current_horizontal_velocity);
+    }
 
-	}
+  }
 
   updateCharacter(character: Jolt.CharacterVirtual, tempVec: Jolt.Vec3): void {
     SetJoltVec3(this._new_velocity, tempVec);
@@ -241,7 +241,7 @@ export class JoltCharacterVirtual {
   private _characterUp: Vector3 = new Vector3();
   private _temp1: Vector3 = new Vector3();
   private _temp2: Vector3 = new Vector3();
-  
+
   prePhysicsUpdate(mDeltaTime: number) {
     GetJoltVec3(this.mCharacter.GetUp(), this._characterUp);
     if (!this.config.sEnableStickToFloor) {
@@ -262,20 +262,20 @@ export class JoltCharacterVirtual {
       const len = -this.mUpdateSettings.mWalkStairsStepUp.Length();
       const vec = this._temp1;
       this._temp2.set(len, len, len);
-      this._characterUp.multiplyToRef( this._temp2, vec);
+      this._characterUp.multiplyToRef(this._temp2, vec);
       SetJoltVec3(vec, this.mUpdateSettings.mWalkStairsStepUp);
     }
     const gravLen = -this.world.physicsSystem.GetGravity().Length();
     this._temp2.set(gravLen, gravLen, gravLen);
     const g = this._characterUp.multiplyInPlace(this._temp2);
 
-    if(this.inputHandler) {
+    if (this.inputHandler) {
       this.inputHandler.processCharacterData(this.mCharacter, this.world.physicsSystem, mDeltaTime);
       this.inputHandler.updateCharacter(this.mCharacter, this._jolt_temp1);
     }
 
-    const inGravity =  SetJoltVec3(g,  this._jolt_temp1);
-    
+    const inGravity = SetJoltVec3(g, this._jolt_temp1);
+
     const {
       movingBPFilter,
       movingLayerFilter,
@@ -313,8 +313,8 @@ export class JoltCharacterVirtual {
     func: OnContactValidate | OnContactAdd | OnAdjustVelocity): void {
 
     let _lVelocity = new Vector3();
-    let _aVelocity = new Vector3();  
-    if(!this.contactListener) {
+    let _aVelocity = new Vector3();
+    if (!this.contactListener) {
       this.contactListener = new Jolt.CharacterContactListenerJS();
       this.contactListener.OnAdjustBodyVelocity = (_inCharacter, inBody2: Jolt.Body, lVelocity: Jolt.Vec3, aVelocity: Jolt.Vec3): void => {
         inBody2 = Jolt.wrapPointer(inBody2 as any as number, Jolt.Body);
@@ -323,26 +323,26 @@ export class JoltCharacterVirtual {
         const impostor = this.plugin.GetImpostorForBodyId(inBody2.GetID().GetIndexAndSequenceNumber());
         GetJoltVec3(lVelocity, _lVelocity);
         GetJoltVec3(aVelocity, _aVelocity);
-        this.onJoltCollide('on-adjust-velocity', { body: impostor, linearVelocity: _lVelocity, angularVelocity: _aVelocity});
+        this.onJoltCollide('on-adjust-velocity', { body: impostor, linearVelocity: _lVelocity, angularVelocity: _aVelocity });
         SetJoltVec3(_aVelocity, aVelocity);
         SetJoltVec3(_lVelocity, lVelocity);
       }
       this.contactListener.OnContactAdded = (_inCharacter: Jolt.CharacterVirtual, inBodyID2: Jolt.BodyID, _inSubShapeID2: Jolt.SubShapeID,
-          _inContactPosition: Jolt.Vec3, _inContactNormal: Jolt.Vec3, _ioSettings: Jolt.CharacterContactSettings): void => {
-            inBodyID2 = Jolt.wrapPointer(inBodyID2 as any as number, Jolt.BodyID);
+        _inContactPosition: Jolt.Vec3, _inContactNormal: Jolt.Vec3, _ioSettings: Jolt.CharacterContactSettings): void => {
+        inBodyID2 = Jolt.wrapPointer(inBodyID2 as any as number, Jolt.BodyID);
         const impostor = this.plugin.GetImpostorForBodyId(inBodyID2.GetIndexAndSequenceNumber());
-        this.onJoltCollide('on-contact-add', { body: impostor});
+        this.onJoltCollide('on-contact-add', { body: impostor });
       }
       this.contactListener.OnContactValidate = (_inCharacter: Jolt.CharacterVirtual, inBodyID2: Jolt.BodyID, _inSubShapeID2: Jolt.SubShapeID): boolean => {
-            inBodyID2 = Jolt.wrapPointer(inBodyID2 as any as number, Jolt.BodyID);
+        inBodyID2 = Jolt.wrapPointer(inBodyID2 as any as number, Jolt.BodyID);
         const impostor = this.plugin.GetImpostorForBodyId(inBodyID2.GetIndexAndSequenceNumber());
-        const ret = this.onJoltCollide('on-contact-validate', { body: impostor});
-        if(ret !== undefined) {
+        const ret = this.onJoltCollide('on-contact-validate', { body: impostor });
+        if (ret !== undefined) {
           return ret;
         }
         return true;
       }
-      this.contactListener.OnContactSolve = (_inCharacter: Jolt.CharacterVirtual, _inBodyID2: Jolt.BodyID, _inSubShapeID2: Jolt.SubShapeID, 
+      this.contactListener.OnContactSolve = (_inCharacter: Jolt.CharacterVirtual, _inBodyID2: Jolt.BodyID, _inSubShapeID2: Jolt.SubShapeID,
         _inContactPosition: Jolt.Vec3, _inContactNormal: Jolt.Vec3, _inContactVelocity: Jolt.Vec3, _inContactMaterial: Jolt.PhysicsMaterial,
         _inCharacterVelocity: Jolt.Vec3, _ioNewCharacterVelocity: Jolt.Vec3): void => {
       }
@@ -361,7 +361,7 @@ export class JoltCharacterVirtual {
       const list = this._JoltPhysicsCallback['on-contact-validate'];
       list.push({ callback: func as OnContactValidate, otherImpostors: collidedAgainstList });
     }
-    if (kind == 'on-adjust-velocity' ){
+    if (kind == 'on-adjust-velocity') {
       const list = this._JoltPhysicsCallback[kind];
       list.push({ callback: func as OnAdjustVelocity, otherImpostors: collidedAgainstList });
     }
@@ -400,7 +400,7 @@ export class JoltCharacterVirtual {
   public onJoltCollide(kind: 'on-contact-add', event: { body: PhysicsImpostor }): void;
   public onJoltCollide(kind: 'on-contact-validate', event: { body: PhysicsImpostor }): boolean | undefined;
   public onJoltCollide(kind: 'on-adjust-velocity', event: { body: PhysicsImpostor, linearVelocity: Vector3, angularVelocity: Vector3 }): void;
-  public onJoltCollide(kind: CharacterListenerCallbackKey, event: { body: PhysicsImpostor, linearVelocity: Vector3, angularVelocity: Vector3  } | { body: PhysicsImpostor }): boolean | undefined | void {
+  public onJoltCollide(kind: CharacterListenerCallbackKey, event: { body: PhysicsImpostor, linearVelocity: Vector3, angularVelocity: Vector3 } | { body: PhysicsImpostor }): boolean | undefined | void {
     if (!this._JoltPhysicsCallback[kind].length) {
       return undefined;
     }
@@ -413,29 +413,29 @@ export class JoltCharacterVirtual {
           return obj.otherImpostors.indexOf(event.body) !== -1;
         }).forEach((obj) => {
           const r = obj.callback(e.body);
-          if(r !== undefined) {
+          if (r !== undefined) {
             ret.push(r);
           }
         });
         //if you have registered multiple validate callback between A & B and they disagree, you have big problems on your hand so I'm not trying to combine
-        if(ret.length > 1) {
+        if (ret.length > 1) {
           console.warn(`Warning: [${ret.length}] Validation Listeners registered between: `, this, event.body);
         }
-        return ret[0]; 
+        return ret[0];
       } else {
         let collisionHandlerCount = 0;
-        if(kind === 'on-adjust-velocity') {
+        if (kind === 'on-adjust-velocity') {
           const list = this._JoltPhysicsCallback[kind];
-          const e = event as {  body: PhysicsImpostor, linearVelocity: Vector3, angularVelocity: Vector3 };
+          const e = event as { body: PhysicsImpostor, linearVelocity: Vector3, angularVelocity: Vector3 };
           list.filter((obj) => {
             return obj.otherImpostors.indexOf(event.body) !== -1;
           }).forEach((obj) => {
             obj.callback(e.body, e.linearVelocity, e.angularVelocity);
             collisionHandlerCount++;
           });
-        } else if(kind === 'on-contact-add') {
+        } else if (kind === 'on-contact-add') {
           const list = this._JoltPhysicsCallback[kind];
-          const e = event as {  body: PhysicsImpostor };
+          const e = event as { body: PhysicsImpostor };
           list.filter((obj) => {
             return obj.otherImpostors.indexOf(event.body) !== -1;
           }).forEach((obj) => {
@@ -444,7 +444,7 @@ export class JoltCharacterVirtual {
           });
         }
         //if you have registered multiple OnContact callback between A & B and they try to modify the ioSettings, it will be a mess
-        if(collisionHandlerCount > 1) {
+        if (collisionHandlerCount > 1) {
           console.warn(`Warning: [${collisionHandlerCount}] OnContact Listeners registered between: `, this, event.body);
         }
       }
@@ -452,9 +452,9 @@ export class JoltCharacterVirtual {
   }
 }
 
-type OnContactValidate = (body: PhysicsImpostor)=> boolean;
+type OnContactValidate = (body: PhysicsImpostor) => boolean;
 type OnContactAdd = (body: PhysicsImpostor) => void;
-type OnAdjustVelocity = ( body: PhysicsImpostor, linearVelocity: Vector3, angularVelocity: Vector3) => void;
+type OnAdjustVelocity = (body: PhysicsImpostor, linearVelocity: Vector3, angularVelocity: Vector3) => void;
 
 type CharacterListenerCallbacks<T> = { callback: T, otherImpostors: Array<PhysicsImpostor> }
-type CharacterListenerCallbackKey = 'on-adjust-velocity'|'on-contact-add'|'on-contact-validate';
+type CharacterListenerCallbackKey = 'on-adjust-velocity' | 'on-contact-add' | 'on-contact-validate';

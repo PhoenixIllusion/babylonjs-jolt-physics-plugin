@@ -99,7 +99,7 @@ function configureWheel(wheel: Jolt.WheelSettings, setting: Vehicle.WheelSetting
   SetJoltVec3(setting.position, wheel.mPosition);
   wheel.mWidth = setting.width;
   wheel.mRadius = setting.radius;
-  if(setting.steeringAxis !== undefined) {
+  if (setting.steeringAxis !== undefined) {
     SetJoltVec3(setting.steeringAxis, wheel.mSteeringAxis);
   }
   if (setting.suspension !== undefined) {
@@ -450,37 +450,37 @@ export function createBasicCar(vehicle: { width: number, height: number, length:
     antiRollBars: [{ leftIndex: 0, rightIndex: 1 }, { leftIndex: 2, rightIndex: 3 }]
   }
 }
-export function createBasicMotorcycle(vehicle: { width: number, height: number, length: number }, wheel: { radius: number, width: number }): Vehicle.MotorcycleVehicleSettings {
+export function createBasicMotorcycle(vehicle: { height: number, length: number }, wheel: { radius: number, width: number }): Vehicle.MotorcycleVehicleSettings {
   const casterAngle = 30 * Math.PI / 180;
   const wheels: Vehicle.WheelSettingWV[] = [{
-      position: new Vector3(0, -vehicle.height/2 * 0.9, vehicle.length / 2),
-      radius: wheel.radius,
-      width: wheel.width,
-      suspension: {
-        maxLength: 0.5,
-        minLength: 0.5 - vehicle.height / 2,
-        direction: new Vector3(0, -1, Math.tan(casterAngle)).normalize(),
-        spring: {
-          frequency: 2
-        }
-      },
-      maxBrakeTorque: 500,
-      maxSteerAngle: 30 * Math.PI / 180,
-      steeringAxis: new Vector3(0, 1, -Math.tan(casterAngle)).normalize()
-    },{
-      position: new Vector3(0, -vehicle.height/2 * 0.9, -vehicle.length / 2),
-      radius: wheel.radius,
-      width: wheel.width,
-      suspension: {
-        maxLength: 0.5,
-        minLength: 0.5 - vehicle.height / 2,
-        spring: {
-          frequency: 1.5
-        }
-      },
-      maxBrakeTorque: 250,
-      maxSteerAngle: 0
-    }];
+    position: new Vector3(0, -vehicle.height / 2 * 0.9, vehicle.length / 2),
+    radius: wheel.radius,
+    width: wheel.width,
+    suspension: {
+      maxLength: 0.5,
+      minLength: 0.5 - vehicle.height / 2,
+      direction: new Vector3(0, -1, Math.tan(casterAngle)).normalize(),
+      spring: {
+        frequency: 2
+      }
+    },
+    maxBrakeTorque: 500,
+    maxSteerAngle: 30 * Math.PI / 180,
+    steeringAxis: new Vector3(0, 1, -Math.tan(casterAngle)).normalize()
+  }, {
+    position: new Vector3(0, -vehicle.height / 2 * 0.9, -vehicle.length / 2),
+    radius: wheel.radius,
+    width: wheel.width,
+    suspension: {
+      maxLength: 0.5,
+      minLength: 0.5 - vehicle.height / 2,
+      spring: {
+        frequency: 1.5
+      }
+    },
+    maxBrakeTorque: 250,
+    maxSteerAngle: 0
+  }];
   const differentials: Vehicle.WheelDifferentials[] = [];
   differentials.push({
     leftIndex: -1, rightIndex: 1, differentialRatio: 1.93 * 40.0 / 16.0
@@ -502,7 +502,7 @@ export function createBasicMotorcycle(vehicle: { width: number, height: number, 
       clutchStrength: 2
     }
   }
-}          
+}
 
 export class WheeledVehicleController {
 

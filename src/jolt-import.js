@@ -2,7 +2,7 @@ import Jolt from 'https://www.unpkg.com/jolt-physics@0.10.2/dist/jolt-physics.wa
 
 const _jolt = {};
 export const loadJolt = async (importSettings) => {
-    const j= await Jolt(importSettings); 
+    const j = await Jolt(importSettings);
     Object.assign(_jolt, j);
 
     j.Quat.sIdentity = j.Quat.prototype.sIdentity;

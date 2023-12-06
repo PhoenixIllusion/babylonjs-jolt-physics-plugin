@@ -15,33 +15,33 @@ export class JoltContactSetting {
   isSensor = false;
   relativeLinearSurfaceVelocity = new Vector3();
   relativeAngularSurfaceVelocity = new Vector3();
-  constructor( ) { 
+  constructor() {
 
   }
-  marshall( jolt: Jolt.ContactSettings, rev: boolean) {
+  marshall(jolt: Jolt.ContactSettings, rev: boolean) {
     const { mCombinedFriction, mCombinedRestitution, mInvMassScale1, mInvMassScale2, mInvInertiaScale1, mInvInertiaScale2, mIsSensor } = jolt;
-    let [ combinedFriction, combinedRestitution, inverseMassScale1, inverseMassScale2, inverseInertiaScale1, inverseInertiaScale2, isSensor ] = 
-      [ mCombinedFriction, mCombinedRestitution, mInvMassScale1, mInvMassScale2, mInvInertiaScale1, mInvInertiaScale2, mIsSensor ];
-    if(rev) {
-      [inverseMassScale1, inverseMassScale2, inverseInertiaScale1 ,inverseInertiaScale2 ] =
-        [inverseMassScale2, inverseMassScale1, inverseInertiaScale2 ,inverseInertiaScale1]
+    let [combinedFriction, combinedRestitution, inverseMassScale1, inverseMassScale2, inverseInertiaScale1, inverseInertiaScale2, isSensor] =
+      [mCombinedFriction, mCombinedRestitution, mInvMassScale1, mInvMassScale2, mInvInertiaScale1, mInvInertiaScale2, mIsSensor];
+    if (rev) {
+      [inverseMassScale1, inverseMassScale2, inverseInertiaScale1, inverseInertiaScale2] =
+        [inverseMassScale2, inverseMassScale1, inverseInertiaScale2, inverseInertiaScale1]
     }
-    Object.assign(this, {combinedFriction, combinedRestitution, inverseMassScale1, inverseMassScale2, inverseInertiaScale1, inverseInertiaScale2, isSensor});
+    Object.assign(this, { combinedFriction, combinedRestitution, inverseMassScale1, inverseMassScale2, inverseInertiaScale1, inverseInertiaScale2, isSensor });
     GetJoltVec3(jolt.mRelativeLinearSurfaceVelocity, this.relativeLinearSurfaceVelocity);
     GetJoltVec3(jolt.mRelativeAngularSurfaceVelocity, this.relativeAngularSurfaceVelocity);
-    if(rev) {
+    if (rev) {
 
     }
   }
 
-  unmarshall( jolt: Jolt.ContactSettings, rev: boolean) {
-    let {combinedFriction, combinedRestitution, inverseMassScale1, inverseMassScale2, inverseInertiaScale1, inverseInertiaScale2, isSensor} = this;
-    if(rev) {
-      [inverseMassScale1, inverseMassScale2, inverseInertiaScale1 ,inverseInertiaScale2 ] =
-        [inverseMassScale2, inverseMassScale1, inverseInertiaScale2 ,inverseInertiaScale1]
+  unmarshall(jolt: Jolt.ContactSettings, rev: boolean) {
+    let { combinedFriction, combinedRestitution, inverseMassScale1, inverseMassScale2, inverseInertiaScale1, inverseInertiaScale2, isSensor } = this;
+    if (rev) {
+      [inverseMassScale1, inverseMassScale2, inverseInertiaScale1, inverseInertiaScale2] =
+        [inverseMassScale2, inverseMassScale1, inverseInertiaScale2, inverseInertiaScale1]
     }
-    const [ mCombinedFriction, mCombinedRestitution, mInvMassScale1, mInvMassScale2, mInvInertiaScale1, mInvInertiaScale2, mIsSensor ] = 
-    [ combinedFriction, combinedRestitution, inverseMassScale1, inverseMassScale2, inverseInertiaScale1, inverseInertiaScale2, isSensor ];
+    const [mCombinedFriction, mCombinedRestitution, mInvMassScale1, mInvMassScale2, mInvInertiaScale1, mInvInertiaScale2, mIsSensor] =
+      [combinedFriction, combinedRestitution, inverseMassScale1, inverseMassScale2, inverseInertiaScale1, inverseInertiaScale2, isSensor];
     Object.assign(jolt, { mCombinedFriction, mCombinedRestitution, mInvMassScale1, mInvMassScale2, mInvInertiaScale1, mInvInertiaScale2, mIsSensor })
 
     SetJoltVec3(this.relativeLinearSurfaceVelocity, jolt.mRelativeLinearSurfaceVelocity);
@@ -116,13 +116,13 @@ export class ContactCollector {
         (body1, body2) => {
           if (body1 instanceof JoltPhysicsImpostor) {
             const resp = body1.onJoltCollide(kind, { body: body2 });
-            if(resp !== undefined) {
+            if (resp !== undefined) {
               ret.push(resp);
             }
           }
         }
       );
-      if(ret[0] !== undefined) {
+      if (ret[0] !== undefined) {
         return ret[0];
       }
       return Jolt.ValidateResult_AcceptAllContactsForThisBodyPair;
@@ -141,22 +141,22 @@ export class ContactCollector {
             body1.onCollide({ body: body2.physicsBody, point: null, distance: 0, impulse: 0, normal: null });
             if (body1 instanceof JoltPhysicsImpostor) {
               body1.onJoltCollide(kind, { body: body2, ioSettings });
-              if(ioSettings.relativeLinearSurfaceVelocity.length() > 0) {
+              if (ioSettings.relativeLinearSurfaceVelocity.length() > 0) {
                 const cLocalSpaceVelocity = ioSettings.relativeLinearSurfaceVelocity;
                 const body1_linear_surface_velocity = !rev ? cLocalSpaceVelocity.applyRotationQuaternion(rotation1) : new Vector3(0, 0, 0);
                 const body2_linear_surface_velocity = rev ? cLocalSpaceVelocity.applyRotationQuaternion(rotation2) : new Vector3(0, 0, 0);
                 ioSettings.relativeLinearSurfaceVelocity.copyFrom(body2_linear_surface_velocity.subtract(body1_linear_surface_velocity));
               }
-              if(ioSettings.relativeAngularSurfaceVelocity.length() > 0) {
+              if (ioSettings.relativeAngularSurfaceVelocity.length() > 0) {
                 const cLocalSpaceAngularVelocity = ioSettings.relativeAngularSurfaceVelocity;
                 const body1_angular_surface_velocity = !rev ? cLocalSpaceAngularVelocity.applyRotationQuaternion(rotation1) : new Vector3(0, 0, 0);
                 const body2_angular_surface_velocity = rev ? cLocalSpaceAngularVelocity.applyRotationQuaternion(rotation2) : new Vector3(0, 0, 0);
-    
+
                 // Note that the angular velocity is the angular velocity around body 1's center of mass, so we need to add the linear velocity of body 2's center of mass
                 const COM1 = GetJoltVec3(inBody1.GetCenterOfMassPosition(), _com1);
                 const COM2 = GetJoltVec3(inBody2.GetCenterOfMassPosition(), _com2);
                 const body2_linear_surface_velocity = rev ?
-                body2_angular_surface_velocity.cross(COM1.subtract(COM2)) : new Vector3(0, 0, 0);
+                  body2_angular_surface_velocity.cross(COM1.subtract(COM2)) : new Vector3(0, 0, 0);
 
                 ioSettings.relativeLinearSurfaceVelocity.copyFrom(body2_linear_surface_velocity);
                 ioSettings.relativeAngularSurfaceVelocity.copyFrom(body2_angular_surface_velocity.subtract(body1_angular_surface_velocity));
@@ -166,7 +166,7 @@ export class ContactCollector {
         })
     }
 
-  // @ts-ignore: Unused
+    // @ts-ignore: Unused
     listener.OnContactValidate = (inBody1, inBody2, inBaseOffset, inCollisionResult) => {
       inBody1 = Jolt.wrapPointer(inBody1 as any as number, Jolt.Body);
       inBody2 = Jolt.wrapPointer(inBody2 as any as number, Jolt.Body);

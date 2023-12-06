@@ -67,15 +67,15 @@ export class JoltPhysicsImpostor extends PhysicsImpostor {
           return obj.otherImpostors.indexOf(event.body) !== -1;
         }).forEach((obj) => {
           const r = obj.callback(e.body);
-          if(r !== undefined) {
+          if (r !== undefined) {
             ret.push(r);
           }
         });
         //if you have registered multiple validate callback between A & B and they disagree, you have big problems on your hand so I'm not trying to combine
-        if(ret.length > 1) {
+        if (ret.length > 1) {
           console.warn(`Warning: [${ret.length}] Validation Listeners registered between: `, this, event.body);
         }
-        return ret[0]; 
+        return ret[0];
       } else {
         let collisionHandlerCount = 0;
         const list: JoltCollisionCallback<OnContactCallback>[] = this._JoltPhysicsCallback[kind];
@@ -87,7 +87,7 @@ export class JoltPhysicsImpostor extends PhysicsImpostor {
           collisionHandlerCount++;
         });
         //if you have registered multiple OnContact callback between A & B and they try to modify the ioSettings, it will be a mess
-        if(collisionHandlerCount > 1) {
+        if (collisionHandlerCount > 1) {
           console.warn(`Warning: [${collisionHandlerCount}] OnContact Listeners registered between: `, this, event.body);
         }
       }

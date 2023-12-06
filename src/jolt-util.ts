@@ -14,12 +14,12 @@ export const GetJoltVec3 = (jVec3: Jolt.Vec3, vec3: Vector3) => {
   return vec3;
 }
 
-export const SetJoltQuat = (quat: Quaternion, jQuat: Jolt.Quat, ) => {
+export const SetJoltQuat = (quat: Quaternion, jQuat: Jolt.Quat,) => {
   jQuat.Set(quat.x, quat.y, quat.z, quat.w);
   return jQuat;
 }
 
 export const GetJoltQuat = (jQuat: Jolt.Quat, quat: Quaternion) => {
-  quat.set(jQuat.GetX(),jQuat.GetY(),jQuat.GetZ(),jQuat.GetW());
+  quat.set(jQuat.GetX(), jQuat.GetY(), jQuat.GetZ(), jQuat.GetW());
   return quat;
 }

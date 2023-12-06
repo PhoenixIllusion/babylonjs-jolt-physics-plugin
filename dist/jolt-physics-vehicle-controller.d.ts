@@ -120,7 +120,6 @@ export declare function createBasicCar(vehicle: {
     width: number;
 }, fourWheelDrive: boolean): Vehicle.WheeledVehicleSettings;
 export declare function createBasicMotorcycle(vehicle: {
-    width: number;
     height: number;
     length: number;
 }, wheel: {

@@ -298,26 +298,27 @@ export class JoltJSPlugin {
                 const radiusY = impostorExtents.y;
                 const radiusZ = impostorExtents.z;
                 const size = Math.max(checkWithEpsilon(radiusX), checkWithEpsilon(radiusY), checkWithEpsilon(radiusZ)) / 2;
-                returnValue = new Jolt.SphereShape(size, new Jolt.PhysicsMaterial());
+                returnValue = new Jolt.SphereShapeSettings(size);
                 break;
             case PhysicsImpostor.CapsuleImpostor:
-                //if(impostor.getParam('radiusTop') && impostor.getParam('radiusBottom')) {
-                //  const radiusTop: number = impostor.getParam('radiusTop');
-                //  const radiusBottom: number = impostor.getParam('radiusBottom');
-                //  const capRadius = impostorExtents.x / 2;
-                //  returnValue = new Jolt.TaperedCapsuleShapeSettings(impostorExtents.y / 2 - capRadius, radiusTop, radiusBottom, new Jolt.PhysicsMaterial()).Create().Get();
-                //} else {
-                const capRadius = impostorExtents.x / 2;
-                returnValue = new Jolt.CapsuleShape(impostorExtents.y / 2 - capRadius, capRadius);
-                //}
+                if (impostor.getParam('radiusTop') && impostor.getParam('radiusBottom')) {
+                    const radiusTop = impostor.getParam('radiusTop');
+                    const radiusBottom = impostor.getParam('radiusBottom');
+                    const capRadius = impostorExtents.x / 2;
+                    returnValue = new Jolt.TaperedCapsuleShapeSettings(impostorExtents.y / 2 - capRadius, radiusTop, radiusBottom, new Jolt.PhysicsMaterial());
+                }
+                else {
+                    const capRadius = impostorExtents.x / 2;
+                    returnValue = new Jolt.CapsuleShapeSettings(impostorExtents.y / 2 - capRadius, capRadius);
+                }
                 break;
             case PhysicsImpostor.CylinderImpostor:
-                returnValue = new Jolt.CylinderShapeSettings(0.5 * impostorExtents.y, 0.5 * impostorExtents.x).Create().Get();
+                returnValue = new Jolt.CylinderShapeSettings(0.5 * impostorExtents.y, 0.5 * impostorExtents.x);
                 break;
             case PhysicsImpostor.PlaneImpostor:
             case PhysicsImpostor.BoxImpostor:
-                this._tempVec3A.Set(impostorExtents.x / 2, impostorExtents.y / 2, impostorExtents.z / 2);
-                returnValue = new Jolt.BoxShape(this._tempVec3A);
+                const extent = new Jolt.Vec3(Math.max(impostorExtents.x / 2, 0.055), Math.max(impostorExtents.y / 2, 0.055), Math.max(impostorExtents.z / 2, 0.055));
+                returnValue = new Jolt.BoxShapeSettings(extent);
                 break;
             case PhysicsImpostor.MeshImpostor:
                 {
@@ -337,7 +338,7 @@ export class JoltJSPlugin {
                             v.z = vertexData.vertices[index + 2];
                         });
                     }
-                    returnValue = new Jolt.MeshShapeSettings(triangles, new Jolt.PhysicsMaterialList).Create().Get();
+                    returnValue = new Jolt.MeshShapeSettings(triangles);
                 }
                 break;
             case PhysicsImpostor.ConvexHullImpostor:
@@ -354,13 +355,18 @@ export class JoltJSPlugin {
                         hull.mPoints.push_back(new Jolt.Vec3(x, y, z));
                     }
                 }
-                returnValue = hull.Create().Get();
+                returnValue = hull;
                 break;
         }
         if (returnValue === undefined) {
             throw new Error('Unsupported Shape: ' + impostor.type);
         }
-        return returnValue;
+        if (impostor.getParam('offset-center-of-mass')) {
+            const CoM = impostor.getParam('offset-center-of-mass');
+            const offset = SetJoltVec3(CoM, new Jolt.Vec3());
+            returnValue = new Jolt.OffsetCenterOfMassShapeSettings(offset, returnValue);
+        }
+        return returnValue.Create().Get();
     }
     generateJoint(impostorJoint) {
         const mainBody = impostorJoint.mainImpostor.physicsBody;
