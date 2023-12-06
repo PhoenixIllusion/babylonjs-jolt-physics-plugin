@@ -65,19 +65,19 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     let object_filter = new Jolt.ObjectLayerPairFilterTable(2);
     object_filter.EnableCollision(LAYER_NON_MOVING, LAYER_MOVING);
     object_filter.EnableCollision(LAYER_MOVING, LAYER_MOVING);
-  
+
     // We use a 1-to-1 mapping between object layers and broadphase layers
     const BP_LAYER_NON_MOVING = new Jolt.BroadPhaseLayer(0);
     const BP_LAYER_MOVING = new Jolt.BroadPhaseLayer(1);
     let bp_interface = new Jolt.BroadPhaseLayerInterfaceTable(2, 2);
     bp_interface.MapObjectToBroadPhaseLayer(LAYER_NON_MOVING, BP_LAYER_NON_MOVING);
     bp_interface.MapObjectToBroadPhaseLayer(LAYER_MOVING, BP_LAYER_MOVING);
-  
+
     // Initialize Jolt
     settings.mObjectLayerPairFilter = object_filter;
     settings.mBroadPhaseLayerInterface = bp_interface;
     settings.mObjectVsBroadPhaseLayerFilter = new Jolt.ObjectVsBroadPhaseLayerFilterTable(settings.mBroadPhaseLayerInterface, 2, settings.mObjectLayerPairFilter, 2);
-    
+
     const joltInterface = new Jolt.JoltInterface(settings);
     return new JoltJSPlugin(joltInterface, _useDeltaForWorldStep);
   }
@@ -134,7 +134,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   }
   unregisterPerPhysicsStepCallback(listener: (timeStep: number) => void): void {
     const index = this._perPhysicsStepCallbacks.indexOf(listener);
-    if(index > 0) {
+    if (index > 0) {
       this._perPhysicsStepCallbacks.splice(index, 1);
     }
   }
@@ -320,7 +320,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   }
 
   private _getMeshVertexData(impostor: PhysicsImpostor): MeshVertexData {
-    const object = (impostor.getParam('mesh') as IPhysicsEnabledObject)||impostor.object;
+    const object = (impostor.getParam('mesh') as IPhysicsEnabledObject) || impostor.object;
     const rawVerts = object.getVerticesData ? object.getVerticesData(VertexBuffer.PositionKind) : [];
     const indices = (object.getIndices && object.getIndices()) ? object.getIndices()! : [];
     if (!rawVerts) {
@@ -365,33 +365,33 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     const checkWithEpsilon = (value: number): number => {
       return Math.max(value, Epsilon);
     };
-    let returnValue: Jolt.Shape | undefined = undefined;
+    let returnValue: Jolt.ShapeSettings | undefined = undefined;
     switch (impostor.type) {
       case PhysicsImpostor.SphereImpostor:
         const radiusX = impostorExtents.x;
         const radiusY = impostorExtents.y;
         const radiusZ = impostorExtents.z;
         const size = Math.max(checkWithEpsilon(radiusX), checkWithEpsilon(radiusY), checkWithEpsilon(radiusZ)) / 2;
-        returnValue = new Jolt.SphereShape(size, new Jolt.PhysicsMaterial())
+        returnValue = new Jolt.SphereShapeSettings(size);
         break;
       case PhysicsImpostor.CapsuleImpostor:
-        //if(impostor.getParam('radiusTop') && impostor.getParam('radiusBottom')) {
-        //  const radiusTop: number = impostor.getParam('radiusTop');
-        //  const radiusBottom: number = impostor.getParam('radiusBottom');
-        //  const capRadius = impostorExtents.x / 2;
-        //  returnValue = new Jolt.TaperedCapsuleShapeSettings(impostorExtents.y / 2 - capRadius, radiusTop, radiusBottom, new Jolt.PhysicsMaterial()).Create().Get();
-        //} else {
-        const capRadius = impostorExtents.x / 2;
-        returnValue = new Jolt.CapsuleShape(impostorExtents.y / 2 - capRadius, capRadius);
-        //}
+        if (impostor.getParam('radiusTop') && impostor.getParam('radiusBottom')) {
+          const radiusTop: number = impostor.getParam('radiusTop');
+          const radiusBottom: number = impostor.getParam('radiusBottom');
+          const capRadius = impostorExtents.x / 2;
+          returnValue = new Jolt.TaperedCapsuleShapeSettings(impostorExtents.y / 2 - capRadius, radiusTop, radiusBottom, new Jolt.PhysicsMaterial());
+        } else {
+          const capRadius = impostorExtents.x / 2;
+          returnValue = new Jolt.CapsuleShapeSettings(impostorExtents.y / 2 - capRadius, capRadius);
+        }
         break;
       case PhysicsImpostor.CylinderImpostor:
-        returnValue = new Jolt.CylinderShapeSettings(0.5 * impostorExtents.y, 0.5 * impostorExtents.x).Create().Get();
+        returnValue = new Jolt.CylinderShapeSettings(0.5 * impostorExtents.y, 0.5 * impostorExtents.x);
         break;
       case PhysicsImpostor.PlaneImpostor:
       case PhysicsImpostor.BoxImpostor:
-        this._tempVec3A.Set(impostorExtents.x / 2, impostorExtents.y / 2, impostorExtents.z / 2);
-        returnValue = new Jolt.BoxShape(this._tempVec3A);
+        const extent = new Jolt.Vec3(Math.max(impostorExtents.x / 2, 0.055), Math.max(impostorExtents.y / 2, 0.055), Math.max(impostorExtents.z / 2, 0.055));
+        returnValue = new Jolt.BoxShapeSettings(extent);
         break;
       case PhysicsImpostor.MeshImpostor: {
         // should transform the vertex data to world coordinates!!
@@ -410,7 +410,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
             v.z = vertexData.vertices[index + 2];
           });
         }
-        returnValue = new Jolt.MeshShapeSettings(triangles, new Jolt.PhysicsMaterialList).Create().Get();
+        returnValue = new Jolt.MeshShapeSettings(triangles);
       }
         break;
       case PhysicsImpostor.ConvexHullImpostor:
@@ -427,13 +427,22 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
             hull.mPoints.push_back(new Jolt.Vec3(x, y, z));
           }
         }
-        returnValue = hull.Create().Get();
+        returnValue = hull;
         break;
     }
     if (returnValue === undefined) {
-      throw new Error('Unsupported Shape: ' + impostor.type);
+      throw new Error('Unsupported Shape: Impostor Type' + impostor.type);
     }
-    return returnValue;
+    if (impostor.getParam('offset-center-of-mass')) {
+      const CoM = impostor.getParam('offset-center-of-mass') as Vector3;
+      const offset = SetJoltVec3(CoM, new Jolt.Vec3());
+      returnValue = new Jolt.OffsetCenterOfMassShapeSettings(offset, returnValue);
+    }
+    const shapeResult: Jolt.ShapeResult = returnValue.Create();
+    if (shapeResult.HasError()) {
+      throw new Error('Creating Jolt Shape : Impostor Type -' + impostor.type + ' : Error - ' + shapeResult.GetError().c_str());
+    }
+    return shapeResult.Get()
   }
 
   generateJoint(impostorJoint: PhysicsImpostorJoint): void {
@@ -749,11 +758,11 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     }
   }
   getRadius(impostor: PhysicsImpostor): number {
-    const extents =  impostor.getParam('extents') as Vector3 || impostor.getObjectExtents();
+    const extents = impostor.getParam('extents') as Vector3 || impostor.getObjectExtents();
     return Math.max(extents.x, extents.y, extents.z) / 2;
   }
   getBoxSizeToRef(impostor: PhysicsImpostor, result: Vector3): void {
-    const extents =  impostor.getParam('extents') as Vector3 || impostor.getObjectExtents();
+    const extents = impostor.getParam('extents') as Vector3 || impostor.getObjectExtents();
     result.x = extents.x;
     result.y = extents.y;
     result.z = extents.z;

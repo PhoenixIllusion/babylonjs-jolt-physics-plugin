@@ -359,14 +359,18 @@ export class JoltJSPlugin {
                 break;
         }
         if (returnValue === undefined) {
-            throw new Error('Unsupported Shape: ' + impostor.type);
+            throw new Error('Unsupported Shape: Impostor Type' + impostor.type);
         }
         if (impostor.getParam('offset-center-of-mass')) {
             const CoM = impostor.getParam('offset-center-of-mass');
             const offset = SetJoltVec3(CoM, new Jolt.Vec3());
             returnValue = new Jolt.OffsetCenterOfMassShapeSettings(offset, returnValue);
         }
-        return returnValue.Create().Get();
+        const shapeResult = returnValue.Create();
+        if (shapeResult.HasError()) {
+            throw new Error('Creating Jolt Shape : Impostor Type -' + impostor.type + ' : Error - ' + shapeResult.GetError().c_str());
+        }
+        return shapeResult.Get();
     }
     generateJoint(impostorJoint) {
         const mainBody = impostorJoint.mainImpostor.physicsBody;
