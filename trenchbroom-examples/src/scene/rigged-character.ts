@@ -7,7 +7,7 @@ import { TestMaterialResolver, TestMeshResolver } from './test-resolvers';
 import { createBox, createConvexHull, createStandardControls } from './example';
 import { GeometryUtil } from '../util/geometry';
 import { RiggedModel } from '../util/rigged-model';
-import { Scene } from '@babylonjs/core'
+import type { Scene } from '@babylonjs/core/scene'
 import '@babylonjs/core/Physics/physicsEngineComponent';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';

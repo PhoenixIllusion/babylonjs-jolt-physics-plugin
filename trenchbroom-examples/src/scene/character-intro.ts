@@ -9,7 +9,7 @@ import { GeometryUtil } from '../util/geometry';
 import { CameraCombinedInput } from '../util/controller';
 import { CameraSetup } from '../util/camera';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
-import { AbstractMesh } from '@babylonjs/core/Meshes';
+import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 import { Vector3, Quaternion } from '@babylonjs/core/Maths/math.vector';
 import { Scene } from '@babylonjs/core/scene';
 import { FreeCamera } from '@babylonjs/core/Cameras/freeCamera';
