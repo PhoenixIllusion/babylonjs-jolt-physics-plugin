@@ -17,6 +17,7 @@ export declare namespace Vehicle {
     }
     interface WheelSetting {
         suspension?: SuspensionSettings;
+        steeringAxis?: Vector3;
         radius: number;
         width: number;
         position: Vector3;
@@ -29,7 +30,7 @@ export declare namespace Vehicle {
     interface WheelDifferentials {
         leftIndex: number;
         rightIndex: number;
-        mDifferentialRatio?: number;
+        differentialRatio?: number;
         leftRightSplit?: number;
         limitedSlipRatio?: number;
         engineTorqueRatio?: number;
@@ -118,6 +119,14 @@ export declare function createBasicCar(vehicle: {
     radius: number;
     width: number;
 }, fourWheelDrive: boolean): Vehicle.WheeledVehicleSettings;
+export declare function createBasicMotorcycle(vehicle: {
+    width: number;
+    height: number;
+    length: number;
+}, wheel: {
+    radius: number;
+    width: number;
+}): Vehicle.MotorcycleVehicleSettings;
 export declare class WheeledVehicleController {
     wheelTransforms: {
         position: Vector3;
@@ -127,6 +136,10 @@ export declare class WheeledVehicleController {
     constructor(impostor: JoltPhysicsImpostor, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController>);
 }
 export declare class MotorcycleController {
+    wheelTransforms: {
+        position: Vector3;
+        rotation: Quaternion;
+    }[];
     private _physicsStepListener;
     constructor(impostor: JoltPhysicsImpostor, settings: Vehicle.MotorcycleVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController>);
 }

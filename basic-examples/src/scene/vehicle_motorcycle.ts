@@ -1,5 +1,5 @@
 import { MeshBuilder, SceneCallback, createBox, createFloor } from './example';
-import { DefaultWheeledVehicleInput, WheeledVehicleController, Vehicle, createBasicCar } from '@phoenixillusion/babylonjs-jolt-plugin/vehicle';
+import { Vehicle, DefaultMotorcycleInput, MotorcycleController, createBasicMotorcycle } from '@phoenixillusion/babylonjs-jolt-plugin/vehicle';
 import { SceneConfig } from '../app';
 import { FollowCamera } from '@babylonjs/core/Cameras/followCamera';
 import { Camera } from '@babylonjs/core/Cameras/camera';
@@ -8,8 +8,6 @@ import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { Scene } from '@babylonjs/core/scene';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
-import { TransformNode } from '@babylonjs/core';
-
 
 let camera: FollowCamera;
 
@@ -42,13 +40,13 @@ export default (scene: Scene): SceneCallback => {
   document.addEventListener("keydown", onDocumentKeyDown, false);
   document.addEventListener("keyup", onDocumentKeyUp, false);
 
-  const physicSetting = { mass: 4000, restitution: 0, friction: 0};
-  const car = createBox(new Vector3(0,2,0), Quaternion.FromEulerAngles(0, Math.PI, 0), new Vector3(0.9, .2, 2), physicSetting, '#FF0000');
+  const physicSetting = { mass: 800, restitution: 0, friction: 0};
+  const car = createBox(new Vector3(0,2,0), Quaternion.FromEulerAngles(0, Math.PI, 0), new Vector3(0.2, .2, 2), physicSetting, '#FF0000');
   car.box.material!.wireframe = true;
 
-  const wheeledConfig: Vehicle.WheeledVehicleSettings = createBasicCar({height: .4, length: 4, width: 1.8}, { radius: 0.5, width: 0.4}, true);
-  const vehicleInput = new DefaultWheeledVehicleInput(car.physics.physicsBody);
-  const controller = new WheeledVehicleController(car.physics, wheeledConfig, vehicleInput);
+  const wheeledConfig: Vehicle.MotorcycleVehicleSettings = createBasicMotorcycle({height: .4, length: 4, width: .4}, { radius: 0.2, width: 0.4});
+  const vehicleInput = new DefaultMotorcycleInput(car.physics.physicsBody);
+  const controller = new MotorcycleController(car.physics, wheeledConfig, vehicleInput);
 
   const carWheels: Mesh[] = []
   wheeledConfig.wheels.forEach((o, i) => {

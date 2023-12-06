@@ -5,6 +5,9 @@ function configureWheel(wheel, setting) {
     SetJoltVec3(setting.position, wheel.mPosition);
     wheel.mWidth = setting.width;
     wheel.mRadius = setting.radius;
+    if (setting.steeringAxis !== undefined) {
+        SetJoltVec3(setting.steeringAxis, wheel.mSteeringAxis);
+    }
     if (setting.suspension !== undefined) {
         const suspension = setting.suspension;
         if (suspension.direction !== undefined) {
@@ -141,8 +144,8 @@ function createDifferential(settings) {
     const differential = new Jolt.VehicleDifferentialSettings();
     differential.mLeftWheel = settings.leftIndex;
     differential.mRightWheel = settings.rightIndex;
-    if (settings.mDifferentialRatio !== undefined) {
-        differential.mDifferentialRatio = settings.mDifferentialRatio;
+    if (settings.differentialRatio !== undefined) {
+        differential.mDifferentialRatio = settings.differentialRatio;
     }
     if (settings.leftRightSplit !== undefined) {
         differential.mLeftRightSplit = settings.leftRightSplit;
@@ -312,6 +315,58 @@ export function createBasicCar(vehicle, wheel, fourWheelDrive) {
         antiRollBars: [{ leftIndex: 0, rightIndex: 1 }, { leftIndex: 2, rightIndex: 3 }]
     };
 }
+export function createBasicMotorcycle(vehicle, wheel) {
+    const casterAngle = 30 * Math.PI / 180;
+    const wheels = [{
+            position: new Vector3(0, -vehicle.height / 2 * 0.9, vehicle.length / 2),
+            radius: wheel.radius,
+            width: wheel.width,
+            suspension: {
+                maxLength: 0.5,
+                minLength: 0.5 - vehicle.height / 2,
+                direction: new Vector3(0, -1, Math.tan(casterAngle)).normalize(),
+                spring: {
+                    frequency: 2
+                }
+            },
+            maxBrakeTorque: 500,
+            maxSteerAngle: 30 * Math.PI / 180,
+            steeringAxis: new Vector3(0, 1, -Math.tan(casterAngle)).normalize()
+        }, {
+            position: new Vector3(0, -vehicle.height / 2 * 0.9, -vehicle.length / 2),
+            radius: wheel.radius,
+            width: wheel.width,
+            suspension: {
+                maxLength: 0.5,
+                minLength: 0.5 - vehicle.height / 2,
+                spring: {
+                    frequency: 1.5
+                }
+            },
+            maxBrakeTorque: 250,
+            maxSteerAngle: 0
+        }];
+    const differentials = [];
+    differentials.push({
+        leftIndex: -1, rightIndex: 1, differentialRatio: 1.93 * 40.0 / 16.0
+    });
+    return {
+        maxPitchRollAngle: 60 * Math.PI / 180,
+        wheels,
+        differentials,
+        collisionTester: 'cylinder',
+        engine: {
+            maxTorque: 150,
+            minRPM: 1000,
+            maxRPM: 10000
+        },
+        transmission: {
+            shiftDownRPM: 2000,
+            shiftUpRPM: 8000,
+            clutchStrength: 2
+        }
+    };
+}
 export class WheeledVehicleController {
     constructor(impostor, settings, input) {
         this.wheelTransforms = [];
@@ -340,6 +395,7 @@ export class WheeledVehicleController {
 }
 export class MotorcycleController {
     constructor(impostor, settings, input) {
+        this.wheelTransforms = [];
         const joltPlugin = impostor._pluginData.plugin;
         const physicsBody = impostor.physicsBody;
         const constraintSettings = createMotorcycleConstraint(settings);
@@ -347,7 +403,17 @@ export class MotorcycleController {
         configureVehicleConstraint(joltPlugin, settings, constraint);
         const bodyInterface = joltPlugin.world.GetBodyInterface();
         const controller = Jolt.castObject(constraint.GetController(), Jolt.MotorcycleController);
+        settings.wheels.forEach(() => {
+            this.wheelTransforms.push({ position: new Vector3, rotation: new Quaternion });
+        });
+        const wheelRight = new Jolt.Vec3(0, 1, 0);
+        const wheelUp = new Jolt.Vec3(1, 0, 0);
         this._physicsStepListener = (delta) => {
+            this.wheelTransforms.forEach((o, i) => {
+                const transform = constraint.GetWheelLocalTransform(i, wheelRight, wheelUp);
+                GetJoltVec3(transform.GetTranslation(), o.position);
+                GetJoltQuat(transform.GetRotation().GetQuaternion(), o.rotation);
+            });
             input.onPrePhysicsUpdate(bodyInterface, controller, delta);
         };
         joltPlugin.registerPerPhysicsStepCallback(this._physicsStepListener);
