@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "mkdir -p dist && cp src/jolt-import.js ./dist/. && tsc",
-    "git-pages": "cd .git-pages && sh build.sh"
+    "git-pages": "sh build-git-pages.sh",
+    "clean-examples": "rm -r basic-examples/dist basic-examples/node_modules trenchbroom-examples/dist trenchbroom-examples/node_modules" 
   },
   "devDependencies": {
     "@babylonjs/core": "6.28.1",

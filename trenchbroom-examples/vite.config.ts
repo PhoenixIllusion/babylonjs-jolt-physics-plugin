@@ -2,7 +2,6 @@ import { defineConfig, splitVendorChunkPlugin } from 'vite'
 
 export default defineConfig({
   build: {
-    minify: 'terser',
     rollupOptions: {
       input: {
         'character_intro': 'character_intro.html',
