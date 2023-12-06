@@ -60,7 +60,7 @@ const run: SceneFunction = async (scene: Scene) => {
   const inputHandler = new StandardCharacterVirtualHandler();
   inputHandler.characterSpeed = 12;
   inputHandler.jumpSpeed = 12;
-  scene.getPhysicsEngine()?.setGravity(new Vector3(0,-18,0));
+  scene.getPhysicsEngine()?.setGravity(new Vector3(0, -18, 0));
   char.phyics.controller.inputHandler = inputHandler;
 
   const camera = createStandardControls(inputHandler, char.mesh);
@@ -68,9 +68,9 @@ const run: SceneFunction = async (scene: Scene) => {
   camera.changeTiltY(-.1);
 
 
-  const ResetGround = createBox(new Vector3(0,-100, 0), Quaternion.Identity(), new Vector3(1e3, 10, 1e3));
+  const ResetGround = createBox(new Vector3(0, -100, 0), Quaternion.Identity(), new Vector3(1e3, 10, 1e3));
   ResetGround.box.isVisible = false;
-  char.phyics.controller.registerOnJoltPhysicsCollide('on-contact-add', [ ResetGround.physics ], () => {
+  char.phyics.controller.registerOnJoltPhysicsCollide('on-contact-add', [ResetGround.physics], () => {
     char.phyics.controller.setPosition(new Vector3(spawn.x, spawn.y, spawn.z));
   })
 

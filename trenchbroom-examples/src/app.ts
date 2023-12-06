@@ -10,8 +10,8 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Scene } from '@babylonjs/core/scene';
 import '@babylonjs/core/Physics/physicsEngineComponent';
 import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight';
- 
-export type SceneCallback = (void|((time: number, delta: number) =>void))
+
+export type SceneCallback = (void | ((time: number, delta: number) => void))
 export type SceneFunction = (scene: Scene) => Promise<SceneCallback>;
 
 export class App {
@@ -20,7 +20,7 @@ export class App {
         // create the canvas html element and attach it to the webpage
         const canvas = this.canvas = document.createElement('canvas');
         canvas.id = 'gameCanvas';
-        document.body.style.height = window.innerHeight+'px';
+        document.body.style.height = window.innerHeight + 'px';
         document.body.appendChild(canvas);
         this.init();
     }
@@ -40,10 +40,10 @@ export class App {
         hemi.specular = Color3.Black();
         // Default intensity is 1. Let's dim the light a small amount
         light.intensity = .5;
-        light.specular = new Color3(0.1,0.1,0.1);
+        light.specular = new Color3(0.1, 0.1, 0.1);
 
         const callback = await this.createScene(scene);
-  
+
         /*
         // hide/show the Inspector
         window.addEventListener('keydown', (ev) => {
@@ -60,7 +60,7 @@ export class App {
         let last = performance.now();
         // run the main render loop
         engine.runRenderLoop(() => {
-            if(callback) {
+            if (callback) {
                 const now = performance.now();
                 callback(now, now - last);
                 last = now;

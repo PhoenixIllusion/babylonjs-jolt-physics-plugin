@@ -45,14 +45,14 @@ export class JoystickControl {
 
 
   checkInput() {
-    if(this.lastTouch > this.firstTouch) {
-      if(this.lastTouch - this.firstTouch < 200) {
+    if (this.lastTouch > this.firstTouch) {
+      if (this.lastTouch - this.firstTouch < 200) {
         this.firstTouch = 0;
         this.actionButton = true;
       } else {
         this.actionButton = false;
       }
-      if(performance.now() - this.lastTouch > 200) {
+      if (performance.now() - this.lastTouch > 200) {
         this.actionButton = false;
         this.isActive = false;
       }
@@ -67,6 +67,7 @@ export class JoystickControl {
     let containerSize = this.joystickCircleRadius * 2 + this.joystickPuckRadius * 2 + 1;
     this.joystickContainer.widthInPixels = containerSize;
     this.joystickContainer.heightInPixels = containerSize;
+    this.joystickContainer.background = 'rgba(255,255,255,.1)'
     this.joystickContainer.horizontalAlignment = Control.HORIZONTAL_ALIGNMENT_LEFT;
     this.joystickContainer.verticalAlignment = Control.VERTICAL_ALIGNMENT_TOP;
 
@@ -125,12 +126,12 @@ export class JoystickControl {
     this.isActive = true;
     const joystickVector = touchPoint.subtract(this.joystickButtonDownPos);
     if (joystickVector.length() > this.joystickCircleRadius)
-        joystickVector.scaleInPlace(this.joystickCircleRadius / joystickVector.length());
+      joystickVector.scaleInPlace(this.joystickCircleRadius / joystickVector.length());
     this.joystickPuck.left = joystickVector.x;
     this.joystickPuck.top = joystickVector.y;
 
     this.joystickDelta = joystickVector.scaleInPlace(this.speed / this.joystickCircleRadius);
-}
+  }
 
 
   disposeImages() {

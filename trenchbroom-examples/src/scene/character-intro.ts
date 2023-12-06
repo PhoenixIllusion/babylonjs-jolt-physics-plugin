@@ -10,7 +10,7 @@ import { CameraCombinedInput } from '../util/controller';
 import { CameraSetup } from '../util/camera';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { AbstractMesh } from '@babylonjs/core/Meshes';
-import { Vector3,Quaternion } from '@babylonjs/core/Maths/math.vector';
+import { Vector3, Quaternion } from '@babylonjs/core/Maths/math.vector';
 import { Scene } from '@babylonjs/core/scene';
 import { FreeCamera } from '@babylonjs/core/Cameras/freeCamera';
 
@@ -28,13 +28,13 @@ class HelloWorldMeshResolver extends TestMeshResolver {
     async forClassName(_modelName: string): Promise<AbstractMesh | undefined> {
         return undefined;
     }
-} 
+}
 
 
 const run: SceneFunction = async (scene: Scene) => {
 
     const mapLoader = new MapLoader();
-    const map = await mapLoader.parseMap('levels/character-intro.map', {forTexture: (_s) => ({ width: 512, height: 512} )});
+    const map = await mapLoader.parseMap('levels/character-intro.map', { forTexture: (_s) => ({ width: 512, height: 512 }) });
     const spawn = map.player.position;
 
     const mapBuilder = new MapSceneBuilder(scene, new TestMaterialResolver(), new HelloWorldMeshResolver());
@@ -43,24 +43,24 @@ const run: SceneFunction = async (scene: Scene) => {
 
     const createCharacter = () => {
         const capsuleProps = { height: 8, tessellation: 16 }
-        const capsule = MeshBuilder.CreateCapsule('capsule', { radius: 2, ... capsuleProps });
-        const model = MeshBuilder.CreateBox('box',{width: 4, height: 8, depth: 4});
+        const capsule = MeshBuilder.CreateCapsule('capsule', { radius: 2, ...capsuleProps });
+        const model = MeshBuilder.CreateBox('box', { width: 4, height: 8, depth: 4 });
         model.rotationQuaternion = Quaternion.Identity();
         model.material = getMaterial('#990000');
         capsule.position.set(spawn.x, spawn.y, spawn.z);
         capsule.isVisible = false;
 
         return {
-          model: model,
-          mesh: capsule,
-          phyics: new JoltCharacterVirtualImpostor(capsule, PhysicsImpostor.CapsuleImpostor, { mass: 10})
-        } 
-      }
-  
-      const char = createCharacter();
-      const inputHandler = new StandardCharacterVirtualHandler();
-      inputHandler.jumpSpeed = 6;
-      char.phyics.controller.inputHandler = inputHandler;
+            model: model,
+            mesh: capsule,
+            phyics: new JoltCharacterVirtualImpostor(capsule, PhysicsImpostor.CapsuleImpostor, { mass: 10 })
+        }
+    }
+
+    const char = createCharacter();
+    const inputHandler = new StandardCharacterVirtualHandler();
+    inputHandler.jumpSpeed = 6;
+    char.phyics.controller.inputHandler = inputHandler;
 
     const input = {
         direction: new Vector3(),
@@ -68,18 +68,18 @@ const run: SceneFunction = async (scene: Scene) => {
         crouched: false
     }
 
-    const camera =  new CameraSetup();
+    const camera = new CameraSetup();
     camera.setTarget(char.model.position);
     const listener = new CameraCombinedInput<FreeCamera>((camera, joystick, keyboard) => {
-        input.direction.set(0,0,0);
-        if(keyboard.KEY_PRESSED) {
-            if(keyboard.LEFT) input.direction.x -= 1;
-            if(keyboard.RIGHT) input.direction.x += 1;
-            if(keyboard.FORWARD) input.direction.z += 1;
-            if(keyboard.BACKWARD) input.direction.z -= 1;
+        input.direction.set(0, 0, 0);
+        if (keyboard.KEY_PRESSED) {
+            if (keyboard.LEFT) input.direction.x -= 1;
+            if (keyboard.RIGHT) input.direction.x += 1;
+            if (keyboard.FORWARD) input.direction.z += 1;
+            if (keyboard.BACKWARD) input.direction.z -= 1;
         }
         input.jump = keyboard.JUMP;
-        if(joystick.length() > 0) {
+        if (joystick.length() > 0) {
             input.direction.x = joystick.x;
             input.direction.z = -joystick.y;
         }
@@ -87,7 +87,7 @@ const run: SceneFunction = async (scene: Scene) => {
         const cameraDirectioNV = Vector3.TransformCoordinates(input.direction, rotation);
         cameraDirectioNV.y = 0;
         cameraDirectioNV.normalize();
-        if(input.direction.length()) {
+        if (input.direction.length()) {
             char.model.lookAt(char.model.position.add(cameraDirectioNV));
         }
         inputHandler.updateInput(cameraDirectioNV, input.jump);

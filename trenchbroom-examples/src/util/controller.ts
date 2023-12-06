@@ -28,23 +28,23 @@ export class CameraCombinedInput<T extends Camera> extends BaseCameraPointersInp
   getSimpleName = () => "joystick"
 
   constructor(private _onInputCheck: OnInputCheck<T>, private cameraSetup: CameraSetup) {
-     super();
+    super();
   }
 
   attachControl(noPreventDefault?: boolean) {
-      super.attachControl(noPreventDefault);
-      this.joystick.attachControl();
-      this.keyboard.attachControl(this.camera.getScene());
-      this.screenSize = CameraCombinedInput.getScreenSize();
-      this.joystick.prepareImages(this.screenSize);
-      EngineStore.LastCreatedEngine!.onResizeObservable.add(this.resize);
+    super.attachControl(noPreventDefault);
+    this.joystick.attachControl();
+    this.keyboard.attachControl(this.camera.getScene());
+    this.screenSize = CameraCombinedInput.getScreenSize();
+    this.joystick.prepareImages(this.screenSize);
+    EngineStore.LastCreatedEngine!.onResizeObservable.add(this.resize);
   }
 
   detachControl() {
-      this.joystick.detachControl();
-      this.keyboard.detachControl(this.camera.getScene());
-      EngineStore.LastCreatedEngine!.onResizeObservable.removeCallback(this.resize);
-      super.detachControl();
+    this.joystick.detachControl();
+    this.keyboard.detachControl(this.camera.getScene());
+    EngineStore.LastCreatedEngine!.onResizeObservable.removeCallback(this.resize);
+    super.detachControl();
   }
 
 
@@ -54,55 +54,55 @@ export class CameraCombinedInput<T extends Camera> extends BaseCameraPointersInp
   };
 
   static getScreenSize() {
-      let engine = EngineStore.LastCreatedEngine!;
-      return new Vector2(engine.getRenderWidth(), engine.getRenderHeight());
+    let engine = EngineStore.LastCreatedEngine!;
+    return new Vector2(engine.getRenderWidth(), engine.getRenderHeight());
   }
 
   checkInputs() {
-      if(this.keyboard.state.KEY_PRESSED) {
-        let engine = EngineStore.LastCreatedEngine!;
-        if(this.keyboard.state.ROTATE_LEFT) this.cameraSetup.rotate(-this.SWIPE_SENSIBILITY * engine.getDeltaTime()/500);
-        if(this.keyboard.state.ROTATE_RIGHT) this.cameraSetup.rotate(this.SWIPE_SENSIBILITY * engine.getDeltaTime()/500);
-        if(this.keyboard.state.ROTATE_UP) this.cameraSetup.changeTiltY(-this.SWIPE_SENSIBILITY * engine.getDeltaTime()/500);
-        if(this.keyboard.state.ROTATE_DOWN) this.cameraSetup.changeTiltY(this.SWIPE_SENSIBILITY * engine.getDeltaTime()/500);
-      }
-      this.joystick.checkInput();
-      if(this.joystick.isActive) {
-        this.keyboard.state.JUMP = this.joystick.actionButton;
-      }
-      this._onInputCheck(this.camera, this.joystick.joystickDelta, this.keyboard.state)
+    if (this.keyboard.state.KEY_PRESSED) {
+      let engine = EngineStore.LastCreatedEngine!;
+      if (this.keyboard.state.ROTATE_LEFT) this.cameraSetup.rotate(-this.SWIPE_SENSIBILITY * engine.getDeltaTime() / 500);
+      if (this.keyboard.state.ROTATE_RIGHT) this.cameraSetup.rotate(this.SWIPE_SENSIBILITY * engine.getDeltaTime() / 500);
+      if (this.keyboard.state.ROTATE_UP) this.cameraSetup.changeTiltY(-this.SWIPE_SENSIBILITY * engine.getDeltaTime() / 500);
+      if (this.keyboard.state.ROTATE_DOWN) this.cameraSetup.changeTiltY(this.SWIPE_SENSIBILITY * engine.getDeltaTime() / 500);
+    }
+    this.joystick.checkInput();
+    if (this.joystick.isActive) {
+      this.keyboard.state.JUMP = this.joystick.actionButton;
+    }
+    this._onInputCheck(this.camera, this.joystick.joystickDelta, this.keyboard.state)
   }
 
   onTouch(point: Nullable<PointerTouch>, offsetX: number, offsetY: number): void {
-      if (point && point.pointerId === this.joystickPointerId) {
-          // point refer to global inner window canvas, we need to convert it to local render canvas
-          this.joystick.onTouchJoystick(new Vector2(point.x, point.y));
-      } else {
-          this.onTouchSwipe(new Vector2(offsetX, offsetY));
-      }
+    if (point && point.pointerId === this.joystickPointerId) {
+      // point refer to global inner window canvas, we need to convert it to local render canvas
+      this.joystick.onTouchJoystick(new Vector2(point.x, point.y));
+    } else {
+      this.onTouchSwipe(new Vector2(offsetX, offsetY));
+    }
   }
   onTouchSwipe(touchOffset: Vector2) {
-      let directionAdjust = 1;
-      if (this.camera.getScene().useRightHandedSystem) directionAdjust *= -1;
-      if (this.camera.parent && this.camera.parent._getWorldMatrixDeterminant() < 0)
-          directionAdjust *= -1;
-      this.cameraSetup.rotate(((directionAdjust * touchOffset.x) / this.screenSize.x) * this.SWIPE_SENSIBILITY);
-      this.cameraSetup.changeTiltY((touchOffset.y / this.screenSize.x) * this.SWIPE_SENSIBILITY);
+    let directionAdjust = 1;
+    if (this.camera.getScene().useRightHandedSystem) directionAdjust *= -1;
+    if (this.camera.parent && this.camera.parent._getWorldMatrixDeterminant() < 0)
+      directionAdjust *= -1;
+    this.cameraSetup.rotate(((directionAdjust * touchOffset.x) / this.screenSize.x) * this.SWIPE_SENSIBILITY);
+    this.cameraSetup.changeTiltY((touchOffset.y / this.screenSize.x) * this.SWIPE_SENSIBILITY);
   }
 
   onButtonDown(evt: IPointerEvent) {
-      if (evt.offsetY > this.screenSize.y * this.joystick.JOYSTICK_TOUCH_AREA_SCREEN_SHARE) {
-        this.joystickPointerId = evt.pointerId;
-        this.joystick.onButtonDownJoystick(evt);
-      }
+    if (evt.offsetY > this.screenSize.y * this.joystick.JOYSTICK_TOUCH_AREA_SCREEN_SHARE) {
+      this.joystickPointerId = evt.pointerId;
+      this.joystick.onButtonDownJoystick(evt);
+    }
   }
 
 
   onButtonUp(evt: IPointerEvent) {
-      if (evt.pointerId === this.joystickPointerId) {
-        this.joystickPointerId = null;
-        this.joystick.onButtonUpJoystick();
-      }
+    if (evt.pointerId === this.joystickPointerId) {
+      this.joystickPointerId = null;
+      this.joystick.onButtonUpJoystick();
+    }
   }
 
 }

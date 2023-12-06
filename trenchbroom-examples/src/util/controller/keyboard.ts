@@ -6,11 +6,11 @@ import { Observer } from "@babylonjs/core/Misc/observable";
 import { Scene } from "@babylonjs/core/scene";
 import { Nullable } from "@babylonjs/core/types";
 
-type DIRECTION_KEY = 'a'|'s'|'d'|'w' | 'ArrowDown'|'ArrowUp'|'ArrowLeft'|'ArrowRight';
-type ROTATE_KEY = 'q'|'e'|'z'|'c';
-type ACTION_KEY = 'r'|' ';
+type DIRECTION_KEY = 'a' | 's' | 'd' | 'w' | 'ArrowDown' | 'ArrowUp' | 'ArrowLeft' | 'ArrowRight';
+type ROTATE_KEY = 'q' | 'e' | 'z' | 'c';
+type ACTION_KEY = 'r' | ' ';
 
-type KEY = DIRECTION_KEY|ROTATE_KEY|ACTION_KEY;
+type KEY = DIRECTION_KEY | ROTATE_KEY | ACTION_KEY;
 
 
 interface IKeyState<T> {
@@ -26,10 +26,10 @@ interface IKeyState<T> {
 }
 
 class KeyCodesState implements IKeyState<KEY[]> {
-  LEFT: KEY[] = ['a','ArrowLeft'];
-  RIGHT: KEY[] = ['d','ArrowRight'];
-  FORWARD: KEY[] = ['w','ArrowUp'];
-  BACKWARD: KEY[] = ['s','ArrowDown'];
+  LEFT: KEY[] = ['a', 'ArrowLeft'];
+  RIGHT: KEY[] = ['d', 'ArrowRight'];
+  FORWARD: KEY[] = ['w', 'ArrowUp'];
+  BACKWARD: KEY[] = ['s', 'ArrowDown'];
   ROTATE_LEFT: KEY[] = ['q'];
   ROTATE_RIGHT: KEY[] = ['e'];
   ROTATE_UP: KEY[] = ['z'];
@@ -62,7 +62,7 @@ export class KeyboardControl {
       return;
     }
     const engine = EngineStore.LastCreatedEngine;
-    if(engine) {
+    if (engine) {
       this._onCanvasBlurObserver = engine.onCanvasBlurObservable.add(() => {
         this._keys.length = 0;
       });
@@ -72,16 +72,16 @@ export class KeyboardControl {
       const evt = info.event;
       const key = evt.key as KEY;
       if (!evt.metaKey) {
-          if (info.type === KeyboardEventTypes.KEYDOWN || info.type === KeyboardEventTypes.KEYUP) {
-            this.state.KEY_PRESSED = false;
-            const set_state = info.type === KeyboardEventTypes.KEYDOWN ? true : false;
-            stateKeys.forEach( k => {
-              if(this.keys[k].indexOf(key) >= 0) {
-                this.state[k] = set_state;
-              }
-              this.state.KEY_PRESSED = this.state.KEY_PRESSED || this.state[k];
-            })
-          }
+        if (info.type === KeyboardEventTypes.KEYDOWN || info.type === KeyboardEventTypes.KEYUP) {
+          this.state.KEY_PRESSED = false;
+          const set_state = info.type === KeyboardEventTypes.KEYDOWN ? true : false;
+          stateKeys.forEach(k => {
+            if (this.keys[k].indexOf(key) >= 0) {
+              this.state[k] = set_state;
+            }
+            this.state.KEY_PRESSED = this.state.KEY_PRESSED || this.state[k];
+          })
+        }
       }
     });
   }
@@ -89,15 +89,15 @@ export class KeyboardControl {
     if (scene && EngineStore.LastCreatedEngine) {
       const engine = EngineStore.LastCreatedEngine;
       if (this._onKeyboardObserver) {
-          scene.onKeyboardObservable.remove(this._onKeyboardObserver);
+        scene.onKeyboardObservable.remove(this._onKeyboardObserver);
       }
 
       if (this._onCanvasBlurObserver) {
-          engine.onCanvasBlurObservable.remove(this._onCanvasBlurObserver);
+        engine.onCanvasBlurObservable.remove(this._onCanvasBlurObserver);
       }
       this._onKeyboardObserver = null;
       this._onCanvasBlurObserver = null;
-  }
-  this._keys.length = 0;
+    }
+    this._keys.length = 0;
   }
 }
