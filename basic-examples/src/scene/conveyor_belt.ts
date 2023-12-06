@@ -27,29 +27,29 @@ export default (): (void | ((time: number, delta: number) => void)) => {
   for (let i = 0; i <= 10; ++i) {
     const box = createBox(new Vector3(-cBeltLength + i * 10.0, 10.0, -cBeltLength),
       Quaternion.Identity(), new Vector3(2, 2, 2), { mass: 10, restitution: 0, friction: Math.max(0.0, 1.0 - 0.1 * i) }, '#5e5e0f');
-      linearBoxes.push(box);
+    linearBoxes.push(box);
   }
 
 
-    // Create 2 cylinders
-    let cylinder1 = createCylinder(new Vector3(-25.0, 1.0, -20.0), 1.0, 6.0,
-      { mass: 10, restitution: 0, friction: 1 }, '#FF0000');
-    cylinder1.cylinder.rotationQuaternion = Quaternion.FromRotationMatrix(Matrix.RotationAxis(new Vector3(0, 0, 1), 0.5 * Math.PI));
-  
-    let cylinder2 = createCylinder(new Vector3(-25.0, 1.0, 20.0), 1.0, 6.0,
-      { mass: 10, restitution: 0, friction: 1 }, '#FF0000');
-    cylinder2.cylinder.rotationQuaternion = Quaternion.FromRotationMatrix(Matrix.RotationAxis(new Vector3(0, 0, 1), 0.5 * Math.PI));
-  
-    // Let a dynamic belt rest on it
-    const dynamic_belt = createBox(new Vector3(-25.0, 3.0, 0), Quaternion.Identity(), new Vector3(5.0, 0.1, 25.0)
-      , { mass: 10, restitution: 0, friction: 1 }, '#333399');
-    mLinearBelts.push(dynamic_belt);
+  // Create 2 cylinders
+  let cylinder1 = createCylinder(new Vector3(-25.0, 1.0, -20.0), 1.0, 6.0,
+    { mass: 10, restitution: 0, friction: 1 }, '#FF0000');
+  cylinder1.cylinder.rotationQuaternion = Quaternion.FromRotationMatrix(Matrix.RotationAxis(new Vector3(0, 0, 1), 0.5 * Math.PI));
 
-    // Create cargo on the dynamic belt
-    const dynamicBox = createBox(new Vector3(-25.0, 6.0, 15.0),
-      Quaternion.Identity(), new Vector3(2, 2, 2), { mass: 10, restitution: 0, friction: 1 }, '#990099');
-    linearBoxes.push(cylinder1, cylinder2, dynamicBox);
-  
+  let cylinder2 = createCylinder(new Vector3(-25.0, 1.0, 20.0), 1.0, 6.0,
+    { mass: 10, restitution: 0, friction: 1 }, '#FF0000');
+  cylinder2.cylinder.rotationQuaternion = Quaternion.FromRotationMatrix(Matrix.RotationAxis(new Vector3(0, 0, 1), 0.5 * Math.PI));
+
+  // Let a dynamic belt rest on it
+  const dynamic_belt = createBox(new Vector3(-25.0, 3.0, 0), Quaternion.Identity(), new Vector3(5.0, 0.1, 25.0)
+    , { mass: 10, restitution: 0, friction: 1 }, '#333399');
+  mLinearBelts.push(dynamic_belt);
+
+  // Create cargo on the dynamic belt
+  const dynamicBox = createBox(new Vector3(-25.0, 6.0, 15.0),
+    Quaternion.Identity(), new Vector3(2, 2, 2), { mass: 10, restitution: 0, friction: 1 }, '#990099');
+  linearBoxes.push(cylinder1, cylinder2, dynamicBox);
+
 
   // Create an angular belt
   const mAngularBelt = createBox(new Vector3(10.0, 3.0, 0), Quaternion.Identity(),

@@ -17,10 +17,10 @@ export const config: SceneConfig = {
     camera.radius = 20;
     return camera;
   }
-} 
+}
 
 export default (): SceneCallback => {
-  const floor = createFloor({friction: 1, mass: 0, restitution: 0});
+  const floor = createFloor({ friction: 1, mass: 0, restitution: 0 });
   const tiledTexture = new Texture('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAAAAABX3VL4AAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5wsCAyocY2BWPgAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAOSURBVAjXY2D4z/CfAQAGAAH/P9ph1wAAAABJRU5ErkJggg==');
   tiledTexture.onLoadObservable.add(() => {
     tiledTexture.wrapU = 1;
@@ -40,17 +40,17 @@ export default (): SceneCallback => {
   document.addEventListener("keydown", onDocumentKeyDown, false);
   document.addEventListener("keyup", onDocumentKeyUp, false);
 
-  const physicSetting = { mass: 4000, restitution: 0, friction: 0};
-  const car = createBox(new Vector3(0,2,0), Quaternion.FromEulerAngles(0, Math.PI, 0), new Vector3(0.9, .2, 2), physicSetting, '#FF0000');
+  const physicSetting = { mass: 4000, restitution: 0, friction: 0 };
+  const car = createBox(new Vector3(0, 2, 0), Quaternion.FromEulerAngles(0, Math.PI, 0), new Vector3(0.9, .2, 2), physicSetting, '#FF0000');
   car.box.material!.wireframe = true;
 
-  const wheeledConfig: Vehicle.WheeledVehicleSettings = createBasicCar({height: .4, length: 4, width: 1.8}, { radius: 0.5, width: 0.4}, true);
+  const wheeledConfig: Vehicle.WheeledVehicleSettings = createBasicCar({ height: .4, length: 4, width: 1.8 }, { radius: 0.5, width: 0.4 }, true);
   const vehicleInput = new DefaultWheeledVehicleInput(car.physics.physicsBody);
   const controller = new WheeledVehicleController(car.physics, wheeledConfig, vehicleInput);
 
   const carWheels: Mesh[] = []
   wheeledConfig.wheels.forEach((o, i) => {
-    const mesh = MeshBuilder.CreateCylinder('cylinder', { diameter: o.radius, height: o.width, tessellation: 16 });
+    const mesh = MeshBuilder.CreateCylinder('cylinder', { diameter: 2 * o.radius, height: o.width, tessellation: 16 });
     mesh.position = controller.wheelTransforms[i].position;
     mesh.rotationQuaternion = controller.wheelTransforms[i].rotation;
     mesh.material = material;
@@ -58,7 +58,7 @@ export default (): SceneCallback => {
     carWheels.push(mesh);
   })
   const followPoint = new Mesh('camera-follow');
-  followPoint.rotate(new Vector3(0,1,0), Math.PI);
+  followPoint.rotate(new Vector3(0, 1, 0), Math.PI);
   followPoint.parent = car.box;
 
   camera.lockedTarget = followPoint;

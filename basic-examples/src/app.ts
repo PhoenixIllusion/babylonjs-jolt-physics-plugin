@@ -12,7 +12,7 @@ import { Scene } from '@babylonjs/core/scene';
 import { Camera } from '@babylonjs/core/Cameras/camera';
 
 export interface SceneConfig {
-    getCamera(): Camera|undefined;
+    getCamera(): Camera | undefined;
 }
 
 export class App {
@@ -21,7 +21,7 @@ export class App {
         // create the canvas html element and attach it to the webpage
         const canvas = this.canvas = document.createElement('canvas');
         canvas.id = 'gameCanvas';
-        document.body.style.height = window.innerHeight+'px';
+        document.body.style.height = window.innerHeight + 'px';
         document.body.appendChild(canvas);
         this.init();
     }
@@ -33,11 +33,11 @@ export class App {
 
         scene.enablePhysics(new Vector3(0, -9.8, 0), await JoltJSPlugin.loadPlugin())
 
-        if(!(this.config && this.config.getCamera())) {
+        if (!(this.config && this.config.getCamera())) {
             const camera = new FlyCamera('camera1', new Vector3(0, 15, 30), scene);
             // This targets the camera to scene origin
-            camera.setTarget(new Vector3(0,10,0));
-    
+            camera.setTarget(new Vector3(0, 10, 0));
+
             // This attaches the camera to the canvas
             camera.attachControl(true);
         }
@@ -51,7 +51,7 @@ export class App {
         light.intensity = 0.7;
 
         const callback = this.createScene();
-  
+
         /*
         // hide/show the Inspector
         window.addEventListener('keydown', (ev) => {
@@ -68,7 +68,7 @@ export class App {
         let last = performance.now();
         // run the main render loop
         engine.runRenderLoop(() => {
-            if(callback) {
+            if (callback) {
                 const now = performance.now();
                 callback(now, now - last);
                 last = now;
