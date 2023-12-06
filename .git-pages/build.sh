@@ -1,4 +1,7 @@
-cd ../basic-examples
+cd ..
+npm ci
+npm run build
+cd basic-examples
 npm ci
 npm run build
 cd ../trenchbroom-examples
