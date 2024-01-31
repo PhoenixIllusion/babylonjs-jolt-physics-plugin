@@ -8,6 +8,7 @@ import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Logger } from '@babylonjs/core/Misc/logger';
 import { VertexBuffer } from '@babylonjs/core/Buffers/buffer';
 import { MotorEnabledJoint, PhysicsJoint } from '@babylonjs/core/Physics/v1/physicsJoint';
+export { setJoltModule } from './jolt-import';
 export var Jolt_Type;
 (function (Jolt_Type) {
     Jolt_Type[Jolt_Type["CHARACTER"] = 200] = "CHARACTER";

@@ -13,6 +13,7 @@ import { IMotorEnabledJoint, MotorEnabledJoint, PhysicsJoint, PhysicsJointData }
 import { IndicesArray, Nullable } from '@babylonjs/core/types';
 import { PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResult';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
+export { setJoltModule } from './jolt-import'
 
 interface MeshVertexData {
   indices: IndicesArray | number[];

@@ -6,6 +6,7 @@ import { IMotorEnabledJoint, PhysicsJoint } from '@babylonjs/core/Physics/v1/phy
 import { Nullable } from '@babylonjs/core/types';
 import { PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResult';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
+export { setJoltModule } from './jolt-import';
 export declare const enum Jolt_Type {
     CHARACTER = 200,
     VIRTUAL_CHARACTER = 201

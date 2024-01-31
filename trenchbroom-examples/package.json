@@ -9,17 +9,17 @@
     "preview": "vite preview"
   },
   "devDependencies": {
-    "@babylonjs/inspector": "6.28.1",
+    "@babylonjs/inspector": "6.40.0",
     "typescript": "5.2.2",
     "vite": "4.5.0"
   },
   "dependencies": {
-    "@babylonjs/core": "6.28.1",
-    "@babylonjs/gui": "6.28.1",
-    "@babylonjs/gui-editor": "6.28.1",
-    "@babylonjs/loaders": "6.28.1",
-    "@babylonjs/materials": "6.28.1",
-    "@babylonjs/serializers": "6.28.1",
+    "@babylonjs/core": "6.40.0",
+    "@babylonjs/gui": "6.40.0",
+    "@babylonjs/gui-editor": "6.40.0",
+    "@babylonjs/loaders": "6.40.0",
+    "@babylonjs/materials": "6.40.0",
+    "@babylonjs/serializers": "6.40.0",
     "@phoenixillusion/babylonjs-jolt-plugin": "PhoenixIllusion/babylonjs-jolt-physics-plugin#v1.0.4",
     "@phoenixillusion/babylonjs-trenchbroom-loader": "PhoenixIllusion/babylonjs-trenchbroom-loader#v1.0.5",
     "quickhull3d": "2.1.0"

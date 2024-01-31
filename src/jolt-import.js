@@ -1,7 +1,15 @@
-import Jolt from 'https://www.unpkg.com/jolt-physics@0.10.2/dist/jolt-physics.wasm-compat.js';
-
 const _jolt = {};
+
+let Jolt;
+
+export const setJoltModule = async (joltModule) => {
+    Jolt = joltModule;
+}
+
 export const loadJolt = async (importSettings) => {
+    if(!Jolt) {
+        Jolt = (await import('https://www.unpkg.com/jolt-physics@0.16.0/dist/jolt-physics.wasm-compat.js')).default
+    }
     const j = await Jolt(importSettings);
     Object.assign(_jolt, j);
 
