@@ -57,6 +57,7 @@ export class StandardCharacterVirtualHandler {
         this._linVelocity = new Vector3();
         this._groundVelocity = new Vector3();
         this._gravity = new Vector3();
+        this._tmpVec3 = new Jolt.Vec3();
     }
     updateInput(inMovementDirection, inJump) {
         this.inMovementDirection.copyFrom(inMovementDirection);
@@ -81,7 +82,9 @@ export class StandardCharacterVirtualHandler {
             // While in air we allow sliding
             this.allowSliding = true;
         }
-        const character_up_rotation = Jolt.Quat.sEulerAngles(new Jolt.Vec3(this.upRotationX, 0, this.upRotationZ));
+        const upRot = this._tmpVec3;
+        upRot.Set(this.upRotationX, 0, this.upRotationZ);
+        const character_up_rotation = Jolt.Quat.sEulerAngles(upRot);
         character.SetUp(character_up_rotation.RotateAxisY());
         character.SetRotation(character_up_rotation);
         const upRotation = GetJoltQuat(character_up_rotation, this._charUpRot);
@@ -141,6 +144,9 @@ export class StandardCharacterVirtualHandler {
     updateCharacter(character, tempVec) {
         SetJoltVec3(this._new_velocity, tempVec);
         character.SetLinearVelocity(tempVec);
+    }
+    dispose() {
+        Jolt.destroy(this._tmpVec3);
     }
 }
 export class JoltCharacterVirtual {
