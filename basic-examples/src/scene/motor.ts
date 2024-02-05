@@ -56,7 +56,11 @@ const createSlider = () => {
   const setEnd = () => joint.setMotor(10);
 
   let i = 0;
-  setInterval(() => {
+  const interval = setInterval(() => {
+    if(box.box.isDisposed()) {
+      clearInterval(interval);
+      return;
+    }
     if (i++ % 2 == 0) {
       setEnd();
     } else {

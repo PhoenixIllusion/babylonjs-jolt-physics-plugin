@@ -25,6 +25,7 @@
   },
   "exports": {
     ".": "./dist/index.js",
+    "./import": "./dist/jolt-import.js",
     "./impostor": "./dist/jolt-impostor.js",
     "./contact": "./dist/jolt-contact.js",
     "./character-virtual": "./dist/jolt-physics-character-virtual.js",

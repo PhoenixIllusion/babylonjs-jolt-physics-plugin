@@ -47,6 +47,7 @@ export const createFloor = (physicsOptions: PhysicsOptions = NullPhysics, color:
 
 
 const COLOR_HASH: { [key: string]: StandardMaterial } = {};
+export const clearMaterials = () => { Object.keys(COLOR_HASH).forEach(key => delete COLOR_HASH[key]) }
 export const getMaterial = (color: string) => {
   if (!COLOR_HASH[color]) {
     const material = COLOR_HASH[color] = new StandardMaterial('Color_' + color);

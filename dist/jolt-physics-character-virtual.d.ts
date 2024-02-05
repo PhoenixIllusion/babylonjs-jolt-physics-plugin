@@ -22,7 +22,7 @@ interface WorldData {
     physicsSystem: Jolt.PhysicsSystem;
 }
 export interface CharacterVirtualInputHandler {
-    processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number): void;
+    processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number, tmp: Jolt.Vec3): void;
     updateCharacter(character: Jolt.CharacterVirtual, tmp: Jolt.Vec3): void;
 }
 export declare const enum GroundState {
@@ -48,8 +48,6 @@ export declare class StandardCharacterVirtualHandler implements CharacterVirtual
     upRotationZ: number;
     groundState: GroundState;
     userState: CharacterState;
-    private _tmpVec3;
-    constructor();
     updateInput(inMovementDirection: Vector3, inJump: boolean): void;
     private _new_velocity;
     private _charUpRot;
@@ -57,9 +55,8 @@ export declare class StandardCharacterVirtualHandler implements CharacterVirtual
     private _linVelocity;
     private _groundVelocity;
     private _gravity;
-    processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number): void;
+    processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number, _tmpVec3: Jolt.Vec3): void;
     updateCharacter(character: Jolt.CharacterVirtual, tempVec: Jolt.Vec3): void;
-    dispose(): void;
 }
 export declare class JoltCharacterVirtual {
     private impostor;

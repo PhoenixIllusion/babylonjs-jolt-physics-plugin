@@ -50,7 +50,7 @@ interface UpdateFiltersData {
 }
 
 export interface CharacterVirtualInputHandler {
-  processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number): void;
+  processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number, tmp: Jolt.Vec3): void;
   updateCharacter(character: Jolt.CharacterVirtual, tmp: Jolt.Vec3): void;
 }
 
@@ -84,12 +84,6 @@ export class StandardCharacterVirtualHandler implements CharacterVirtualInputHan
   public groundState: GroundState = GroundState.ON_GROUND;
   public userState: CharacterState = CharacterState.IDLE;
 
-  private _tmpVec3: Jolt.Vec3;
-
-  constructor() {
-    this._tmpVec3 = new Jolt.Vec3();
-  }
-
   updateInput(inMovementDirection: Vector3, inJump: boolean) {
     this.inMovementDirection.copyFrom(inMovementDirection);
     this.inJump = inJump;
@@ -102,7 +96,7 @@ export class StandardCharacterVirtualHandler implements CharacterVirtualInputHan
   private _linVelocity: Vector3 = new Vector3();
   private _groundVelocity: Vector3 = new Vector3();
   private _gravity: Vector3 = new Vector3();
-  processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number) {
+  processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number, _tmpVec3: Jolt.Vec3) {
 
     const player_controls_horizontal_velocity = this.controlMovementDuringJump || character.IsSupported();
     if (player_controls_horizontal_velocity) {
@@ -121,7 +115,7 @@ export class StandardCharacterVirtualHandler implements CharacterVirtualInputHan
       // While in air we allow sliding
       this.allowSliding = true;
     }
-    const upRot = this._tmpVec3;
+    const upRot = _tmpVec3;
     upRot.Set(this.upRotationX, 0, this.upRotationZ);
     const character_up_rotation = Jolt.Quat.sEulerAngles(upRot);
     character.SetUp(character_up_rotation.RotateAxisY());
@@ -189,10 +183,6 @@ export class StandardCharacterVirtualHandler implements CharacterVirtualInputHan
     SetJoltVec3(this._new_velocity, tempVec);
     character.SetLinearVelocity(tempVec);
   }
-
-  dispose() {
-    Jolt.destroy(this._tmpVec3);
-  }
 }
 
 
@@ -231,10 +221,13 @@ export class JoltCharacterVirtual {
     settings.mCharacterPadding = this.config.sCharacterPadding;
     settings.mPenetrationRecoverySpeed = this.config.sPenetrationRecoverySpeed;
     settings.mPredictiveContactDistance = this.config.sPredictiveContactDistance;
-    settings.mSupportingVolume = new Jolt.Plane(Jolt.Vec3.sAxisY(), -1);
+    const mSupportingVolume = new Jolt.Plane(Jolt.Vec3.sAxisY(), -1);
+    settings.mSupportingVolume = mSupportingVolume;
+    Jolt.destroy(mSupportingVolume);
 
     this.mCharacter = new Jolt.CharacterVirtual(settings, Jolt.Vec3.sZero(), Jolt.Quat.sIdentity(), this.world.physicsSystem);
-    this.mDisposables.push(this.mCharacter, this.mUpdateSettings, settings);
+    Jolt.destroy(settings);
+    this.mDisposables.push(this.mCharacter, this.mUpdateSettings);
 
 
     const objectVsBroadPhaseLayerFilter = world.jolt.GetObjectVsBroadPhaseLayerFilter();
@@ -281,7 +274,7 @@ export class JoltCharacterVirtual {
     const g = this._characterUp.multiplyInPlace(this._temp2);
 
     if (this.inputHandler) {
-      this.inputHandler.processCharacterData(this.mCharacter, this.world.physicsSystem, mDeltaTime);
+      this.inputHandler.processCharacterData(this.mCharacter, this.world.physicsSystem, mDeltaTime, this._jolt_temp1);
       this.inputHandler.updateCharacter(this.mCharacter, this._jolt_temp1);
     }
 

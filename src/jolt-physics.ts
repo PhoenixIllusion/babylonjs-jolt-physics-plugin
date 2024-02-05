@@ -73,13 +73,15 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     let bp_interface = new Jolt.BroadPhaseLayerInterfaceTable(2, 2);
     bp_interface.MapObjectToBroadPhaseLayer(LAYER_NON_MOVING, BP_LAYER_NON_MOVING);
     bp_interface.MapObjectToBroadPhaseLayer(LAYER_MOVING, BP_LAYER_MOVING);
-
+    Jolt.destroy(BP_LAYER_MOVING);
+    Jolt.destroy(BP_LAYER_NON_MOVING);
     // Initialize Jolt
     settings.mObjectLayerPairFilter = object_filter;
     settings.mBroadPhaseLayerInterface = bp_interface;
     settings.mObjectVsBroadPhaseLayerFilter = new Jolt.ObjectVsBroadPhaseLayerFilterTable(settings.mBroadPhaseLayerInterface, 2, settings.mObjectLayerPairFilter, 2);
 
     const joltInterface = new Jolt.JoltInterface(settings);
+    Jolt.destroy(settings);
     return new JoltJSPlugin(joltInterface, _useDeltaForWorldStep);
   }
 
@@ -246,13 +248,15 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       if (impostor instanceof JoltCharacterVirtualImpostor) {
         const imp = impostor as JoltCharacterVirtualImpostor;
         const shape = this._createShape(imp);
-        const char = new JoltCharacterVirtual(imp, shape, { physicsSystem: this.world, jolt: this.jolt }, this);
+        const char = new JoltCharacterVirtual(imp, shape.shape, { physicsSystem: this.world, jolt: this.jolt }, this);
         char.init();
         imp.physicsBody = char.getCharacter();
         imp._pluginData.controller = char;
+        Jolt.destroy(shape.settings);
+        this._impostorLookup[-performance.now()] = imp;
         return;
       }
-      const colShape = this._createShape(impostor);
+      const collision = this._createShape(impostor);
       const mass = impostor.getParam('mass');
       const friction = impostor.getParam('friction');
       const restitution = impostor.getParam('restitution');
@@ -270,7 +274,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       );
       const isStatic = (mass === 0) ? Jolt.EMotionType_Static : Jolt.EMotionType_Dynamic;
       const layer = (mass === 0) ? LAYER_NON_MOVING : LAYER_MOVING;
-      const settings = new Jolt.BodyCreationSettings(colShape, this._tempVec3A, this._tempQuaternion, isStatic, layer);
+      const settings = new Jolt.BodyCreationSettings(collision.shape, this._tempVec3A, this._tempQuaternion, isStatic, layer);
       if (collisionGroup !== undefined) {
         settings.mCollisionGroup.SetGroupID(collisionGroup);
       }
@@ -284,6 +288,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       impostor._pluginData.friction = friction;
       impostor._pluginData.restitution = restitution;
       impostor._pluginData.plugin = this;
+      Jolt.destroy(collision.settings);
       settings.mRestitution = restitution;
       settings.mFriction = friction;
       if (mass !== 0) {
@@ -291,6 +296,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         settings.mMassPropertiesOverride.mMass = mass;
       }
       const body = impostor.physicsBody = this._bodyInterface.CreateBody(settings);
+      Jolt.destroy(settings);
       this._bodyInterface.AddBody(body.GetID(), Jolt.EActivation_Activate);
       this._impostorLookup[body.GetID().GetIndexAndSequenceNumber()] = impostor;
     }
@@ -305,6 +311,15 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   * @param impostor imposter to remove the physics body from
   */
   public removePhysicsBody(impostor: PhysicsImpostor) {
+    if (impostor instanceof JoltCharacterVirtualImpostor) {
+      if (impostor._pluginData) {
+        impostor._pluginData.toDispose.forEach((d: any) => {
+          Jolt.destroy(d);
+        });
+        impostor._pluginData.toDispose = [];
+      }
+      return;
+    }
     if (this.world) {
       delete this._impostorLookup[impostor.physicsBody.GetID().GetIndexAndSequenceNumber()];
       this._bodyInterface.RemoveBody(impostor.physicsBody.GetID());
@@ -361,7 +376,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     }
   }
 
-  private _createShape(impostor: PhysicsImpostor): Jolt.Shape {
+  private _createShape(impostor: PhysicsImpostor): {shape: Jolt.Shape, settings: Jolt.ShapeSettings } {
     const impostorExtents = impostor.getParam('extents') as Vector3 || impostor.getObjectExtents();
     const checkWithEpsilon = (value: number): number => {
       return Math.max(value, Epsilon);
@@ -380,7 +395,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
           const radiusTop: number = impostor.getParam('radiusTop');
           const radiusBottom: number = impostor.getParam('radiusBottom');
           const capRadius = impostorExtents.x / 2;
-          returnValue = new Jolt.TaperedCapsuleShapeSettings(impostorExtents.y / 2 - capRadius, radiusTop, radiusBottom, new Jolt.PhysicsMaterial());
+          returnValue = new Jolt.TaperedCapsuleShapeSettings(impostorExtents.y / 2 - capRadius, radiusTop, radiusBottom);
         } else {
           const capRadius = impostorExtents.x / 2;
           returnValue = new Jolt.CapsuleShapeSettings(impostorExtents.y / 2 - capRadius, capRadius);
@@ -393,6 +408,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       case PhysicsImpostor.BoxImpostor:
         const extent = new Jolt.Vec3(Math.max(impostorExtents.x / 2, 0.055), Math.max(impostorExtents.y / 2, 0.055), Math.max(impostorExtents.z / 2, 0.055));
         returnValue = new Jolt.BoxShapeSettings(extent);
+        Jolt.destroy(extent);
         break;
       case PhysicsImpostor.MeshImpostor: {
         // should transform the vertex data to world coordinates!!
@@ -412,12 +428,15 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
           });
         }
         returnValue = new Jolt.MeshShapeSettings(triangles);
+        Jolt.destroy(triangles);
       }
         break;
       case PhysicsImpostor.ConvexHullImpostor:
         const vertexData = this._getMeshVertexData(impostor);
         const hasIndex = vertexData.indices.length > 0;
         const hull = new Jolt.ConvexHullShapeSettings;
+        hull.mPoints.resize(0);
+        const p = new Jolt.Vec3();
         for (let i = 0; i < vertexData.faceCount; i++) {
           for (let j = 0; j < 3; j++) {
             const offset = i * 3 + j;
@@ -425,9 +444,11 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
             const x = vertexData.vertices[index + 0];
             const y = vertexData.vertices[index + 1];
             const z = vertexData.vertices[index + 2];
-            hull.mPoints.push_back(new Jolt.Vec3(x, y, z));
+            p.Set(x,y,z);
+            hull.mPoints.push_back(p);
           }
         }
+        Jolt.destroy(p);
         returnValue = hull;
         break;
     }
@@ -437,13 +458,17 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     if (impostor.getParam('offset-center-of-mass')) {
       const CoM = impostor.getParam('offset-center-of-mass') as Vector3;
       const offset = SetJoltVec3(CoM, new Jolt.Vec3());
-      returnValue = new Jolt.OffsetCenterOfMassShapeSettings(offset, returnValue);
+      const newVal = new Jolt.OffsetCenterOfMassShapeSettings(offset, returnValue);
+      Jolt.destroy(offset);
+      Jolt.destroy(returnValue);
+      returnValue = newVal;
     }
     const shapeResult: Jolt.ShapeResult = returnValue.Create();
     if (shapeResult.HasError()) {
       throw new Error('Creating Jolt Shape : Impostor Type -' + impostor.type + ' : Error - ' + shapeResult.GetError().c_str());
     }
-    return shapeResult.Get()
+    const shape = shapeResult.Get();
+    return { shape, settings: returnValue };
   }
 
   generateJoint(impostorJoint: PhysicsImpostorJoint): void {
@@ -510,6 +535,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         setIfAvailable(constraintSettings, 'mMaxDistance', 'max-distance');
         constraint = constraintSettings.Create(mainBody, connectedBody);
         constraint = Jolt.castObject(constraint, Jolt.DistanceConstraint);
+        Jolt.destroy(constraintSettings);
       }
         break;
       case PhysicsJoint.HingeJoint: {
@@ -521,6 +547,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         setIfAvailable(constraintSettings, 'mLimitsMax', 'max-limit');
         constraint = constraintSettings.Create(mainBody, connectedBody);
         constraint = Jolt.castObject(constraint, Jolt.HingeConstraint);
+        Jolt.destroy(constraintSettings);
       }
         break;
       case PhysicsJoint.SliderJoint: {
@@ -532,11 +559,11 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         setIfAvailable(constraintSettings, 'mLimitsMax', 'max-limit');
         constraint = constraintSettings.Create(mainBody, connectedBody);
         constraint = Jolt.castObject(constraint, Jolt.SliderConstraint);
+        Jolt.destroy(constraintSettings);
       }
         break;
     }
     if (constraint) {
-      impostorJoint.mainImpostor._pluginData.toDispose.push(constraint);
       this.world.AddConstraint(constraint);
       impostorJoint.joint.physicsJoint = constraint;
       impostorJoint.joint.jointData.nativeParams.body1 = mainBody;
@@ -781,14 +808,21 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   }
 
   dispose(): void {
+    const outstandingBodies = Object.values(this._impostorLookup);
+    outstandingBodies.forEach(impostor => {
+      impostor.dispose();
+    })
+
     // Dispose of world
-    Jolt.destroy(this.world);
+    Jolt.destroy(this.jolt);
 
     // Dispose of temp variables
     Jolt.destroy(this._tempQuaternion);
     Jolt.destroy(this._tempVec3A);
     Jolt.destroy(this._tempVec3B);
+
     this._raycaster.dispose();
+    Jolt.destroy(this._contactListener);
     (this.world as any) = null;
   }
 

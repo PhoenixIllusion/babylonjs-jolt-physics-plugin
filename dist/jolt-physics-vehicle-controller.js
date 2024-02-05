@@ -56,8 +56,8 @@ function createVehicleConstraint(settings) {
     vehicle.mWheels.clear();
     if (settings.antiRollBars !== undefined) {
         vehicle.mAntiRollBars.clear();
+        const rollbar = new Jolt.VehicleAntiRollBar();
         settings.antiRollBars.forEach(setting => {
-            const rollbar = new Jolt.VehicleAntiRollBar();
             rollbar.mLeftWheel = setting.leftIndex;
             rollbar.mRightWheel = setting.rightIndex;
             if (setting.stiffness !== undefined) {
@@ -65,6 +65,7 @@ function createVehicleConstraint(settings) {
             }
             vehicle.mAntiRollBars.push_back(rollbar);
         });
+        Jolt.destroy(rollbar);
     }
     return vehicle;
 }
@@ -140,8 +141,7 @@ function configureMotorcycleLean(motorcycle, settings) {
         motorcycle.mLeanSmoothingFactor = settings.smoothingFactor;
     }
 }
-function createDifferential(settings) {
-    const differential = new Jolt.VehicleDifferentialSettings();
+function createDifferential(differential, settings) {
     differential.mLeftWheel = settings.leftIndex;
     differential.mRightWheel = settings.rightIndex;
     if (settings.differentialRatio !== undefined) {
@@ -172,9 +172,11 @@ function configureWheeledVehicleConstraint(settings, controllerSettings) {
         configureTransmission(controllerSettings.mTransmission, settings.transmission);
     }
     controllerSettings.mDifferentials.clear();
+    const differential = new Jolt.VehicleDifferentialSettings();
     settings.differentials.forEach(setting => {
-        controllerSettings.mDifferentials.push_back(createDifferential(setting));
+        controllerSettings.mDifferentials.push_back(createDifferential(differential, setting));
     });
+    Jolt.destroy(differential);
     if (settings.differentialSlipRatio) {
         controllerSettings.mDifferentialLimitedSlipRatio = settings.differentialSlipRatio;
     }
@@ -280,7 +282,10 @@ function configureVehicleConstraint(joltPlugin, settings, constraint) {
         constraint.SetVehicleCollisionTester(new Jolt.VehicleCollisionTesterRay(LAYER_MOVING));
     }
     joltPlugin.world.AddConstraint(constraint);
-    joltPlugin.world.AddStepListener(new Jolt.VehicleConstraintStepListener(constraint));
+    const stepListener = new Jolt.VehicleConstraintStepListener(constraint);
+    const toDispose = [stepListener];
+    joltPlugin.world.AddStepListener(stepListener);
+    return toDispose;
 }
 export function createBasicCar(vehicle, wheel, fourWheelDrive) {
     const posMultiplier = [[1, 1], [-1, 1], [1, -1], [-1, -1]];
@@ -374,7 +379,8 @@ export class WheeledVehicleController {
         const physicsBody = impostor.physicsBody;
         const constraintSettings = createWheeledVehicleConstraint(settings);
         const constraint = new Jolt.VehicleConstraint(physicsBody, constraintSettings);
-        configureVehicleConstraint(joltPlugin, settings, constraint);
+        Jolt.destroy(constraintSettings);
+        const toDispose = configureVehicleConstraint(joltPlugin, settings, constraint);
         const bodyInterface = joltPlugin.world.GetBodyInterface();
         const controller = Jolt.castObject(constraint.GetController(), Jolt.WheeledVehicleController);
         settings.wheels.forEach(() => {
@@ -391,6 +397,7 @@ export class WheeledVehicleController {
             input.onPrePhysicsUpdate(bodyInterface, controller, delta);
         };
         joltPlugin.registerPerPhysicsStepCallback(this._physicsStepListener);
+        impostor._pluginData.toDispose.push(wheelRight, wheelUp, ...toDispose);
     }
 }
 export class MotorcycleController {
@@ -400,7 +407,8 @@ export class MotorcycleController {
         const physicsBody = impostor.physicsBody;
         const constraintSettings = createMotorcycleConstraint(settings);
         const constraint = new Jolt.VehicleConstraint(physicsBody, constraintSettings);
-        configureVehicleConstraint(joltPlugin, settings, constraint);
+        Jolt.destroy(constraintSettings);
+        const toDispose = configureVehicleConstraint(joltPlugin, settings, constraint);
         const bodyInterface = joltPlugin.world.GetBodyInterface();
         const controller = Jolt.castObject(constraint.GetController(), Jolt.MotorcycleController);
         settings.wheels.forEach(() => {
@@ -417,6 +425,7 @@ export class MotorcycleController {
             input.onPrePhysicsUpdate(bodyInterface, controller, delta);
         };
         joltPlugin.registerPerPhysicsStepCallback(this._physicsStepListener);
+        impostor._pluginData.toDispose.push(wheelRight, wheelUp, ...toDispose);
     }
 }
 export class TreadedVehicleController {

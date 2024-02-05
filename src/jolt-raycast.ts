@@ -68,9 +68,9 @@ export class RayCastUtility {
   }
 
   public dispose() {
-    Jolt.destroy(this._raycastResult);
     Jolt.destroy(this._ray_settings);
     Jolt.destroy(this._ray_collector);
+    Jolt.destroy(this._ray);
 
     Jolt.destroy(this._bp_filter);
     Jolt.destroy(this._object_filter);

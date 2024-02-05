@@ -57,13 +57,12 @@ export class StandardCharacterVirtualHandler {
         this._linVelocity = new Vector3();
         this._groundVelocity = new Vector3();
         this._gravity = new Vector3();
-        this._tmpVec3 = new Jolt.Vec3();
     }
     updateInput(inMovementDirection, inJump) {
         this.inMovementDirection.copyFrom(inMovementDirection);
         this.inJump = inJump;
     }
-    processCharacterData(character, physicsSys, inDeltaTime) {
+    processCharacterData(character, physicsSys, inDeltaTime, _tmpVec3) {
         const player_controls_horizontal_velocity = this.controlMovementDuringJump || character.IsSupported();
         if (player_controls_horizontal_velocity) {
             // True if the player intended to move
@@ -82,7 +81,7 @@ export class StandardCharacterVirtualHandler {
             // While in air we allow sliding
             this.allowSliding = true;
         }
-        const upRot = this._tmpVec3;
+        const upRot = _tmpVec3;
         upRot.Set(this.upRotationX, 0, this.upRotationZ);
         const character_up_rotation = Jolt.Quat.sEulerAngles(upRot);
         character.SetUp(character_up_rotation.RotateAxisY());
@@ -145,9 +144,6 @@ export class StandardCharacterVirtualHandler {
         SetJoltVec3(this._new_velocity, tempVec);
         character.SetLinearVelocity(tempVec);
     }
-    dispose() {
-        Jolt.destroy(this._tmpVec3);
-    }
 }
 export class JoltCharacterVirtual {
     constructor(impostor, shape, world, plugin) {
@@ -176,9 +172,12 @@ export class JoltCharacterVirtual {
         settings.mCharacterPadding = this.config.sCharacterPadding;
         settings.mPenetrationRecoverySpeed = this.config.sPenetrationRecoverySpeed;
         settings.mPredictiveContactDistance = this.config.sPredictiveContactDistance;
-        settings.mSupportingVolume = new Jolt.Plane(Jolt.Vec3.sAxisY(), -1);
+        const mSupportingVolume = new Jolt.Plane(Jolt.Vec3.sAxisY(), -1);
+        settings.mSupportingVolume = mSupportingVolume;
+        Jolt.destroy(mSupportingVolume);
         this.mCharacter = new Jolt.CharacterVirtual(settings, Jolt.Vec3.sZero(), Jolt.Quat.sIdentity(), this.world.physicsSystem);
-        this.mDisposables.push(this.mCharacter, this.mUpdateSettings, settings);
+        Jolt.destroy(settings);
+        this.mDisposables.push(this.mCharacter, this.mUpdateSettings);
         const objectVsBroadPhaseLayerFilter = world.jolt.GetObjectVsBroadPhaseLayerFilter();
         const objectLayerPairFilter = world.jolt.GetObjectLayerPairFilter();
         const filter = this.mUpdateFilterData = {
@@ -215,7 +214,7 @@ export class JoltCharacterVirtual {
         this._temp2.set(gravLen, gravLen, gravLen);
         const g = this._characterUp.multiplyInPlace(this._temp2);
         if (this.inputHandler) {
-            this.inputHandler.processCharacterData(this.mCharacter, this.world.physicsSystem, mDeltaTime);
+            this.inputHandler.processCharacterData(this.mCharacter, this.world.physicsSystem, mDeltaTime, this._jolt_temp1);
             this.inputHandler.updateCharacter(this.mCharacter, this._jolt_temp1);
         }
         const inGravity = SetJoltVec3(g, this._jolt_temp1);
