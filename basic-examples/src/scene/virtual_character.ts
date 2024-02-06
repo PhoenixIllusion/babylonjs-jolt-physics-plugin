@@ -40,7 +40,8 @@ export default (): SceneCallback => {
     const capsule = MeshBuilder.CreateCapsule('capsule', { radius: 2, ...capsuleProps })
     capsule.position.set(0, 10, 0);
     capsule.material = getMaterial('#990000');
-    camera.lockedTarget = capsule;
+    if(camera)
+      camera.lockedTarget = capsule;
     return {
       mesh: capsule,
       phyics: new JoltCharacterVirtualImpostor(capsule, PhysicsImpostor.CapsuleImpostor, { mass: 10 })

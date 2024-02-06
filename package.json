@@ -1,7 +1,7 @@
 {
   "name": "@phoenixillusion/babylonjs-jolt-plugin",
   "private": true,
-  "version": "1.0.5",
+  "version": "1.0.6",
   "type": "module",
   "scripts": {
     "build": "mkdir -p dist && cp src/jolt-import.js ./dist/. && tsc",

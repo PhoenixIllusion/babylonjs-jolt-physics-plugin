@@ -6,6 +6,7 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 
 export class RayCastUtility {
 
+  private _physicsSystem: Jolt.PhysicsSystem;
   private _raycastResult: PhysicsRaycastResult;
   private _ray_settings: Jolt.RayCastSettings;
   private _ray: Jolt.RRayCast;
@@ -16,7 +17,11 @@ export class RayCastUtility {
   private _body_filter: Jolt.BodyFilter;
   private _shape_filter: Jolt.ShapeFilter;
 
+  private toDispose: any[] = [];
+
+
   constructor(jolt: Jolt.JoltInterface) {
+    this._physicsSystem = jolt.GetPhysicsSystem();
     this._raycastResult = new PhysicsRaycastResult();
     this._ray_settings = new Jolt.RayCastSettings();
     this._ray_collector = new Jolt.CastRayCollectorJS();
@@ -27,6 +32,12 @@ export class RayCastUtility {
     this._shape_filter = new Jolt.ShapeFilter(); // We don't want to filter out any shapes
 
     this._ray = new Jolt.RRayCast();
+
+    this.toDispose.push(
+      this._ray_settings, this._ray_collector,
+      this._bp_filter, this._object_filter,
+      this._body_filter, this._shape_filter,
+      this._ray)
   }
 
   raycast(from: Vector3, to: Vector3): PhysicsRaycastResult {
@@ -60,6 +71,11 @@ export class RayCastUtility {
         GetJoltVec3(hitNormal, closestResult.hitNormal)
       }
     }
+
+    this._physicsSystem.GetNarrowPhaseQuery().CastRay(
+      this._ray, this._ray_settings,
+      this._ray_collector as any, this._bp_filter, this._object_filter,
+      this._body_filter, this._shape_filter);
     result.reset(from, to);
     if (closestResult.mFraction <= 1.0) {
       result.setHitData(closestResult.hitPoint, closestResult.hitNormal);
@@ -68,13 +84,8 @@ export class RayCastUtility {
   }
 
   public dispose() {
-    Jolt.destroy(this._ray_settings);
-    Jolt.destroy(this._ray_collector);
-    Jolt.destroy(this._ray);
-
-    Jolt.destroy(this._bp_filter);
-    Jolt.destroy(this._object_filter);
-    Jolt.destroy(this._body_filter);
-    Jolt.destroy(this._shape_filter);
+    this.toDispose.forEach(joltObj => {
+      Jolt.destroy(joltObj);
+    });
   }
 }

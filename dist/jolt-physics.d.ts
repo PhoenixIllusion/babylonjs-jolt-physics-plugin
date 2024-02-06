@@ -28,6 +28,7 @@ export declare class JoltJSPlugin implements IPhysicsEnginePlugin {
     private _contactCollector;
     private _contactListener;
     private _impostorLookup;
+    private toDispose;
     static loadPlugin(_useDeltaForWorldStep?: boolean, physicsSettings?: any, importSettings?: any): Promise<JoltJSPlugin>;
     constructor(jolt: Jolt.JoltInterface, _useDeltaForWorldStep?: boolean);
     setGravity(gravity: Vector3): void;

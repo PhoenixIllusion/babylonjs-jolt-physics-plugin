@@ -47,6 +47,7 @@ export class JoltJSPlugin {
         this._maxSteps = 10;
         this._tempQuaternionBJS = new Quaternion();
         this._impostorLookup = {};
+        this.toDispose = [];
         this._perPhysicsStepCallbacks = [];
         this.world = jolt.GetPhysicsSystem();
         this._bodyInterface = this.world.GetBodyInterface();
@@ -57,6 +58,7 @@ export class JoltJSPlugin {
         this._contactListener = new Jolt.ContactListenerJS();
         this._contactCollector = new ContactCollector(this._contactListener);
         this.world.SetContactListener(this._contactListener);
+        this.toDispose.push(this.jolt, this._tempVec3A, this._tempVec3B, this._tempQuaternion, this._contactListener);
     }
     setGravity(gravity) {
         this._tempVec3A.Set(gravity.x, gravity.y, gravity.z);
@@ -389,7 +391,6 @@ export class JoltJSPlugin {
             const offset = SetJoltVec3(CoM, new Jolt.Vec3());
             const newVal = new Jolt.OffsetCenterOfMassShapeSettings(offset, returnValue);
             Jolt.destroy(offset);
-            Jolt.destroy(returnValue);
             returnValue = newVal;
         }
         const shapeResult = returnValue.Create();
@@ -397,6 +398,7 @@ export class JoltJSPlugin {
             throw new Error('Creating Jolt Shape : Impostor Type -' + impostor.type + ' : Error - ' + shapeResult.GetError().c_str());
         }
         const shape = shapeResult.Get();
+        Jolt.destroy(shapeResult);
         return { shape, settings: returnValue };
     }
     generateJoint(impostorJoint) {
@@ -728,14 +730,10 @@ export class JoltJSPlugin {
         outstandingBodies.forEach(impostor => {
             impostor.dispose();
         });
-        // Dispose of world
-        Jolt.destroy(this.jolt);
-        // Dispose of temp variables
-        Jolt.destroy(this._tempQuaternion);
-        Jolt.destroy(this._tempVec3A);
-        Jolt.destroy(this._tempVec3B);
+        this.toDispose.forEach(joltObj => {
+            Jolt.destroy(joltObj);
+        });
         this._raycaster.dispose();
-        Jolt.destroy(this._contactListener);
         this.world = null;
     }
 }

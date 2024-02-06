@@ -57,6 +57,8 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
 
   private _impostorLookup: Record<number, PhysicsImpostor> = {};
 
+  private toDispose: any[] = [];
+
 
   static async loadPlugin(_useDeltaForWorldStep: boolean = true, physicsSettings?: any, importSettings?: any): Promise<JoltJSPlugin> {
     await loadJolt(importSettings);
@@ -95,6 +97,8 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     this._contactListener = new Jolt.ContactListenerJS();
     this._contactCollector = new ContactCollector(this._contactListener);
     this.world.SetContactListener(this._contactListener);
+
+    this.toDispose.push(this.jolt, this._tempVec3A, this._tempVec3B, this._tempQuaternion, this._contactListener);
 
   }
 
@@ -455,12 +459,12 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     if (returnValue === undefined) {
       throw new Error('Unsupported Shape: Impostor Type' + impostor.type);
     }
+
     if (impostor.getParam('offset-center-of-mass')) {
       const CoM = impostor.getParam('offset-center-of-mass') as Vector3;
       const offset = SetJoltVec3(CoM, new Jolt.Vec3());
       const newVal = new Jolt.OffsetCenterOfMassShapeSettings(offset, returnValue);
       Jolt.destroy(offset);
-      Jolt.destroy(returnValue);
       returnValue = newVal;
     }
     const shapeResult: Jolt.ShapeResult = returnValue.Create();
@@ -468,6 +472,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       throw new Error('Creating Jolt Shape : Impostor Type -' + impostor.type + ' : Error - ' + shapeResult.GetError().c_str());
     }
     const shape = shapeResult.Get();
+    Jolt.destroy(shapeResult);
     return { shape, settings: returnValue };
   }
 
@@ -812,17 +817,10 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     outstandingBodies.forEach(impostor => {
       impostor.dispose();
     })
-
-    // Dispose of world
-    Jolt.destroy(this.jolt);
-
-    // Dispose of temp variables
-    Jolt.destroy(this._tempQuaternion);
-    Jolt.destroy(this._tempVec3A);
-    Jolt.destroy(this._tempVec3B);
-
+    this.toDispose.forEach(joltObj => {
+      Jolt.destroy(joltObj);
+    });
     this._raycaster.dispose();
-    Jolt.destroy(this._contactListener);
     (this.world as any) = null;
   }
 

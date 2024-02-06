@@ -4,6 +4,8 @@ import { SetJoltVec3, GetJoltVec3, LAYER_MOVING } from './jolt-util';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 export class RayCastUtility {
     constructor(jolt) {
+        this.toDispose = [];
+        this._physicsSystem = jolt.GetPhysicsSystem();
         this._raycastResult = new PhysicsRaycastResult();
         this._ray_settings = new Jolt.RayCastSettings();
         this._ray_collector = new Jolt.CastRayCollectorJS();
@@ -12,6 +14,7 @@ export class RayCastUtility {
         this._body_filter = new Jolt.BodyFilter(); // We don't want to filter out any bodies
         this._shape_filter = new Jolt.ShapeFilter(); // We don't want to filter out any shapes
         this._ray = new Jolt.RRayCast();
+        this.toDispose.push(this._ray_settings, this._ray_collector, this._bp_filter, this._object_filter, this._body_filter, this._shape_filter, this._ray);
     }
     raycast(from, to) {
         this.raycastToRef(from, to, this._raycastResult);
@@ -40,6 +43,7 @@ export class RayCastUtility {
                 GetJoltVec3(hitNormal, closestResult.hitNormal);
             }
         };
+        this._physicsSystem.GetNarrowPhaseQuery().CastRay(this._ray, this._ray_settings, this._ray_collector, this._bp_filter, this._object_filter, this._body_filter, this._shape_filter);
         result.reset(from, to);
         if (closestResult.mFraction <= 1.0) {
             result.setHitData(closestResult.hitPoint, closestResult.hitNormal);
@@ -47,12 +51,8 @@ export class RayCastUtility {
         }
     }
     dispose() {
-        Jolt.destroy(this._ray_settings);
-        Jolt.destroy(this._ray_collector);
-        Jolt.destroy(this._ray);
-        Jolt.destroy(this._bp_filter);
-        Jolt.destroy(this._object_filter);
-        Jolt.destroy(this._body_filter);
-        Jolt.destroy(this._shape_filter);
+        this.toDispose.forEach(joltObj => {
+            Jolt.destroy(joltObj);
+        });
     }
 }
