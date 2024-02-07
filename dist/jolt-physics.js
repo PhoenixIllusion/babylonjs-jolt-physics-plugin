@@ -54,7 +54,7 @@ export class JoltJSPlugin {
         this._tempVec3A = new Jolt.Vec3();
         this._tempVec3B = new Jolt.Vec3();
         this._tempQuaternion = new Jolt.Quat();
-        this._raycaster = new RayCastUtility(jolt);
+        this._raycaster = new RayCastUtility(jolt, this);
         this._contactListener = new Jolt.ContactListenerJS();
         this._contactCollector = new ContactCollector(this._contactListener);
         this.world.SetContactListener(this._contactListener);

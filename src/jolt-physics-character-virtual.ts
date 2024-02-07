@@ -320,7 +320,7 @@ export class JoltCharacterVirtual {
     let _aVelocity = new Vector3();
     if (!this.contactListener) {
       this.contactListener = new Jolt.CharacterContactListenerJS();
-      this.contactListener.OnAdjustBodyVelocity = (_inCharacter, inBody2: Jolt.Body, lVelocity: Jolt.Vec3, aVelocity: Jolt.Vec3): void => {
+      this.contactListener.OnAdjustBodyVelocity = (_inCharacter: Jolt.CharacterVirtual, inBody2: Jolt.Body, lVelocity: Jolt.Vec3, aVelocity: Jolt.Vec3): void => {
         inBody2 = Jolt.wrapPointer(inBody2 as any as number, Jolt.Body);
         lVelocity = Jolt.wrapPointer(lVelocity as any as number, Jolt.Vec3);
         aVelocity = Jolt.wrapPointer(aVelocity as any as number, Jolt.Vec3);

@@ -3,12 +3,14 @@ import Jolt from './jolt-import';
 import { SetJoltVec3, GetJoltVec3, LAYER_MOVING } from './jolt-util';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 export class RayCastUtility {
-    constructor(jolt) {
+    constructor(jolt, plugin) {
+        this.plugin = plugin;
         this.toDispose = [];
-        this._physicsSystem = jolt.GetPhysicsSystem();
+        this.point = new Vector3();
+        this.normal = new Vector3();
         this._raycastResult = new PhysicsRaycastResult();
         this._ray_settings = new Jolt.RayCastSettings();
-        this._ray_collector = new Jolt.CastRayCollectorJS();
+        this._ray_collector = new Jolt.CastRayClosestHitCollisionCollector();
         this._bp_filter = new Jolt.DefaultBroadPhaseLayerFilter(jolt.GetObjectVsBroadPhaseLayerFilter(), LAYER_MOVING);
         this._object_filter = new Jolt.DefaultObjectLayerFilter(jolt.GetObjectLayerPairFilter(), LAYER_MOVING);
         this._body_filter = new Jolt.BodyFilter(); // We don't want to filter out any bodies
@@ -24,29 +26,18 @@ export class RayCastUtility {
         const delta = to.subtract(from);
         SetJoltVec3(from, this._ray.mOrigin);
         SetJoltVec3(delta, this._ray.mDirection);
-        let body;
-        const closestResult = {
-            mFraction: 1.01,
-            hitPoint: new Vector3(),
-            hitNormal: new Vector3()
-        };
-        this._ray_collector.OnBody = (inBody) => {
-            body = Jolt.wrapPointer(inBody, Jolt.Body);
-        };
-        this._ray_collector.AddHit = (inRayCastResult) => {
-            inRayCastResult = Jolt.wrapPointer(inRayCastResult, Jolt.RayCastResult);
-            if (inRayCastResult.mFraction <= closestResult.mFraction && inRayCastResult.mFraction <= 1.0) {
-                closestResult.mFraction = inRayCastResult.mFraction;
-                let hitPoint = this._ray.GetPointOnRay(inRayCastResult.mFraction);
-                GetJoltVec3(hitPoint, closestResult.hitPoint);
-                let hitNormal = body.GetWorldSpaceSurfaceNormal(inRayCastResult.mSubShapeID2, hitPoint);
-                GetJoltVec3(hitNormal, closestResult.hitNormal);
-            }
-        };
-        this._physicsSystem.GetNarrowPhaseQuery().CastRay(this._ray, this._ray_settings, this._ray_collector, this._bp_filter, this._object_filter, this._body_filter, this._shape_filter);
+        this._ray_collector.Reset();
+        this.plugin.world.GetNarrowPhaseQuery().CastRay(this._ray, this._ray_settings, this._ray_collector, this._bp_filter, this._object_filter, this._body_filter, this._shape_filter);
         result.reset(from, to);
-        if (closestResult.mFraction <= 1.0) {
-            result.setHitData(closestResult.hitPoint, closestResult.hitNormal);
+        if (this._ray_collector.HadHit()) {
+            const hit = this._ray_collector.mHit;
+            const body = this.plugin.GetImpostorForBodyId(hit.mBodyID.GetIndexAndSequenceNumber()).physicsBody;
+            result.body = body;
+            const hitPoint = this._ray.GetPointOnRay(hit.mFraction);
+            const hitNormal = body.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, hitPoint);
+            const point = GetJoltVec3(hitPoint, this.point);
+            const normal = GetJoltVec3(hitNormal, this.normal);
+            result.setHitData(point, normal);
             result.calculateHitDistance();
         }
     }
