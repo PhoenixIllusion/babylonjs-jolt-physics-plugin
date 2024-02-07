@@ -8,6 +8,7 @@ export default (): SceneCallback => {
   let timeNextSpawn = 0;
 
   createFloor();
+  const maxBoxes = 200;
 
   const boxes: {box: Mesh, physics: PhysicsImpostor }[] = []
   function generateObject() {
@@ -18,7 +19,7 @@ export default (): SceneCallback => {
     rot, new Vector3(0.5, 0.5, 0.5), { mass: 10, restitution: 0.5, friction: 1 }, '#ff0000');
 
     boxes.push(box);
-    while (boxes.length > (window as any).maxBoxes) {
+    while (boxes.length > maxBoxes) {
       const last = boxes.shift();
       last?.box.dispose();
       last?.physics.dispose();
