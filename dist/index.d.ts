@@ -4,3 +4,6 @@ export * from './jolt-physics';
 export * from './jolt-physics-character-virtual';
 export * from './jolt-impostor';
 export * from './jolt-contact';
+import Jolt from './jolt-import';
+export * from './jolt-import';
+export { Jolt };
