@@ -1,6 +1,8 @@
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import Jolt from "./jolt-import";
 import { GetJoltQuat, GetJoltVec3, LAYER_MOVING, SetJoltVec3 } from "./jolt-util";
+import { PhysicsImpostor } from "@babylonjs/core/Physics/v1/physicsImpostor";
+import { JoltJSPlugin } from ".";
 
 export namespace Vehicle {
   export type VehicleType = 'wheeled' | 'motorcycle' | 'track'
@@ -517,8 +519,13 @@ interface VehicleRequired {
 export class WheeledVehicleController {
 
   public wheelTransforms: { position: Vector3, rotation: Quaternion }[] = []
-
   private _physicsStepListener: (delta: number) => void;
+
+  static fromPhysicsImpostor(impostor: PhysicsImpostor, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController>): WheeledVehicleController {
+    const pluginV1: JoltJSPlugin = impostor._pluginData.plugin;
+    return pluginV1.createWheeledVehicleController(impostor, settings, input);
+  }
+
   constructor(data: VehicleRequired, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController>) {
     const physicsBody: Jolt.Body = data.body;
     const constraintSettings = createWheeledVehicleConstraint(settings);
@@ -551,6 +558,11 @@ export class WheeledVehicleController {
 export class MotorcycleController {
   public wheelTransforms: { position: Vector3, rotation: Quaternion }[] = []
   private _physicsStepListener: (delta: number) => void;
+
+  static fromPhysicsImpostor(impostor: PhysicsImpostor, settings: Vehicle.MotorcycleVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController>): MotorcycleController {
+    const pluginV1: JoltJSPlugin = impostor._pluginData.plugin;
+    return pluginV1.createMotorcycleVehicleController(impostor, settings, input);
+  }
   constructor(data: VehicleRequired, settings: Vehicle.MotorcycleVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController>) {
     const physicsBody: Jolt.Body = data.body;
     const constraintSettings = createMotorcycleConstraint(settings);

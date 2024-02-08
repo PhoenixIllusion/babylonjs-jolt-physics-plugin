@@ -26,7 +26,6 @@ export default (): SceneCallback => {
     }
   }
 
-
   return (time: number, _delta: number) => {
     // Check if its time to spawn a new object
     if (time > timeNextSpawn) {

@@ -373,6 +373,10 @@ export function createBasicMotorcycle(vehicle, wheel) {
     };
 }
 export class WheeledVehicleController {
+    static fromPhysicsImpostor(impostor, settings, input) {
+        const pluginV1 = impostor._pluginData.plugin;
+        return pluginV1.createWheeledVehicleController(impostor, settings, input);
+    }
     constructor(data, settings, input) {
         this.wheelTransforms = [];
         const physicsBody = data.body;
@@ -400,6 +404,10 @@ export class WheeledVehicleController {
     }
 }
 export class MotorcycleController {
+    static fromPhysicsImpostor(impostor, settings, input) {
+        const pluginV1 = impostor._pluginData.plugin;
+        return pluginV1.createMotorcycleVehicleController(impostor, settings, input);
+    }
     constructor(data, settings, input) {
         this.wheelTransforms = [];
         const physicsBody = data.body;
