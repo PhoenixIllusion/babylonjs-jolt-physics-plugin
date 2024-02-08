@@ -252,15 +252,15 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       if (impostor instanceof JoltCharacterVirtualImpostor) {
         const imp = impostor as JoltCharacterVirtualImpostor;
         const shape = this._createShape(imp);
-        const char = new JoltCharacterVirtual(imp, shape.shape, { physicsSystem: this.world, jolt: this.jolt }, this);
+        const char = new JoltCharacterVirtual(imp, shape, { physicsSystem: this.world, jolt: this.jolt }, this);
         char.init();
+        shape.Release();
         imp.physicsBody = char.getCharacter();
         imp._pluginData.controller = char;
-        Jolt.destroy(shape.settings);
         this._impostorLookup[-performance.now()] = imp;
         return;
       }
-      const collision = this._createShape(impostor);
+      const shape = this._createShape(impostor);
       const mass = impostor.getParam('mass');
       const friction = impostor.getParam('friction');
       const restitution = impostor.getParam('restitution');
@@ -278,12 +278,12 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       );
       const isStatic = (mass === 0) ? Jolt.EMotionType_Static : Jolt.EMotionType_Dynamic;
       const layer = (mass === 0) ? LAYER_NON_MOVING : LAYER_MOVING;
-      const settings = new Jolt.BodyCreationSettings(collision.shape, this._tempVec3A, this._tempQuaternion, isStatic, layer);
+      const settings = new Jolt.BodyCreationSettings(shape, this._tempVec3A, this._tempQuaternion, isStatic, layer);
       if (collisionGroup !== undefined) {
         settings.mCollisionGroup.SetGroupID(collisionGroup);
       }
       if (collisionSubGroup !== undefined) {
-        settings.mCollisionGroup.SetSubGroupID(collisionGroup);
+        settings.mCollisionGroup.SetSubGroupID(collisionSubGroup);
       }
       if (collisionFilter !== undefined) {
         settings.mCollisionGroup.SetGroupFilter(collisionFilter);
@@ -292,7 +292,6 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       impostor._pluginData.friction = friction;
       impostor._pluginData.restitution = restitution;
       impostor._pluginData.plugin = this;
-      Jolt.destroy(collision.settings);
       settings.mRestitution = restitution;
       settings.mFriction = friction;
       if (mass !== 0) {
@@ -300,6 +299,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         settings.mMassPropertiesOverride.mMass = mass;
       }
       const body = impostor.physicsBody = this._bodyInterface.CreateBody(settings);
+      shape.Release();
       Jolt.destroy(settings);
       this._bodyInterface.AddBody(body.GetID(), Jolt.EActivation_Activate);
       this._impostorLookup[body.GetID().GetIndexAndSequenceNumber()] = impostor;
@@ -380,7 +380,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     }
   }
 
-  private _createShape(impostor: PhysicsImpostor): {shape: Jolt.Shape, settings: Jolt.ShapeSettings } {
+  private _createShape(impostor: PhysicsImpostor): Jolt.Shape {
     const impostorExtents = impostor.getParam('extents') as Vector3 || impostor.getObjectExtents();
     const checkWithEpsilon = (value: number): number => {
       return Math.max(value, Epsilon);
@@ -472,8 +472,9 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       throw new Error('Creating Jolt Shape : Impostor Type -' + impostor.type + ' : Error - ' + shapeResult.GetError().c_str());
     }
     const shape = shapeResult.Get();
-    Jolt.destroy(shapeResult);
-    return { shape, settings: returnValue };
+    shape.AddRef();
+    Jolt.destroy(returnValue);
+    return shape;
   }
 
   generateJoint(impostorJoint: PhysicsImpostorJoint): void {
@@ -528,6 +529,18 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         constraintSettings.mNormalAxis2.Set(n2.x, n2.y, n2.z);
       }
     }
+    const setAxisXY = (constraintSettings: { mAxisX1: Jolt.Vec3, mAxisX2: Jolt.Vec3,  mAxisY1: Jolt.Vec3, mAxisY2: Jolt.Vec3,}) => {
+      if (options['axis-x-1'] && options['axis-x-2'] && options['axis-y-1'] && options['axis-y-2']) {
+        const x1: Vector3 = options['axis-x-1'];
+        const x2: Vector3 = options['axis-x-2'];
+        const y1: Vector3 = options['axis-y-1'];
+        const y2: Vector3 = options['axis-y-2'];
+        constraintSettings.mAxisX1.Set(x1.x, x1.y, x1.z);
+        constraintSettings.mAxisX2.Set(x2.x, x2.y, x2.z);
+        constraintSettings.mAxisY1.Set(y1.x, y1.y, y1.z);
+        constraintSettings.mAxisY2.Set(y2.x, y2.y, y2.z);
+      }
+    }
 
     const p1 = jointData.mainPivot;
     const p2 = jointData.connectedPivot;
@@ -555,8 +568,8 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         Jolt.destroy(constraintSettings);
       }
         break;
-      case PhysicsJoint.SliderJoint: {
-        let constraintSettings = new Jolt.SliderConstraintSettings();
+      case PhysicsJoint.PrismaticJoint: {
+        let constraintSettings =  new Jolt.SliderConstraintSettings();
         setPoints(constraintSettings);
         setSliderAxis(constraintSettings);
         setNormalAxis(constraintSettings);
@@ -566,7 +579,24 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         constraint = Jolt.castObject(constraint, Jolt.SliderConstraint);
         Jolt.destroy(constraintSettings);
       }
-        break;
+      break;
+      case PhysicsJoint.LockJoint: {
+        let constraintSettings = new Jolt.FixedConstraintSettings();
+        constraintSettings.mAutoDetectPoint = true;
+        setPoints(constraintSettings);
+        setAxisXY(constraintSettings);
+        constraint = constraintSettings.Create(mainBody, connectedBody);
+        Jolt.destroy(constraintSettings);
+      }
+      break;
+      case PhysicsJoint.PointToPointJoint: {
+        let constraintSettings = new Jolt.PointConstraintSettings();
+        setPoints(constraintSettings);
+        constraint = constraintSettings.Create(mainBody, connectedBody);
+        constraint = Jolt.castObject(constraint, Jolt.PointConstraint);
+        Jolt.destroy(constraintSettings);
+      }
+      break;
     }
     if (constraint) {
       this.world.AddConstraint(constraint);

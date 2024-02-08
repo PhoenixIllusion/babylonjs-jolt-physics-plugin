@@ -49,7 +49,7 @@ const createSlider = () => {
       'normal-axis-2': new Vector3(0, 0, 1)
     }
   };
-  const joint = new MotorEnabledJoint(MotorEnabledJoint.SliderJoint, jointConfig);
+  const joint = new MotorEnabledJoint(MotorEnabledJoint.PrismaticJoint, jointConfig);
   target.physics.addJoint(box.physics, joint);
 
   const setStart = () => joint.setMotor(0);

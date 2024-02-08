@@ -8,6 +8,7 @@ export default defineConfig({
         "add_remove_bodies": "add_remove_bodies.html",
         "bounce_sphere": "bounce_sphere.html",
         "character_virtual": "character_virtual.html",
+        "constraints": "constraints.html",
         "conveyor_belt": "conveyor_belt.html",
         "falling_shapes": "falling_shapes.html",
         "friction": "friction.html",

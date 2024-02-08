@@ -76,7 +76,7 @@ export const createCylinder = (position: Vector3, radius: number, height: number
 export const createBox = (position: Vector3, rotation: Quaternion, halfExtent: Vector3, physicsOptions: PhysicsOptions = NullPhysics, color = '#FFFFFF') => {
   const box = MeshBuilder.CreateBox('box', { width: halfExtent.x * 2, height: halfExtent.y * 2, depth: halfExtent.z * 2 });
   box.position.copyFrom(position);
-  box.rotationQuaternion = rotation;
+  box.rotationQuaternion = rotation.clone();
   box.material = getMaterial(color);
   const physics = new JoltPhysicsImpostor(box, PhysicsImpostor.BoxImpostor, physicsOptions);
   return { box, physics };
