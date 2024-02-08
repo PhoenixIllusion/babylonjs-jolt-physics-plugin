@@ -1,10 +1,10 @@
 
 import { IPhysicsEnginePlugin, PhysicsImpostorJoint } from '@babylonjs/core/Physics/v1/IPhysicsEnginePlugin';
-import { JoltCharacterVirtualImpostor, JoltCharacterVirtual } from './jolt-physics-character-virtual';
-import Jolt, { loadJolt } from './jolt-import';
+import { JoltCharacterVirtualImpostor, JoltCharacterVirtual } from '../jolt-physics-character-virtual';
+import Jolt, { loadJolt } from '../jolt-import';
 import { ContactCollector } from './jolt-contact';
-import { RayCastUtility } from './jolt-raycast';
-import { LAYER_MOVING, LAYER_NON_MOVING, SetJoltVec3 } from './jolt-util';
+import { RayCastUtility } from '../jolt-raycast';
+import { LAYER_MOVING, LAYER_NON_MOVING, SetJoltVec3 } from '../jolt-util';
 import { Epsilon, Quaternion, Vector3 } from '@babylonjs/core/Maths/math';
 import { IPhysicsEnabledObject, PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Logger } from '@babylonjs/core/Misc/logger';
@@ -13,7 +13,7 @@ import { IMotorEnabledJoint, MotorEnabledJoint, PhysicsJoint, PhysicsJointData }
 import { IndicesArray, Nullable } from '@babylonjs/core/types';
 import { PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResult';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
-export { setJoltModule } from './jolt-import'
+export { setJoltModule } from '../jolt-import'
 
 interface MeshVertexData {
   indices: IndicesArray | number[];
@@ -93,7 +93,11 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     this._tempVec3A = new Jolt.Vec3();
     this._tempVec3B = new Jolt.Vec3();
     this._tempQuaternion = new Jolt.Quat();
-    this._raycaster = new RayCastUtility(jolt, this);
+    this._raycaster = new RayCastUtility(jolt, {
+      world: this.world,
+      GetBodyForBodyId: (seqAndNum: number) => this.GetImpostorForBodyId(seqAndNum).physicsBody,
+      GetPhysicsBodyForBodyId: (seqAndNum: number) => this.GetImpostorForBodyId(seqAndNum)
+    });
     this._contactListener = new Jolt.ContactListenerJS();
     this._contactCollector = new ContactCollector(this._contactListener);
     this.world.SetContactListener(this._contactListener);
@@ -238,7 +242,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   }
 
   generatePhysicsBody(impostor: PhysicsImpostor): void {
-    impostor._pluginData.toDispose = [];
+    const toDispose = impostor._pluginData.toDispose = [];
 
     //parent-child relationship
     if (impostor.parent) {
@@ -252,7 +256,13 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       if (impostor instanceof JoltCharacterVirtualImpostor) {
         const imp = impostor as JoltCharacterVirtualImpostor;
         const shape = this._createShape(imp);
-        const char = new JoltCharacterVirtual(imp, shape, { physicsSystem: this.world, jolt: this.jolt }, this);
+        const char = new JoltCharacterVirtual({
+          toDispose,
+          jolt: this.jolt,
+          physicsSystem: this.world,
+          GetBodyForBodyId: (seqAndNum: number) => this.GetImpostorForBodyId(seqAndNum).physicsBody,
+          GetPhysicsBodyForBodyId: (seqAndNum: number) => this.GetImpostorForBodyId(seqAndNum)
+        }, shape);
         char.init();
         shape.Release();
         imp.physicsBody = char.getCharacter();

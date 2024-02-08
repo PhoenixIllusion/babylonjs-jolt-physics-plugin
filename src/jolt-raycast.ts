@@ -3,7 +3,12 @@ import { PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResu
 import Jolt from './jolt-import';
 import { SetJoltVec3, GetJoltVec3, LAYER_MOVING } from './jolt-util';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { JoltJSPlugin } from '.';
+
+interface RayCastRequired {
+  world: Jolt.PhysicsSystem,
+  GetBodyForBodyId: (bodyIdSeqNum: number) => Jolt.Body
+  GetPhysicsBodyForBodyId: (bodyIdSeqNum: number) => any
+}
 
 export class RayCastUtility {
 
@@ -23,7 +28,7 @@ export class RayCastUtility {
   point = new Vector3();
   normal = new Vector3();
 
-  constructor(jolt: Jolt.JoltInterface, private plugin: JoltJSPlugin) {
+  constructor(jolt: Jolt.JoltInterface, private plugin: RayCastRequired) {
     this._raycastResult = new PhysicsRaycastResult();
     this._ray_settings = new Jolt.RayCastSettings();
     this._ray_collector = new Jolt.CastRayClosestHitCollisionCollector();
@@ -61,12 +66,12 @@ export class RayCastUtility {
 
     if (this._ray_collector.HadHit()) {
       const hit = this._ray_collector.mHit;
-      const body: Jolt.Body = this.plugin.GetImpostorForBodyId(hit.mBodyID.GetIndexAndSequenceNumber()).physicsBody;
-      result.body = body as any;
+      const body: Jolt.Body = this.plugin.GetBodyForBodyId(hit.mBodyID.GetIndexAndSequenceNumber());
       const hitPoint = this._ray.GetPointOnRay(hit.mFraction);
       const hitNormal =  body.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, hitPoint);
       const point = GetJoltVec3(hitPoint, this.point)
       const normal = GetJoltVec3(hitNormal, this.normal)
+      result.body = this.plugin.GetPhysicsBodyForBodyId(hit.mBodyID.GetIndexAndSequenceNumber());
       result.setHitData(point, normal)
       result.calculateHitDistance();
     }

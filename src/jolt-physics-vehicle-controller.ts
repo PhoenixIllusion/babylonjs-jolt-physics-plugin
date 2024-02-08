@@ -1,8 +1,8 @@
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import Jolt from "./jolt-import";
 import { GetJoltQuat, GetJoltVec3, LAYER_MOVING, SetJoltVec3 } from "./jolt-util";
-import type { JoltPhysicsImpostor } from "./jolt-impostor";
-import type { JoltJSPlugin } from "./jolt-physics";
+import type { JoltPhysicsImpostor } from "./v1/jolt-impostor";
+import type { JoltJSPlugin } from "./v1/jolt-physics";
 
 export namespace Vehicle {
 
@@ -406,17 +406,17 @@ export class DefaultMotorcycleInput extends DefaultVehicleInput implements Wheel
   }
 }
 
-function configureVehicleConstraint<T extends Vehicle.WheelSetting>(joltPlugin: JoltJSPlugin, settings: Vehicle.VehicleSettings<T>, constraint: Jolt.VehicleConstraint): any[] {
+function configureVehicleConstraint<T extends Vehicle.WheelSetting>(data: VehicleRequired, settings: Vehicle.VehicleSettings<T>, constraint: Jolt.VehicleConstraint): any[] {
   if (settings.collisionTester === 'cylinder') {
     constraint.SetVehicleCollisionTester(new Jolt.VehicleCollisionTesterCastCylinder(LAYER_MOVING, 0.05))
   }
   if (settings.collisionTester === 'ray') {
     constraint.SetVehicleCollisionTester(new Jolt.VehicleCollisionTesterRay(LAYER_MOVING))
   }
-  joltPlugin.world.AddConstraint(constraint);
+  data.world.AddConstraint(constraint);
   const stepListener = new Jolt.VehicleConstraintStepListener(constraint);
   const toDispose = [stepListener];
-  joltPlugin.world.AddStepListener(stepListener);
+  data.world.AddStepListener(stepListener);
   return toDispose;
 }
 
@@ -509,20 +509,27 @@ export function createBasicMotorcycle(vehicle: { height: number, length: number 
   }
 }
 
+interface VehicleRequired {
+  world: Jolt.PhysicsSystem,
+  body: Jolt.Body,
+  toDispose: any[],
+  registerPerPhysicsStepCallback: (callback: (delta: number)=>void) => void
+}
+
+
 export class WheeledVehicleController {
 
   public wheelTransforms: { position: Vector3, rotation: Quaternion }[] = []
 
   private _physicsStepListener: (delta: number) => void;
-  constructor(impostor: JoltPhysicsImpostor, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController>) {
-    const joltPlugin: JoltJSPlugin = impostor._pluginData.plugin;
-    const physicsBody: Jolt.Body = impostor.physicsBody;
+  constructor(data: VehicleRequired, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController>) {
+    const physicsBody: Jolt.Body = data.body;
     const constraintSettings = createWheeledVehicleConstraint(settings);
     const constraint = new Jolt.VehicleConstraint(physicsBody, constraintSettings);
     Jolt.destroy(constraintSettings);
-    const toDispose = configureVehicleConstraint(joltPlugin, settings, constraint);
+    const toDispose = configureVehicleConstraint(data, settings, constraint);
 
-    const bodyInterface = joltPlugin.world.GetBodyInterface();
+    const bodyInterface = data.world.GetBodyInterface();
     const controller = Jolt.castObject(constraint.GetController(), Jolt.WheeledVehicleController);
 
     settings.wheels.forEach(() => {
@@ -539,22 +546,22 @@ export class WheeledVehicleController {
       })
       input.onPrePhysicsUpdate(bodyInterface, controller, delta);
     };
-    joltPlugin.registerPerPhysicsStepCallback(this._physicsStepListener);
-    impostor._pluginData.toDispose.push(wheelRight, wheelUp, ... toDispose);
+    data.registerPerPhysicsStepCallback(this._physicsStepListener);
+    data.toDispose.push(wheelRight, wheelUp, ... toDispose);
   }
 }
+
 export class MotorcycleController {
   public wheelTransforms: { position: Vector3, rotation: Quaternion }[] = []
   private _physicsStepListener: (delta: number) => void;
-  constructor(impostor: JoltPhysicsImpostor, settings: Vehicle.MotorcycleVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController>) {
-    const joltPlugin: JoltJSPlugin = impostor._pluginData.plugin;
-    const physicsBody: Jolt.Body = impostor.physicsBody;
+  constructor(data: VehicleRequired, settings: Vehicle.MotorcycleVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController>) {
+    const physicsBody: Jolt.Body = data.body;
     const constraintSettings = createMotorcycleConstraint(settings);
     const constraint = new Jolt.VehicleConstraint(physicsBody, constraintSettings);
     Jolt.destroy(constraintSettings);
-    const toDispose = configureVehicleConstraint(joltPlugin, settings, constraint);
+    const toDispose = configureVehicleConstraint(data, settings, constraint);
 
-    const bodyInterface = joltPlugin.world.GetBodyInterface();
+    const bodyInterface = data.world.GetBodyInterface();
     const controller = Jolt.castObject(constraint.GetController(), Jolt.MotorcycleController);
 
     settings.wheels.forEach(() => {
@@ -571,8 +578,8 @@ export class MotorcycleController {
       })
       input.onPrePhysicsUpdate(bodyInterface, controller, delta);
     };
-    joltPlugin.registerPerPhysicsStepCallback(this._physicsStepListener);
-    impostor._pluginData.toDispose.push(wheelRight, wheelUp, ... toDispose);
+    data.registerPerPhysicsStepCallback(this._physicsStepListener);
+    data.toDispose.push(wheelRight, wheelUp, ... toDispose);
   }
 }
 export class TreadedVehicleController {
