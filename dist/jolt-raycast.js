@@ -31,12 +31,12 @@ export class RayCastUtility {
         result.reset(from, to);
         if (this._ray_collector.HadHit()) {
             const hit = this._ray_collector.mHit;
-            const body = this.plugin.GetImpostorForBodyId(hit.mBodyID.GetIndexAndSequenceNumber()).physicsBody;
-            result.body = body;
+            const body = this.plugin.GetBodyForBodyId(hit.mBodyID.GetIndexAndSequenceNumber());
             const hitPoint = this._ray.GetPointOnRay(hit.mFraction);
             const hitNormal = body.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, hitPoint);
             const point = GetJoltVec3(hitPoint, this.point);
             const normal = GetJoltVec3(hitNormal, this.normal);
+            result.body = this.plugin.GetPhysicsBodyForBodyId(hit.mBodyID.GetIndexAndSequenceNumber());
             result.setHitData(point, normal);
             result.calculateHitDistance();
         }

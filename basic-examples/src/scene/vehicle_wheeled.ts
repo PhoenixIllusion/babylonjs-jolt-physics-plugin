@@ -7,6 +7,7 @@ import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { JoltJSPlugin } from '../../../dist/v1';
 
 
 let camera: FollowCamera;
@@ -46,7 +47,7 @@ export default (): SceneCallback => {
 
   const wheeledConfig: Vehicle.WheeledVehicleSettings = createBasicCar({ height: .4, length: 4, width: 1.8 }, { radius: 0.5, width: 0.4 }, true);
   const vehicleInput = new DefaultWheeledVehicleInput(car.physics.physicsBody);
-  const controller = new WheeledVehicleController(car.physics, wheeledConfig, vehicleInput);
+  const controller = (car.box.getScene().getPhysicsEngine()?.getPhysicsPlugin() as JoltJSPlugin).createWheeledVehicleController(car.physics, wheeledConfig, vehicleInput);
 
   const carWheels: Mesh[] = []
   wheeledConfig.wheels.forEach((o, i) => {

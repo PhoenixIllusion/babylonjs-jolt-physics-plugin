@@ -1,8 +1,7 @@
 import Jolt from './jolt-import';
-import { JoltJSPlugin } from '.';
-import { IPhysicsEnabledObject, PhysicsImpostor, PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
-import { Scene } from '@babylonjs/core/scene';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import type { PhysicsBody } from '@babylonjs/core/Physics/v2/physicsBody';
+import type { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 declare class CharacterVirtualConfig {
     sMaxSlopeAngle: number;
     sMaxStrength: number;
@@ -11,15 +10,6 @@ declare class CharacterVirtualConfig {
     sPredictiveContactDistance: number;
     sEnableWalkStairs: boolean;
     sEnableStickToFloor: boolean;
-}
-export declare class JoltCharacterVirtualImpostor extends PhysicsImpostor {
-    constructor(object: IPhysicsEnabledObject, type: number, _options: PhysicsImpostorParameters, _scene?: Scene);
-    get controller(): JoltCharacterVirtual;
-    set controller(controller: JoltCharacterVirtual);
-}
-interface WorldData {
-    jolt: Jolt.JoltInterface;
-    physicsSystem: Jolt.PhysicsSystem;
 }
 export interface CharacterVirtualInputHandler {
     processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number, tmp: Jolt.Vec3): void;
@@ -58,11 +48,16 @@ export declare class StandardCharacterVirtualHandler implements CharacterVirtual
     processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number, _tmpVec3: Jolt.Vec3): void;
     updateCharacter(character: Jolt.CharacterVirtual, tempVec: Jolt.Vec3): void;
 }
-export declare class JoltCharacterVirtual {
-    private impostor;
+interface JoltCharacterRequired<T extends (PhysicsImpostor | PhysicsBody)> {
+    toDispose: any[];
+    jolt: Jolt.JoltInterface;
+    physicsSystem: Jolt.PhysicsSystem;
+    GetBodyForBodyId: (bodyIdSeqNum: number) => Jolt.Body;
+    GetPhysicsBodyForBodyId: (bodyIdSeqNum: number) => T;
+}
+export declare class JoltCharacterVirtual<T extends (PhysicsImpostor | PhysicsBody)> {
+    private data;
     private shape;
-    private world;
-    private plugin;
     private mCharacter;
     private mDisposables;
     private mUpdateSettings;
@@ -71,7 +66,7 @@ export declare class JoltCharacterVirtual {
     config: CharacterVirtualConfig;
     contactListener?: Jolt.CharacterContactListenerJS;
     private _jolt_temp1;
-    constructor(impostor: JoltCharacterVirtualImpostor, shape: Jolt.Shape, world: WorldData, plugin: JoltJSPlugin);
+    constructor(data: JoltCharacterRequired<T>, shape: Jolt.Shape);
     init(): void;
     private _characterUp;
     private _temp1;
@@ -80,33 +75,33 @@ export declare class JoltCharacterVirtual {
     getCharacter(): Jolt.CharacterVirtual;
     setPosition(position: Vector3): void;
     _JoltPhysicsCallback: {
-        'on-adjust-velocity': CharacterListenerCallbacks<OnAdjustVelocity>[];
-        'on-contact-add': CharacterListenerCallbacks<OnContactAdd>[];
-        'on-contact-validate': CharacterListenerCallbacks<OnContactValidate>[];
+        'on-adjust-velocity': CharacterListenerCallbacks<OnAdjustVelocity, T>[];
+        'on-contact-add': CharacterListenerCallbacks<OnContactAdd, T>[];
+        'on-contact-validate': CharacterListenerCallbacks<OnContactValidate, T>[];
     };
-    registerOnJoltPhysicsCollide(kind: 'on-contact-add', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactAdd): void;
-    registerOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidate): void;
-    registerOnJoltPhysicsCollide(kind: 'on-adjust-velocity', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnAdjustVelocity): void;
-    unregisterOnJoltPhysicsCollide(kind: 'on-contact-add', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactAdd): void;
-    unregisterOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidate): void;
-    unregisterOnJoltPhysicsCollide(kind: 'on-adjust-velocity', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnAdjustVelocity): void;
+    registerOnJoltPhysicsCollide(kind: 'on-contact-add', collideAgainst: T | Array<T>, func: OnContactAdd): void;
+    registerOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: T | Array<T>, func: OnContactValidate): void;
+    registerOnJoltPhysicsCollide(kind: 'on-adjust-velocity', collideAgainst: T | Array<T>, func: OnAdjustVelocity): void;
+    unregisterOnJoltPhysicsCollide(kind: 'on-contact-add', collideAgainst: T | Array<T>, func: OnContactAdd): void;
+    unregisterOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: T | Array<T>, func: OnContactValidate): void;
+    unregisterOnJoltPhysicsCollide(kind: 'on-adjust-velocity', collideAgainst: T | Array<T>, func: OnAdjustVelocity): void;
     onJoltCollide(kind: 'on-contact-add', event: {
-        body: PhysicsImpostor;
+        body: T;
     }): void;
     onJoltCollide(kind: 'on-contact-validate', event: {
-        body: PhysicsImpostor;
+        body: T;
     }): boolean | undefined;
     onJoltCollide(kind: 'on-adjust-velocity', event: {
-        body: PhysicsImpostor;
+        body: T;
         linearVelocity: Vector3;
         angularVelocity: Vector3;
     }): void;
 }
-type OnContactValidate = (body: PhysicsImpostor) => boolean;
-type OnContactAdd = (body: PhysicsImpostor) => void;
-type OnAdjustVelocity = (body: PhysicsImpostor, linearVelocity: Vector3, angularVelocity: Vector3) => void;
-type CharacterListenerCallbacks<T> = {
+type OnContactValidate = <T extends (PhysicsBody | PhysicsImpostor)>(body: T) => boolean;
+type OnContactAdd = <T extends (PhysicsBody | PhysicsImpostor)>(body: T) => void;
+type OnAdjustVelocity = <T extends (PhysicsBody | PhysicsImpostor)>(body: T, linearVelocity: Vector3, angularVelocity: Vector3) => void;
+type CharacterListenerCallbacks<T, K extends (PhysicsBody | PhysicsImpostor)> = {
     callback: T;
-    otherImpostors: Array<PhysicsImpostor>;
+    otherImpostors: Array<K>;
 };
 export {};

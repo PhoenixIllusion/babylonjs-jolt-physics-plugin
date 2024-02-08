@@ -1,14 +1,30 @@
 
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
-import { OnContactCallback, OnContactValidateCallback, JoltCollisionKey, JoltContactSetting, OnContactValidateResponse, JoltCollisionCallback, JoltPhysicsCollideCallbacks } from './jolt-contact';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Logger } from '@babylonjs/core/Misc/logger';
+import { JoltCollisionKey, JoltContactSetting, OnContactValidateResponse } from '../jolt-contact';
+
+
+export type OnContactValidateCallback = (body: PhysicsImpostor) => OnContactValidateResponse;
+export type OnContactRemoveCallback = (body: PhysicsImpostor) => void;
+export type OnContactCallback = (body: PhysicsImpostor, offset: Vector3, contactSettings: JoltContactSetting) => void;
+
+export interface JoltCollisionCallback<T extends OnContactValidateCallback | OnContactCallback> { callback: T, otherImpostors: Array<PhysicsImpostor> }
+
+
+export interface JoltPhysicsCollideCallbacks {
+  'on-contact-add': JoltCollisionCallback<OnContactCallback>[],
+  'on-contact-remove': JoltCollisionCallback<OnContactRemoveCallback>[],
+  'on-contact-persist': JoltCollisionCallback<OnContactCallback>[],
+  'on-contact-validate': JoltCollisionCallback<OnContactValidateCallback>[]
+}
 
 export class JoltPhysicsImpostor extends PhysicsImpostor {
 
-  public _JoltPhysicsCallback: JoltPhysicsCollideCallbacks = { 'on-contact-add': [], 'on-contact-persist': [], 'on-contact-validate': [] }
+  public _JoltPhysicsCallback: JoltPhysicsCollideCallbacks = { 'on-contact-add': [], 'on-contact-persist': [], 'on-contact-validate': [], 'on-contact-remove': [] }
 
   public registerOnJoltPhysicsCollide(kind: 'on-contact-add' | 'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactCallback): void;
+  public registerOnJoltPhysicsCollide(kind: 'on-contact-remove', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactRemoveCallback): void;
   public registerOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidateCallback): void;
   public registerOnJoltPhysicsCollide(kind: JoltCollisionKey, collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>,
     func: OnContactCallback | OnContactValidateCallback): void {
@@ -18,6 +34,10 @@ export class JoltPhysicsImpostor extends PhysicsImpostor {
     if (kind == 'on-contact-validate') {
       const list: JoltPhysicsCollideCallbacks['on-contact-validate'] = this._JoltPhysicsCallback['on-contact-validate'];
       list.push({ callback: func as OnContactValidateCallback, otherImpostors: collidedAgainstList });
+    }  else 
+    if (kind == 'on-contact-remove') {
+      const list: JoltPhysicsCollideCallbacks['on-contact-remove'] = this._JoltPhysicsCallback['on-contact-remove'];
+      list.push({ callback: func as OnContactRemoveCallback, otherImpostors: collidedAgainstList });
     } else {
       const list: JoltCollisionCallback<OnContactCallback>[] = this._JoltPhysicsCallback[kind];
       list.push({ callback: func as OnContactCallback, otherImpostors: collidedAgainstList });
@@ -25,6 +45,7 @@ export class JoltPhysicsImpostor extends PhysicsImpostor {
   }
   public unregisterOnJoltPhysicsCollide(kind: 'on-contact-add' | 'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactCallback): void;
   public unregisterOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidateCallback): void;
+  public unregisterOnJoltPhysicsCollide(kind: 'on-contact-remove', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactRemoveCallback): void;
   public unregisterOnJoltPhysicsCollide(kind: JoltCollisionKey, collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>,
     func: OnContactCallback | OnContactValidateCallback): void {
     const collidedAgainstList: Array<PhysicsImpostor> = collideAgainst instanceof Array ?
@@ -54,6 +75,7 @@ export class JoltPhysicsImpostor extends PhysicsImpostor {
 
   public onJoltCollide(kind: 'on-contact-add' | 'on-contact-persist', event: { body: PhysicsImpostor, ioSettings: JoltContactSetting }): void;
   public onJoltCollide(kind: 'on-contact-validate', event: { body: PhysicsImpostor }): OnContactValidateResponse | undefined;
+  public onJoltCollide(kind: 'on-contact-remove', event: { body: PhysicsImpostor }): void;
   public onJoltCollide(kind: JoltCollisionKey, event: { body: PhysicsImpostor, ioSettings: JoltContactSetting } | { body: PhysicsImpostor }): OnContactValidateResponse | undefined | void {
     if (!this._JoltPhysicsCallback[kind].length) {
       return undefined;
@@ -76,6 +98,15 @@ export class JoltPhysicsImpostor extends PhysicsImpostor {
           console.warn(`Warning: [${ret.length}] Validation Listeners registered between: `, this, event.body);
         }
         return ret[0];
+      } else 
+      if (kind == 'on-contact-remove') {
+        const list: JoltCollisionCallback<OnContactRemoveCallback>[] = this._JoltPhysicsCallback[kind];
+        const e = event as { body: PhysicsImpostor, ioSettings: JoltContactSetting };
+        list.filter((obj) => {
+          return obj.otherImpostors.indexOf(event.body) !== -1;
+        }).forEach((obj) => {
+          obj.callback(e.body);
+        });
       } else {
         let collisionHandlerCount = 0;
         const list: JoltCollisionCallback<OnContactCallback>[] = this._JoltPhysicsCallback[kind];

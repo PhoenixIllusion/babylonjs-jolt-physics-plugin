@@ -1,5 +1,5 @@
 import QuickHull from 'quickhull3d'
-import { JoltPhysicsImpostor } from '@phoenixillusion/babylonjs-jolt-plugin/impostor';
+import { JoltPhysicsImpostor } from '@phoenixillusion/babylonjs-jolt-plugin/v1/impostor';
 import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
 import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder';
 import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder';

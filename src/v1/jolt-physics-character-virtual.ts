@@ -1,6 +1,7 @@
 import { IPhysicsEnabledObject, PhysicsImpostor, PhysicsImpostorParameters } from "@babylonjs/core/Physics/v1/physicsImpostor";
 import { Scene } from "@babylonjs/core/scene";
 import { JoltCharacterVirtual } from "../jolt-physics-character-virtual";
+export * from '../jolt-physics-character-virtual';
 
 export class JoltCharacterVirtualImpostor extends PhysicsImpostor {
   constructor(

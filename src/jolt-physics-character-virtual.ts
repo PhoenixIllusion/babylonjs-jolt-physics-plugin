@@ -2,7 +2,6 @@
 import Jolt from './jolt-import';
 import { GetJoltQuat, GetJoltVec3, LAYER_MOVING, SetJoltVec3 } from './jolt-util';
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { Logger } from '@babylonjs/core/Misc/logger';
 import type { PhysicsBody } from '@babylonjs/core/Physics/v2/physicsBody';
 import type { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 
@@ -377,7 +376,7 @@ export class JoltCharacterVirtual<T extends (PhysicsImpostor|PhysicsBody)> {
     if (found) {
       this._JoltPhysicsCallback[kind].splice(index, 1);
     } else {
-      Logger.Warn('Function to remove was not found');
+      console.warn('Function to remove was not found');
     }
   }
 

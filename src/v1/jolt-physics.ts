@@ -1,8 +1,7 @@
 
 import { IPhysicsEnginePlugin, PhysicsImpostorJoint } from '@babylonjs/core/Physics/v1/IPhysicsEnginePlugin';
-import { JoltCharacterVirtualImpostor, JoltCharacterVirtual } from '../jolt-physics-character-virtual';
+import { JoltCharacterVirtual } from '../jolt-physics-character-virtual';
 import Jolt, { loadJolt } from '../jolt-import';
-import { ContactCollector } from './jolt-contact';
 import { RayCastUtility } from '../jolt-raycast';
 import { LAYER_MOVING, LAYER_NON_MOVING, SetJoltVec3 } from '../jolt-util';
 import { Epsilon, Quaternion, Vector3 } from '@babylonjs/core/Maths/math';
@@ -13,6 +12,9 @@ import { IMotorEnabledJoint, MotorEnabledJoint, PhysicsJoint, PhysicsJointData }
 import { IndicesArray, Nullable } from '@babylonjs/core/types';
 import { PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResult';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
+import { MotorcycleController, Vehicle, WheeledVehicleController, WheeledVehicleInput } from '../jolt-physics-vehicle-controller';
+import { JoltCharacterVirtualImpostor } from './jolt-physics-character-virtual';
+import { ContactCollectorV1 } from './jolt-contact';
 export { setJoltModule } from '../jolt-import'
 
 interface MeshVertexData {
@@ -52,7 +54,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
 
   private _raycaster: RayCastUtility;
 
-  private _contactCollector: ContactCollector;
+  private _contactCollector: ContactCollectorV1;
   private _contactListener: Jolt.ContactListenerJS;
 
   private _impostorLookup: Record<number, PhysicsImpostor> = {};
@@ -99,7 +101,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       GetPhysicsBodyForBodyId: (seqAndNum: number) => this.GetImpostorForBodyId(seqAndNum)
     });
     this._contactListener = new Jolt.ContactListenerJS();
-    this._contactCollector = new ContactCollector(this._contactListener);
+    this._contactCollector = new ContactCollectorV1(this._contactListener);
     this.world.SetContactListener(this._contactListener);
 
     this.toDispose.push(this.jolt, this._tempVec3A, this._tempVec3B, this._tempQuaternion, this._contactListener);
@@ -864,4 +866,30 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     (this.world as any) = null;
   }
 
+
+  createWheeledVehicleController(impostor: PhysicsImpostor, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController> ): WheeledVehicleController {
+    return new WheeledVehicleController(
+      {
+        body: impostor.physicsBody as Jolt.Body,
+        world: this.world,
+        toDispose: impostor._pluginData.toDispose,
+        registerPerPhysicsStepCallback: (cb) => this.registerPerPhysicsStepCallback(cb)
+      },
+      settings,
+      input
+    )
+  }
+
+  createMotorcycleVehicleController(impostor: PhysicsImpostor, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController> ): MotorcycleController {
+    return new MotorcycleController(
+      {
+        body: impostor.physicsBody as Jolt.Body,
+        world: this.world,
+        toDispose: impostor._pluginData.toDispose,
+        registerPerPhysicsStepCallback: (cb) => this.registerPerPhysicsStepCallback(cb)
+      },
+      settings,
+      input
+    )
+  }
 }

@@ -1,11 +1,8 @@
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import Jolt from "./jolt-import";
 import { GetJoltQuat, GetJoltVec3, LAYER_MOVING, SetJoltVec3 } from "./jolt-util";
-import type { JoltPhysicsImpostor } from "./v1/jolt-impostor";
-import type { JoltJSPlugin } from "./v1/jolt-physics";
 
 export namespace Vehicle {
-
   export type VehicleType = 'wheeled' | 'motorcycle' | 'track'
 
   export interface SpringSetting {

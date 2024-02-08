@@ -1,8 +1,6 @@
 import Jolt from './jolt-import';
 import { GetJoltQuat, GetJoltVec3, LAYER_MOVING, SetJoltVec3 } from './jolt-util';
-import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { Logger } from '@babylonjs/core/Misc/logger';
 class CharacterVirtualConfig {
     constructor() {
         this.sMaxSlopeAngle = 45.0 * (Math.PI / 180.0);
@@ -12,17 +10,6 @@ class CharacterVirtualConfig {
         this.sPredictiveContactDistance = 0.1;
         this.sEnableWalkStairs = true;
         this.sEnableStickToFloor = true;
-    }
-}
-export class JoltCharacterVirtualImpostor extends PhysicsImpostor {
-    constructor(object, type, _options, _scene) {
-        super(object, type, _options, _scene);
-    }
-    get controller() {
-        return this._pluginData.controller;
-    }
-    set controller(controller) {
-        this._pluginData.controller = controller;
     }
 }
 export var GroundState;
@@ -146,11 +133,9 @@ export class StandardCharacterVirtualHandler {
     }
 }
 export class JoltCharacterVirtual {
-    constructor(impostor, shape, world, plugin) {
-        this.impostor = impostor;
+    constructor(data, shape) {
+        this.data = data;
         this.shape = shape;
-        this.world = world;
-        this.plugin = plugin;
         this.config = new CharacterVirtualConfig();
         this._characterUp = new Vector3();
         this._temp1 = new Vector3();
@@ -158,9 +143,7 @@ export class JoltCharacterVirtual {
         this._JoltPhysicsCallback = { 'on-adjust-velocity': [], 'on-contact-add': [], 'on-contact-validate': [] };
     }
     init() {
-        const world = this.world;
-        const impostor = this.impostor;
-        this.mDisposables = impostor._pluginData.toDispose;
+        this.mDisposables = this.data.toDispose;
         this._jolt_temp1 = new Jolt.Vec3();
         this.mDisposables.push(this._jolt_temp1);
         this.mUpdateSettings = new Jolt.ExtendedUpdateSettings();
@@ -175,11 +158,11 @@ export class JoltCharacterVirtual {
         const mSupportingVolume = new Jolt.Plane(Jolt.Vec3.sAxisY(), -1);
         settings.mSupportingVolume = mSupportingVolume;
         Jolt.destroy(mSupportingVolume);
-        this.mCharacter = new Jolt.CharacterVirtual(settings, Jolt.Vec3.sZero(), Jolt.Quat.sIdentity(), this.world.physicsSystem);
+        this.mCharacter = new Jolt.CharacterVirtual(settings, Jolt.Vec3.sZero(), Jolt.Quat.sIdentity(), this.data.physicsSystem);
         Jolt.destroy(settings);
         this.mDisposables.push(this.mCharacter, this.mUpdateSettings);
-        const objectVsBroadPhaseLayerFilter = world.jolt.GetObjectVsBroadPhaseLayerFilter();
-        const objectLayerPairFilter = world.jolt.GetObjectLayerPairFilter();
+        const objectVsBroadPhaseLayerFilter = this.data.jolt.GetObjectVsBroadPhaseLayerFilter();
+        const objectLayerPairFilter = this.data.jolt.GetObjectLayerPairFilter();
         const filter = this.mUpdateFilterData = {
             movingBPFilter: new Jolt.DefaultBroadPhaseLayerFilter(objectVsBroadPhaseLayerFilter, LAYER_MOVING),
             movingLayerFilter: new Jolt.DefaultObjectLayerFilter(objectLayerPairFilter, LAYER_MOVING),
@@ -210,16 +193,16 @@ export class JoltCharacterVirtual {
             this._characterUp.multiplyToRef(this._temp2, vec);
             SetJoltVec3(vec, this.mUpdateSettings.mWalkStairsStepUp);
         }
-        const gravLen = -this.world.physicsSystem.GetGravity().Length();
+        const gravLen = -this.data.physicsSystem.GetGravity().Length();
         this._temp2.set(gravLen, gravLen, gravLen);
         const g = this._characterUp.multiplyInPlace(this._temp2);
         if (this.inputHandler) {
-            this.inputHandler.processCharacterData(this.mCharacter, this.world.physicsSystem, mDeltaTime, this._jolt_temp1);
+            this.inputHandler.processCharacterData(this.mCharacter, this.data.physicsSystem, mDeltaTime, this._jolt_temp1);
             this.inputHandler.updateCharacter(this.mCharacter, this._jolt_temp1);
         }
         const inGravity = SetJoltVec3(g, this._jolt_temp1);
         const { movingBPFilter, movingLayerFilter, bodyFilter, shapeFilter } = this.mUpdateFilterData;
-        this.mCharacter.ExtendedUpdate(mDeltaTime, inGravity, this.mUpdateSettings, movingBPFilter, movingLayerFilter, bodyFilter, shapeFilter, this.world.jolt.GetTempAllocator());
+        this.mCharacter.ExtendedUpdate(mDeltaTime, inGravity, this.mUpdateSettings, movingBPFilter, movingLayerFilter, bodyFilter, shapeFilter, this.data.jolt.GetTempAllocator());
     }
     getCharacter() {
         return this.mCharacter;
@@ -237,7 +220,7 @@ export class JoltCharacterVirtual {
                 inBody2 = Jolt.wrapPointer(inBody2, Jolt.Body);
                 lVelocity = Jolt.wrapPointer(lVelocity, Jolt.Vec3);
                 aVelocity = Jolt.wrapPointer(aVelocity, Jolt.Vec3);
-                const impostor = this.plugin.GetImpostorForBodyId(inBody2.GetID().GetIndexAndSequenceNumber());
+                const impostor = this.data.GetPhysicsBodyForBodyId(inBody2.GetID().GetIndexAndSequenceNumber());
                 GetJoltVec3(lVelocity, _lVelocity);
                 GetJoltVec3(aVelocity, _aVelocity);
                 this.onJoltCollide('on-adjust-velocity', { body: impostor, linearVelocity: _lVelocity, angularVelocity: _aVelocity });
@@ -246,12 +229,12 @@ export class JoltCharacterVirtual {
             };
             this.contactListener.OnContactAdded = (_inCharacter, inBodyID2, _inSubShapeID2, _inContactPosition, _inContactNormal, _ioSettings) => {
                 inBodyID2 = Jolt.wrapPointer(inBodyID2, Jolt.BodyID);
-                const impostor = this.plugin.GetImpostorForBodyId(inBodyID2.GetIndexAndSequenceNumber());
+                const impostor = this.data.GetPhysicsBodyForBodyId(inBodyID2.GetIndexAndSequenceNumber());
                 this.onJoltCollide('on-contact-add', { body: impostor });
             };
             this.contactListener.OnContactValidate = (_inCharacter, inBodyID2, _inSubShapeID2) => {
                 inBodyID2 = Jolt.wrapPointer(inBodyID2, Jolt.BodyID);
-                const impostor = this.plugin.GetImpostorForBodyId(inBodyID2.GetIndexAndSequenceNumber());
+                const impostor = this.data.GetPhysicsBodyForBodyId(inBodyID2.GetIndexAndSequenceNumber());
                 const ret = this.onJoltCollide('on-contact-validate', { body: impostor });
                 if (ret !== undefined) {
                     return ret;
@@ -300,7 +283,7 @@ export class JoltCharacterVirtual {
             this._JoltPhysicsCallback[kind].splice(index, 1);
         }
         else {
-            Logger.Warn('Function to remove was not found');
+            console.warn('Function to remove was not found');
         }
     }
     onJoltCollide(kind, event) {

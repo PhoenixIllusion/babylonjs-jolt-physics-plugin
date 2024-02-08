@@ -274,17 +274,17 @@ export class DefaultMotorcycleInput extends DefaultVehicleInput {
             bodyInterface.ActivateBody(this.bodyId);
     }
 }
-function configureVehicleConstraint(joltPlugin, settings, constraint) {
+function configureVehicleConstraint(data, settings, constraint) {
     if (settings.collisionTester === 'cylinder') {
         constraint.SetVehicleCollisionTester(new Jolt.VehicleCollisionTesterCastCylinder(LAYER_MOVING, 0.05));
     }
     if (settings.collisionTester === 'ray') {
         constraint.SetVehicleCollisionTester(new Jolt.VehicleCollisionTesterRay(LAYER_MOVING));
     }
-    joltPlugin.world.AddConstraint(constraint);
+    data.world.AddConstraint(constraint);
     const stepListener = new Jolt.VehicleConstraintStepListener(constraint);
     const toDispose = [stepListener];
-    joltPlugin.world.AddStepListener(stepListener);
+    data.world.AddStepListener(stepListener);
     return toDispose;
 }
 export function createBasicCar(vehicle, wheel, fourWheelDrive) {
@@ -373,15 +373,14 @@ export function createBasicMotorcycle(vehicle, wheel) {
     };
 }
 export class WheeledVehicleController {
-    constructor(impostor, settings, input) {
+    constructor(data, settings, input) {
         this.wheelTransforms = [];
-        const joltPlugin = impostor._pluginData.plugin;
-        const physicsBody = impostor.physicsBody;
+        const physicsBody = data.body;
         const constraintSettings = createWheeledVehicleConstraint(settings);
         const constraint = new Jolt.VehicleConstraint(physicsBody, constraintSettings);
         Jolt.destroy(constraintSettings);
-        const toDispose = configureVehicleConstraint(joltPlugin, settings, constraint);
-        const bodyInterface = joltPlugin.world.GetBodyInterface();
+        const toDispose = configureVehicleConstraint(data, settings, constraint);
+        const bodyInterface = data.world.GetBodyInterface();
         const controller = Jolt.castObject(constraint.GetController(), Jolt.WheeledVehicleController);
         settings.wheels.forEach(() => {
             this.wheelTransforms.push({ position: new Vector3, rotation: new Quaternion });
@@ -396,20 +395,19 @@ export class WheeledVehicleController {
             });
             input.onPrePhysicsUpdate(bodyInterface, controller, delta);
         };
-        joltPlugin.registerPerPhysicsStepCallback(this._physicsStepListener);
-        impostor._pluginData.toDispose.push(wheelRight, wheelUp, ...toDispose);
+        data.registerPerPhysicsStepCallback(this._physicsStepListener);
+        data.toDispose.push(wheelRight, wheelUp, ...toDispose);
     }
 }
 export class MotorcycleController {
-    constructor(impostor, settings, input) {
+    constructor(data, settings, input) {
         this.wheelTransforms = [];
-        const joltPlugin = impostor._pluginData.plugin;
-        const physicsBody = impostor.physicsBody;
+        const physicsBody = data.body;
         const constraintSettings = createMotorcycleConstraint(settings);
         const constraint = new Jolt.VehicleConstraint(physicsBody, constraintSettings);
         Jolt.destroy(constraintSettings);
-        const toDispose = configureVehicleConstraint(joltPlugin, settings, constraint);
-        const bodyInterface = joltPlugin.world.GetBodyInterface();
+        const toDispose = configureVehicleConstraint(data, settings, constraint);
+        const bodyInterface = data.world.GetBodyInterface();
         const controller = Jolt.castObject(constraint.GetController(), Jolt.MotorcycleController);
         settings.wheels.forEach(() => {
             this.wheelTransforms.push({ position: new Vector3, rotation: new Quaternion });
@@ -424,8 +422,8 @@ export class MotorcycleController {
             });
             input.onPrePhysicsUpdate(bodyInterface, controller, delta);
         };
-        joltPlugin.registerPerPhysicsStepCallback(this._physicsStepListener);
-        impostor._pluginData.toDispose.push(wheelRight, wheelUp, ...toDispose);
+        data.registerPerPhysicsStepCallback(this._physicsStepListener);
+        data.toDispose.push(wheelRight, wheelUp, ...toDispose);
     }
 }
 export class TreadedVehicleController {

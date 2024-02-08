@@ -53,7 +53,7 @@ export default (): SceneCallback => {
     const result = engine.raycast(getOrigin(), getDest());
     if(result.hasHit) {
       boxes.forEach(box => {
-        if(box.physics.physicsBody == result.body) {
+        if(box.physics == result.body as any) {
           box.box.material = colorBlue;
         } else {
           if(box.box.material != colorRed) {

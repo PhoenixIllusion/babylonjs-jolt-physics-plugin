@@ -1,6 +1,5 @@
-import { Vector3 } from '@babylonjs/core/Maths/math.vector';
-import Jolt from './jolt-import';
-import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import Jolt from "./jolt-import";
 export declare class JoltContactSetting {
     combinedFriction: number;
     combinedRestitution: number;
@@ -21,24 +20,25 @@ export declare const enum OnContactValidateResponse {
     RejectContact = 2,
     RejectAllContactsForThisBodyPair = 3
 }
-export type OnContactValidateCallback = (body: PhysicsImpostor) => OnContactValidateResponse;
-export type OnContactCallback = (body: PhysicsImpostor, offset: Vector3, contactSettings: JoltContactSetting) => void;
-export interface JoltCollisionCallback<T extends OnContactValidateCallback | OnContactCallback> {
-    callback: T;
-    otherImpostors: Array<PhysicsImpostor>;
+interface ContactReporter {
+    onContactRemove(body: number, withBody: number): void;
+    onContactAdd(body: number, withBody: number, contactSettings: JoltContactSetting): void;
+    onContactPersist(body: number, withBody: number, contactSettings: JoltContactSetting): void;
+    onContactValidate(body: number, withBody: number): OnContactValidateResponse;
 }
-export interface JoltPhysicsCollideCallbacks {
-    'on-contact-add': JoltCollisionCallback<OnContactCallback>[];
-    'on-contact-persist': JoltCollisionCallback<OnContactCallback>[];
-    'on-contact-validate': JoltCollisionCallback<OnContactValidateCallback>[];
-}
-export type JoltCollisionKey = keyof JoltPhysicsCollideCallbacks;
+type CollisionRecords = {
+    'on-contact-add': Record<number, boolean>;
+    'on-contact-persist': Record<number, boolean>;
+    'on-contact-validate': Record<number, boolean>;
+    'on-contact-remove': Record<number, boolean>;
+};
+export type JoltCollisionKey = keyof CollisionRecords;
 export declare class ContactCollector {
-    private _collisionEnabled;
+    private reporter;
     private _joltEventEnabled;
-    private _imposterBodyHash;
     private _contactSettings;
-    constructor(listener: Jolt.ContactListenerJS);
-    registerImpostor(hash: number, impostor: PhysicsImpostor): void;
+    constructor(listener: Jolt.ContactListenerJS, reporter: ContactReporter);
+    registerImpostor(hash: number, kind: JoltCollisionKey): void;
     clear(): void;
 }
+export {};
