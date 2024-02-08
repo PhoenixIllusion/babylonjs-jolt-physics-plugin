@@ -1,7 +1,7 @@
 {
   "name": "@phoenixillusion/babylonjs-jolt-plugin",
   "private": true,
-  "version": "1.0.9",
+  "version": "1.0.10",
   "type": "module",
   "scripts": {
     "build": "mkdir -p dist && cp src/jolt-import.js ./dist/. && tsc",
@@ -38,7 +38,7 @@
     "./dist/index.js",
     "./dist/jolt-contact.d.ts",
     "./dist/jolt-contact.js",
-    "./dist/jolt-import.d.js",
+    "./dist/jolt-import.d.ts",
     "./dist/jolt-import.js",
     "./dist/jolt-impostor.d.ts",
     "./dist/jolt-impostor.js",
