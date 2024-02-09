@@ -282,12 +282,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
 
       impostor.object.computeWorldMatrix(true);
       SetJoltVec3(impostor.object.position, this._tempVec3A);
-      this._tempQuaternion.Set(
-        impostor.object.rotationQuaternion!.x,
-        impostor.object.rotationQuaternion!.y,
-        impostor.object.rotationQuaternion!.z,
-        impostor.object.rotationQuaternion!.w
-      );
+      SetJoltQuat(impostor.object.rotationQuaternion!, this._tempQuaternion);
       const isStatic = (mass === 0) ? Jolt.EMotionType_Static : Jolt.EMotionType_Dynamic;
       const layer = (mass === 0) ? LAYER_NON_MOVING : LAYER_MOVING;
       const settings = new Jolt.BodyCreationSettings(shape, this._tempVec3A, this._tempQuaternion, isStatic, layer);
