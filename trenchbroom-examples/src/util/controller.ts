@@ -9,6 +9,7 @@ import { KeyState, KeyboardControl } from "./controller/keyboard";
 import { CameraSetup } from "./camera";
 import { BaseCameraPointersInput } from "@babylonjs/core/Cameras/Inputs/BaseCameraPointersInput";
 import { Camera } from "@babylonjs/core/Cameras/camera";
+import { App } from "../app";
 
 type OnInputCheck<T> = (camera: T, joystickState: Vector2, keyboardState: KeyState) => void;
 
@@ -20,7 +21,7 @@ export class CameraCombinedInput<T extends Camera> extends BaseCameraPointersInp
 
   private screenSize!: Vector2;
   private joystickPointerId: number | null = null;
-  private joystick: JoystickControl = new JoystickControl();
+  private joystick: JoystickControl;
   private keyboard: KeyboardControl = new KeyboardControl();
 
   getClassName = () => this.constructor.name;
@@ -29,15 +30,15 @@ export class CameraCombinedInput<T extends Camera> extends BaseCameraPointersInp
 
   constructor(private _onInputCheck: OnInputCheck<T>, private cameraSetup: CameraSetup) {
     super();
+    this.joystick = new JoystickControl(App.ui);
   }
 
   attachControl(noPreventDefault?: boolean) {
     super.attachControl(noPreventDefault);
     this.joystick.attachControl();
     this.keyboard.attachControl(this.camera.getScene());
-    this.screenSize = CameraCombinedInput.getScreenSize();
-    this.joystick.prepareImages(this.screenSize);
     EngineStore.LastCreatedEngine!.onResizeObservable.add(this.resize);
+    this.screenSize = CameraCombinedInput.getScreenSize();
   }
 
   detachControl() {
@@ -50,7 +51,7 @@ export class CameraCombinedInput<T extends Camera> extends BaseCameraPointersInp
 
   resize = () => {
     this.screenSize = CameraCombinedInput.getScreenSize();
-    this.joystick.resize(this.screenSize);
+    this.joystick.resize();
   };
 
   static getScreenSize() {
@@ -66,9 +67,8 @@ export class CameraCombinedInput<T extends Camera> extends BaseCameraPointersInp
       if (this.keyboard.state.ROTATE_UP) this.cameraSetup.changeTiltY(-this.SWIPE_SENSIBILITY * engine.getDeltaTime() / 500);
       if (this.keyboard.state.ROTATE_DOWN) this.cameraSetup.changeTiltY(this.SWIPE_SENSIBILITY * engine.getDeltaTime() / 500);
     }
-    this.joystick.checkInput();
-    if (this.joystick.isActive) {
-      this.keyboard.state.JUMP = this.joystick.actionButton;
+    if(this.joystick.useJumpButton) {
+      this.keyboard.state.JUMP = this.joystick.jumpState;
     }
     this._onInputCheck(this.camera, this.joystick.joystickDelta, this.keyboard.state)
   }
@@ -81,6 +81,7 @@ export class CameraCombinedInput<T extends Camera> extends BaseCameraPointersInp
       this.onTouchSwipe(new Vector2(offsetX, offsetY));
     }
   }
+  
   onTouchSwipe(touchOffset: Vector2) {
     let directionAdjust = 1;
     if (this.camera.getScene().useRightHandedSystem) directionAdjust *= -1;
@@ -91,7 +92,7 @@ export class CameraCombinedInput<T extends Camera> extends BaseCameraPointersInp
   }
 
   onButtonDown(evt: IPointerEvent) {
-    if (evt.offsetY > this.screenSize.y * this.joystick.JOYSTICK_TOUCH_AREA_SCREEN_SHARE) {
+    if (this.joystick.isTouch(evt)) {
       this.joystickPointerId = evt.pointerId;
       this.joystick.onButtonDownJoystick(evt);
     }

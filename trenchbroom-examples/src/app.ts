@@ -1,7 +1,5 @@
 import './style.css';
 
-//import '@babylonjs/core/Debug/debugLayer';
-//import '@babylonjs/inspector';
 import { JoltJSPlugin } from '@phoenixillusion/babylonjs-jolt-plugin';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
@@ -10,12 +8,15 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Scene } from '@babylonjs/core/scene';
 import '@babylonjs/core/Physics/physicsEngineComponent';
 import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight';
+import { AdvancedDynamicTexture } from '@babylonjs/gui/2D/advancedDynamicTexture';
 
 export type SceneCallback = (void | ((time: number, delta: number) => void))
 export type SceneFunction = (scene: Scene) => Promise<SceneCallback>;
 
 export class App {
     private canvas: HTMLCanvasElement;
+    public static ui: AdvancedDynamicTexture; 
+
     constructor(private createScene: SceneFunction) {
         // create the canvas html element and attach it to the webpage
         const canvas = this.canvas = document.createElement('canvas');
@@ -29,6 +30,7 @@ export class App {
         // initialize babylon scene and engine
         var engine = new Engine(this.canvas, true);
         var scene = new Scene(engine);
+        App.ui = AdvancedDynamicTexture.CreateFullscreenUI('gui');
 
         scene.enablePhysics(new Vector3(0, -9.8, 0), await JoltJSPlugin.loadPlugin())
 
@@ -44,18 +46,6 @@ export class App {
 
         const callback = await this.createScene(scene);
 
-        /*
-        // hide/show the Inspector
-        window.addEventListener('keydown', (ev) => {
-            // Shift+Ctrl+Alt+I
-            if (ev.shiftKey && ev.ctrlKey && ev.altKey && ev.keyCode === 73) {
-                if (scene.debugLayer.isVisible()) {
-                    scene.debugLayer.hide();
-                } else {
-                    scene.debugLayer.show();
-                }
-            }
-        });*/
 
         let last = performance.now();
         // run the main render loop

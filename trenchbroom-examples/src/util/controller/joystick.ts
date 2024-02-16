@@ -1,6 +1,8 @@
+import { EngineStore } from "@babylonjs/core/Engines/engineStore";
 import type { IPointerEvent } from "@babylonjs/core/Events";
 import { Vector2 } from "@babylonjs/core/Maths/math.vector";
 import { AdvancedDynamicTexture } from "@babylonjs/gui/2D/advancedDynamicTexture";
+import { Button } from '@babylonjs/gui/2D/controls/button';
 import { Container } from "@babylonjs/gui/2D/controls/container";
 import { Control } from "@babylonjs/gui/2D/controls/control";
 import { Ellipse } from "@babylonjs/gui/2D/controls/ellipse";
@@ -21,7 +23,6 @@ export class JoystickControl {
   private joystickButtonDownPosOffset!: Vector2;
   private joystickButtonDownPos!: Vector2;
 
-  private ui!: AdvancedDynamicTexture;
   private joystickCircleRadius!: number;
   private joystickPuckRadius!: number;
   private joystickContainer!: Container;
@@ -30,36 +31,26 @@ export class JoystickControl {
   private joystickInnerCircle!: Ellipse;
   private joystickPuck!: Ellipse;
 
-  private firstTouch = 0;
-  private lastTouch = 0;
-  public isActive = true;
-  public actionButton = false;
+  private jumpButton!: Button;
+  public useJumpButton = false;
+  public jumpState = false;
 
-  constructor() {
+  constructor(private ui: AdvancedDynamicTexture) {
 
+  }
+
+  isTouch(evt: IPointerEvent): boolean {
+    return evt.offsetY > this.joystickContainer.topInPixels;
   }
 
   attachControl() {
-    this.ui = AdvancedDynamicTexture.CreateFullscreenUI("UI");
+    this.prepareImages();
   }
 
+  prepareImages() {
+    const engine = EngineStore.LastCreatedEngine!;
+    const screenSize = new Vector2(engine.getRenderWidth(), engine.getRenderHeight());
 
-  checkInput() {
-    if (this.lastTouch > this.firstTouch) {
-      if (this.lastTouch - this.firstTouch < 200) {
-        this.firstTouch = 0;
-        this.actionButton = true;
-      } else {
-        this.actionButton = false;
-      }
-      if (performance.now() - this.lastTouch > 200) {
-        this.actionButton = false;
-        this.isActive = false;
-      }
-    }
-  }
-
-  prepareImages(screenSize: Vector2) {
     this.joystickCircleRadius = screenSize.y * this.JOYSTICK_CIRCLE_SIZE_VERTICAL_SCREEN_SHARE;
     this.joystickPuckRadius = screenSize.y * this.JOYSTICK_PUCK_SIZE_VERTICAL_SCREEN_SHARE;
 
@@ -87,8 +78,25 @@ export class JoystickControl {
     this.joystickContainer.addControl(this.joystickOuterCirce);
     this.joystickContainer.addControl(this.joystickInnerCircle);
     this.joystickContainer.addControl(this.joystickPuck);
-    this.joystickContainer.isVisible = false;
+    this.joystickContainer.left = screenSize.x - this.joystickContainer.widthInPixels;
+    this.joystickContainer.top = screenSize.y - this.joystickContainer.heightInPixels;
     this.ui.addControl(this.joystickContainer);
+
+    const button = this.jumpButton = Button.CreateSimpleButton('jump','jump');
+    button.color = "white";
+    button.background = "green";
+    button.leftInPixels = -screenSize.x/2 + screenSize.x/8 + 10;
+    button.widthInPixels = screenSize.x / 4;
+    button.heightInPixels = 80;
+    button.topInPixels = screenSize.y /2 - 50;
+    button.onPointerDownObservable.add(() => {
+      this.useJumpButton = true;
+      this.jumpState = true;
+    });
+    button.onPointerUpObservable.add(() => {
+      this.jumpState = false;
+    });
+    this.ui.addControl(button);
   }
 
   prepareJoystickCircle(radius: number, thickness: number) {
@@ -105,25 +113,18 @@ export class JoystickControl {
 
   onButtonDownJoystick(evt: IPointerEvent) {
     let point = new Vector2(evt.offsetX, evt.offsetY);
-    this.firstTouch = performance.now();
-    this.isActive = true;
     this.joystickButtonDownPos = point;
     this.joystickButtonDownPosOffset = new Vector2(evt.clientX - point.x, evt.clientY - point.y);
-    this.joystickContainer.left = point.x - this.joystickContainer.widthInPixels / 2;
-    this.joystickContainer.top = point.y - this.joystickContainer.heightInPixels / 2;
-    this.joystickContainer.isVisible = true;
   }
 
   onButtonUpJoystick() {
-    this.lastTouch = performance.now();
-    this.isActive = true;
     this.joystickDelta.scaleInPlace(0);
-    this.joystickContainer.isVisible = false;
+    this.joystickPuck.left = 0;
+    this.joystickPuck.top = 0;
   }
 
   onTouchJoystick(touchPoint: Vector2) {
     touchPoint.subtractInPlace(this.joystickButtonDownPosOffset)
-    this.isActive = true;
     const joystickVector = touchPoint.subtract(this.joystickButtonDownPos);
     if (joystickVector.length() > this.joystickCircleRadius)
       joystickVector.scaleInPlace(this.joystickCircleRadius / joystickVector.length());
@@ -138,16 +139,16 @@ export class JoystickControl {
     this.joystickContainer.dispose()
     this.joystickInnerCircle.dispose();
     this.joystickOuterCirce.dispose();
+    this.jumpButton.dispose();
     this.joystickPuck.dispose();
   }
 
-  resize(screenSize: Vector2) {
+  resize() {
     this.disposeImages();
-    this.prepareImages(screenSize);
+    this.prepareImages();
   }
 
   detachControl() {
     this.disposeImages();
-    this.ui.dispose();
   }
 }

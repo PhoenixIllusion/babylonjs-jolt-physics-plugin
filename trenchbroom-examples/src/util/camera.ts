@@ -53,7 +53,7 @@ export class CameraSetup {
     this.camera.inputs.clear();
     this.camera.attachControl();
     this.camera.inputs.add(input);
-    document.body.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
+    document.querySelector('canvas')!.addEventListener('touchstart', (e) => e.preventDefault(), { passive: false });
   }
   getRoot() {
     return this._camRoot;
