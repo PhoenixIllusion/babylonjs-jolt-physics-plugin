@@ -13,6 +13,7 @@ export class JoltConstraintManager {
             constraintSettings.mNormalAxis2.Set(...params.normalAxis2);
         };
         let twoBodySettings;
+        let constraint = undefined;
         switch (constraintParams.type) {
             case 'Fixed':
                 {
@@ -24,6 +25,7 @@ export class JoltConstraintManager {
                     constraintSettings.mAxisX2.Set(...params.axisx2);
                     constraintSettings.mAxisY1.Set(...params.axisy1);
                     constraintSettings.mAxisY2.Set(...params.axisy2);
+                    constraint = twoBodySettings.Create(mainBody, connectedBody);
                 }
                 break;
             case 'Point':
@@ -32,6 +34,8 @@ export class JoltConstraintManager {
                     let constraintSettings = twoBodySettings = new Jolt.PointConstraintSettings();
                     constraintSettings.mSpace = params.space == 'Local' ? Jolt.EConstraintSpace_LocalToBodyCOM : Jolt.EConstraintSpace_WorldSpace;
                     setPoints(constraintSettings, params);
+                    constraint = twoBodySettings.Create(mainBody, connectedBody);
+                    constraint = Jolt.castObject(constraint, Jolt.PointConstraint);
                 }
                 break;
             case 'Hinge':
@@ -46,6 +50,8 @@ export class JoltConstraintManager {
                     constraintSettings.mLimitsMin = params.limitsMin;
                     constraintSettings.mLimitsMax = params.limitsMax;
                     constraintSettings.mMaxFrictionTorque = params.maxFrictionTorque;
+                    constraint = twoBodySettings.Create(mainBody, connectedBody);
+                    constraint = Jolt.castObject(constraint, Jolt.HingeConstraint);
                 }
                 break;
             case 'Slider':
@@ -60,6 +66,8 @@ export class JoltConstraintManager {
                     constraintSettings.mLimitsMin = params.limitsMin;
                     constraintSettings.mLimitsMax = params.limitsMax;
                     constraintSettings.mMaxFrictionForce = params.maxFrictionForce;
+                    constraint = twoBodySettings.Create(mainBody, connectedBody);
+                    constraint = Jolt.castObject(constraint, Jolt.SliderConstraint);
                 }
                 break;
             case 'Distance':
@@ -70,6 +78,8 @@ export class JoltConstraintManager {
                     setPoints(constraintSettings, params);
                     constraintSettings.mMinDistance = params.minDistance;
                     constraintSettings.mMaxDistance = params.maxDistance;
+                    constraint = twoBodySettings.Create(mainBody, connectedBody);
+                    constraint = Jolt.castObject(constraint, Jolt.DistanceConstraint);
                 }
                 break;
             case 'Cone':
@@ -81,13 +91,16 @@ export class JoltConstraintManager {
                     constraintSettings.mTwistAxis1.Set(...params.twistAxis1);
                     constraintSettings.mTwistAxis2.Set(...params.twistAxis2);
                     constraintSettings.mHalfConeAngle = params.halfConeAngle;
+                    constraint = twoBodySettings.Create(mainBody, connectedBody);
+                    constraint = Jolt.castObject(constraint, Jolt.ConeConstraint);
                 }
                 break;
             case 'Path':
                 {
                     const params = constraintParams;
                     let constraintSettings = twoBodySettings = new Jolt.PathConstraintSettings();
-                    constraintSettings.mPath = new JoltConstraintPath(params.path.map(f3 => new Vector3(...f3)), new Vector3(...params.pathNormal)).getPtr();
+                    const path = new JoltConstraintPath(params.path.map(f3 => new Vector3(-f3[0], f3[1], f3[2])), new Vector3(...params.pathNormal));
+                    constraintSettings.mPath.SetIsLooping(path.looping);
                     constraintSettings.mPathPosition.Set(...params.pathPosition);
                     constraintSettings.mPathRotation.Set(...params.pathRotation);
                     constraintSettings.mPathFraction = params.pathFraction;
@@ -112,6 +125,9 @@ export class JoltConstraintManager {
                             constraintSettings.mRotationConstraintType = Jolt.EPathRotationConstraintType_FullyConstrained;
                             break;
                     }
+                    constraint = twoBodySettings.Create(mainBody, connectedBody);
+                    const pathConstraint = constraint = Jolt.castObject(constraint, Jolt.PathConstraint);
+                    pathConstraint.SetPath(path.getPtr(), params.pathFraction);
                 }
                 break;
             case 'Pulley':
@@ -126,12 +142,12 @@ export class JoltConstraintManager {
                     constraintSettings.mRatio = params.ratio;
                     constraintSettings.mMinLength = params.minLength;
                     constraintSettings.mMaxLength = params.maxLength;
+                    constraint = twoBodySettings.Create(mainBody, connectedBody);
+                    constraint = Jolt.castObject(constraint, Jolt.PulleyConstraint);
                 }
                 break;
         }
-        let constraint = undefined;
         if (twoBodySettings) {
-            constraint = twoBodySettings.Create(mainBody, connectedBody);
             Jolt.destroy(twoBodySettings);
         }
         return constraint;

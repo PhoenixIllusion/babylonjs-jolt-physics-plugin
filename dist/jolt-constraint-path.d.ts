@@ -8,7 +8,7 @@ export declare class JoltConstraintPath {
     private ptr;
     constructor(points: Vector3[], normal: Vector3);
     getPtr(): Jolt.PathConstraintPathJS;
-    getClosestPoint(vecPtr: Jolt.Vec3, fractionHint: float): number;
+    getClosestPoint(vecPtr: Jolt.Vec3, _fractionHint: float): number;
     getPathMaxFraction(): float;
     getPointOnPath(inFraction: float, outPathPositionPtr: Jolt.Vec3, outPathTangentPtr: Jolt.Vec3, outPathNormalPtr: Jolt.Vec3, outPathBinormalPtr: Jolt.Vec3): void;
 }
