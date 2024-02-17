@@ -21,7 +21,7 @@
     "@babylonjs/core": "6.x"
   },
   "dependencies": {
-    "jolt-physics": "0.16.0"
+    "jolt-physics": "0.17.0"
   },
   "exports": {
     ".": "./dist/index.js",
@@ -38,6 +38,10 @@
     "./dist/index.js",
     "./dist/jolt-contact.d.ts",
     "./dist/jolt-contact.js",
+    "./dist/jolt-constraint.d.ts",
+    "./dist/jolt-constraint.js",
+    "./dist/jolt-constraint-path.d.ts",
+    "./dist/jolt-constraint-path.js",
     "./dist/jolt-import.d.ts",
     "./dist/jolt-import.js",
     "./dist/jolt-impostor.d.ts",
