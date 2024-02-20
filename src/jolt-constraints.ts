@@ -188,7 +188,7 @@ export class JoltConstraintManager {
       case 'Path': {
         const params = constraintParams as PathConstraintParams;
         let constraintSettings = twoBodySettings = new Jolt.PathConstraintSettings();
-        const path = new JoltConstraintPath(params.path.map(f3 => new Vector3(-f3[0],f3[1],f3[2])), new Vector3(...params.pathNormal));
+        const path = new JoltConstraintPath(params.path.map(f3 => new Vector3(f3[0],f3[1],f3[2])), new Vector3(...params.pathNormal));
         constraintSettings.mPath.SetIsLooping(path.looping);
         constraintSettings.mPathPosition.Set(...params.pathPosition);
         constraintSettings.mPathRotation.Set(...params.pathRotation);

@@ -1,0 +1,20 @@
+{
+    "name": "ExportJoltGLB",
+    "rootNamespace": "",
+    "references": [
+        "glTFast",
+        "glTFast.Editor",
+        "glTFast.Export",
+        "JoltRigidBody",
+        "Unity.Mathematics"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
