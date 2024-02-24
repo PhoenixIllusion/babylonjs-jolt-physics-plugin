@@ -29,15 +29,18 @@ export class JoltConstraintPath {
     return this.ptr;
   }
 
-  getClosestPoint(vecPtr: Jolt.Vec3, fractionHint: float): number {
+  getClosestPoint(vecPtr: Jolt.Vec3, _fractionHint: float): number {
     const jVec3 = Jolt.wrapPointer(vecPtr as any, Jolt.Vec3);
     GetJoltVec3(jVec3, TmpVectors.Vector3[0]);
 
-    const prevPathFrac = (fractionHint-0.5) / this.length;
-    const nextPathFrac = (fractionHint+0.5) / this.length;
+    //const prevPathFrac = (fractionHint-2) / this.length;
+    //const nextPathFrac = (fractionHint+2) / this.length;
 
-    const closestPoint = this.path3d.slice(prevPathFrac, nextPathFrac).getClosestPositionTo(TmpVectors.Vector3[0]);
-    return prevPathFrac + closestPoint;
+    //const closestPoint = this.path3d.slice(prevPathFrac %1.0, nextPathFrac).getClosestPositionTo(TmpVectors.Vector3[0]);
+    //const closestPoint = this.path3d.getClosestPositionTo(TmpVectors.Vector3[0]);
+    //return (fractionHint + 4*(closestPoint-0.5)) % this.length;
+    const closestPoint = this.path3d.getClosestPositionTo(TmpVectors.Vector3[0]);
+    return (closestPoint * this.length) % this.length;
   }
 
   getPathMaxFraction(): float {
