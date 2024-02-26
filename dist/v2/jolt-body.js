@@ -104,9 +104,9 @@ export class JoltBodyManager {
         const layer = (mass == 0) ? LAYER_NON_MOVING : LAYER_MOVING;
         const settings = new Jolt.BodyCreationSettings(shape, this.position, this.orientation, motionType, layer);
         if (material) {
-            if (material.restitution)
+            if (material.restitution != undefined)
                 settings.mRestitution = material.restitution;
-            if (material.friction)
+            if (material.friction != undefined)
                 settings.mFriction = material.friction;
         }
         if (mass !== 0) {

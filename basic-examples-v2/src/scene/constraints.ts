@@ -4,8 +4,11 @@ import { SceneCallback, createBox, createFloor } from './example';
 
 import Jolt from '@phoenixillusion/babylonjs-jolt-plugin/import'
 import { PhysicsJoint } from '@babylonjs/core/Physics/v1/physicsJoint';
+import { Scene } from '@babylonjs/core/scene';
+import { PhysicsConstraint } from '@babylonjs/core/Physics/v2/physicsConstraint';
+import { PhysicsConstraintType } from '@babylonjs/core/Physics/v2/IPhysicsEnginePlugin';
 
-export default (): SceneCallback => {
+export default (scene: Scene): SceneCallback => {
 
   const rot = Quaternion.Identity();
   const size = new Vector3(0.5, 0.5, 0.5);
@@ -34,7 +37,7 @@ export default (): SceneCallback => {
 
       // Add an impulse (gravity is really boring, many constraints look the same)
       if (z == len-1)
-        box.physics.applyImpulse(new Vector3(100, 0, 0), pos);
+        box.physics.body.applyImpulse(new Vector3(100, 0, 0), pos);
 
       return box;
     }
@@ -50,12 +53,27 @@ export default (): SceneCallback => {
         if (prevBody != null) {
           let point = position.clone();
           point.z = z - 0.5;
-          const jointConfig = {
-            mainPivot: point,
-            connectedPivot: point
-          };
-          const joint = new PhysicsJoint(PhysicsJoint.LockJoint, jointConfig);
-          prevBody.physics.addJoint(box.physics, joint);
+          const joint = new PhysicsConstraint(PhysicsConstraintType.LOCK, { pivotA: point, pivotB: point }, scene );
+          prevBody.physics.body.addConstraint(box.physics.body, joint);
+        }
+
+        prevBody = box;
+      }
+    }
+    position.x += 4;
+    {
+      let prevBody = null;
+
+      for (let z = 0; z < len; ++z) {
+        const pZ = z * 1.2;
+        let box = createBody(position, pZ);
+        box.box.name = 'Point-'+z;
+
+        if (prevBody != null) {
+          let point = position.clone();
+          point.z = pZ - 0.6;
+          const joint = new PhysicsConstraint(PhysicsConstraintType.BALL_AND_SOCKET, { pivotA: point, pivotB: point }, scene );
+          prevBody.physics.body.addConstraint(box.physics.body, joint);
         }
 
         prevBody = box;
@@ -72,38 +90,8 @@ export default (): SceneCallback => {
         if (prevBody != null) {
           let point = position.clone();
           point.z = z - 0.5;
-          const jointConfig = {
-            mainPivot: point,
-            connectedPivot: point
-          };
-          const joint = new PhysicsJoint(PhysicsJoint.PointToPointJoint, jointConfig);
-          prevBody.physics.addJoint(box.physics, joint);
-        }
-
-        prevBody = box;
-      }
-    }
-    position.x += 4;
-    {
-      let prevBody = null;
-
-      for (let z = 0; z < len; ++z) {
-        let box = createBody(position, z);
-        box.box.name = 'Point-'+z;
-
-        if (prevBody != null) {
-          let point = position.clone();
-          point.z = z - 0.5;
-          const jointConfig = {
-            mainPivot: point,
-            connectedPivot: point,
-            nativeParams: {
-              'min-distance': 0,
-              'max-distance': 1,
-            }
-          };
-          const joint = new PhysicsJoint(PhysicsJoint.DistanceJoint, jointConfig);
-          prevBody.physics.addJoint(box.physics, joint);
+          const joint = new PhysicsConstraint(PhysicsConstraintType.DISTANCE, { pivotA: point, pivotB: point, maxDistance: 1 }, scene );
+          prevBody.physics.body.addConstraint(box.physics.body, joint);
         }
 
         prevBody = box;
@@ -113,26 +101,22 @@ export default (): SceneCallback => {
     {
       let prevBody = null;
       const hingeAxis = new Vector3(1,0,0);
+      const perpAxis = new Vector3(0,1,0);
 
       for (let z = 0; z < len; ++z) {
-        let box = createBody(position, z);
+        const pZ = z * 1.2;
+        let box = createBody(position, pZ);
         box.box.name = 'Point-'+z;
 
         if (prevBody != null) {
           let point = position.clone();
-          point.z = z - 0.5;
-          const jointConfig = {
-            mainPivot: point,
-            connectedPivot: point,
-            mainAxis: hingeAxis,
-            connectedAxis: hingeAxis,
-            nativeParams: {
-              'normal-axis-1': new Vector3(0,1,0),
-              'normal-axis-2': new Vector3(0,1,0),
-            }
-          };
-          const joint = new PhysicsJoint(PhysicsJoint.HingeJoint, jointConfig);
-          prevBody.physics.addJoint(box.physics, joint);
+          point.z = pZ - 0.6;
+          const joint = new PhysicsConstraint(PhysicsConstraintType.HINGE, {
+            pivotA: point, pivotB: point,
+            axisA: hingeAxis, axisB: hingeAxis,
+            perpAxisA: perpAxis, perpAxisB: perpAxis
+          }, scene );
+          prevBody.physics.body.addConstraint(box.physics.body, joint);
         }
 
         prevBody = box;
@@ -153,20 +137,12 @@ export default (): SceneCallback => {
         if (prevBody != null) {
           let point = position.clone();
           point.z = z - 0.5;
-          const jointConfig = {
-            mainPivot: point,
-            connectedPivot: point,
-            mainAxis: slideAxis,
-            connectedAxis:  slideAxis,
-            nativeParams: {
-              'normal-axis-1': normalAxis,
-              'normal-axis-2': normalAxis,
-              'min-limit': 0,
-              'max-limit': 1,
-            }
-          };
-          const joint = new PhysicsJoint(PhysicsJoint.PrismaticJoint, jointConfig);
-          prevBody.physics.addJoint(box.physics, joint);
+          const joint = new PhysicsConstraint(PhysicsConstraintType.PRISMATIC, {
+            pivotA: point, pivotB: point,
+            axisA: slideAxis, axisB: slideAxis,
+            perpAxisA: normalAxis, perpAxisB: normalAxis,
+            maxDistance: 1 }, scene );
+          prevBody.physics.body.addConstraint(box.physics.body, joint);
         }
 
         prevBody = box;

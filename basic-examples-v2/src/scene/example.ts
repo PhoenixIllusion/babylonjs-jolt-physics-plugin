@@ -13,6 +13,10 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Quaternion } from '@babylonjs/core/Maths/math.vector';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
+import { Scene } from '@babylonjs/core/scene';
+import { PhysicsShapeType } from '@babylonjs/core/Physics/v2/IPhysicsEnginePlugin';
+import { PhysicsAggregate } from '@babylonjs/core/Physics/v2/physicsAggregate';
+import { Engine } from '@babylonjs/core/Engines/engine';
 
 export const MeshBuilder = {
   CreateSphere,
@@ -27,7 +31,7 @@ interface PhysicsOptions {
 }
 
 export type SceneCallback = (void | ((time: number, delta: number) => void))
-export type SceneFunction = () => SceneCallback;
+export type SceneFunction = (scene: Scene) => SceneCallback;
 
 export const DegreesToRadians = (deg: number) => deg * (Math.PI / 180.0);
 
@@ -41,7 +45,8 @@ export const createFloor = (physicsOptions: PhysicsOptions = NullPhysics, color:
   const ground = MeshBuilder.CreateGround('ground', { width: 100, height: 100 });
   ground.position.y = -0.5;
   ground.material = getMaterial(color);
-  const physics = new JoltPhysicsImpostor(ground, PhysicsImpostor.BoxImpostor, physicsOptions);
+  const scene = Engine.LastCreatedScene!;
+  const physics = new PhysicsAggregate(ground, PhysicsShapeType.BOX, physicsOptions, scene);
   return { ground, physics };
 }
 
@@ -62,14 +67,16 @@ export const createSphere = (position: Vector3, radius: number, physicsOptions: 
   const sphere = MeshBuilder.CreateSphere('sphere', { diameter: radius, segments: 32 });
   sphere.position.copyFrom(position);
   sphere.material = getMaterial(color);
-  const physics = new JoltPhysicsImpostor(sphere, PhysicsImpostor.SphereImpostor, physicsOptions);
+  const scene = Engine.LastCreatedScene!;
+  const physics = new PhysicsAggregate(sphere, PhysicsShapeType.SPHERE, physicsOptions, scene);
   return { sphere, physics };
 }
 export const createCylinder = (position: Vector3, radius: number, height: number, physicsOptions: PhysicsOptions = NullPhysics, color: string = '#FFFFFF') => {
   const cylinder = MeshBuilder.CreateCylinder('cylinder', { diameter: radius, height, tessellation: 16 });
   cylinder.position.copyFrom(position);
   cylinder.material = getMaterial(color);
-  const physics = new JoltPhysicsImpostor(cylinder, PhysicsImpostor.CylinderImpostor, physicsOptions);
+  const scene = Engine.LastCreatedScene!;
+  const physics = new PhysicsAggregate(cylinder, PhysicsShapeType.CYLINDER, physicsOptions, scene);
   return { cylinder, physics };
 }
 
@@ -78,23 +85,21 @@ export const createBox = (position: Vector3, rotation: Quaternion, halfExtent: V
   box.position.copyFrom(position);
   box.rotationQuaternion = rotation.clone();
   box.material = getMaterial(color);
-  const physics = new JoltPhysicsImpostor(box, PhysicsImpostor.BoxImpostor, physicsOptions);
+  const scene = Engine.LastCreatedScene!;
+  const physics = new PhysicsAggregate(box, PhysicsShapeType.BOX, physicsOptions, scene);
   return { box, physics };
 }
 
 export const createCapsule = (position: Vector3, radiusTop: number, radiusBottom: number, height: number, physicsOptions: PhysicsOptions = NullPhysics, color = '#FFFFFF') => {
   const capsuleProps = { height: height + radiusTop + radiusBottom, tessellation: 16 }
-  const box = (radiusTop !== radiusBottom)
+  const capsule = (radiusTop !== radiusBottom)
     ? MeshBuilder.CreateCapsule('capsule', { radiusTop, radiusBottom, ...capsuleProps })
     : MeshBuilder.CreateCapsule('capsule', { radius: radiusBottom, ...capsuleProps })
-  box.position.copyFrom(position);
-  box.material = getMaterial(color);
-  const physics = new JoltPhysicsImpostor(box, PhysicsImpostor.CapsuleImpostor, {
-    radiusTop: radiusTop !== radiusBottom ? radiusBottom : undefined,
-    radiusBottom: radiusTop !== radiusBottom ? radiusBottom : undefined,
-    ...physicsOptions
-  } as PhysicsImpostorParameters);
-  return { box, physics };
+  capsule.position.copyFrom(position);
+  capsule.material = getMaterial(color);
+  const scene = Engine.LastCreatedScene!;
+  const physics = new PhysicsAggregate(capsule, PhysicsShapeType.CAPSULE, physicsOptions, scene);
+  return { capsule, physics };
 }
 
 export const createConvexHull = (position: Vector3, points: Vector3[], physicsOptions: PhysicsOptions = NullPhysics, color = '#FFFFFF') => {
@@ -125,7 +130,8 @@ export const createConvexHull = (position: Vector3, points: Vector3[], physicsOp
   mesh.position.copyFrom(position);
   mesh.material = getMaterial(color);
   mesh.material.wireframe = true;
-  const physics = new JoltPhysicsImpostor(mesh, PhysicsImpostor.ConvexHullImpostor, physicsOptions);
+  const scene = Engine.LastCreatedScene!;
+  const physics = new PhysicsAggregate(mesh, PhysicsShapeType.CONVEX_HULL, physicsOptions, scene);
   return { mesh, physics };
 }
 
@@ -174,6 +180,7 @@ export const createMeshFloor = (n: number, cell_size: number, amp: number, posit
   vertexData.applyToMesh(mesh);
   mesh.position.copyFrom(position);
   mesh.material = getMaterial(color);
-  const physics = new JoltPhysicsImpostor(mesh, PhysicsImpostor.MeshImpostor, physicsOptions);
+  const scene = Engine.LastCreatedScene!;
+  const physics = new PhysicsAggregate(mesh, PhysicsShapeType.MESH, physicsOptions, scene);
   return { mesh, physics };
 }

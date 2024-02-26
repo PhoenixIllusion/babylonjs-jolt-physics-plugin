@@ -2,7 +2,8 @@ import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import Jolt from "./jolt-import";
 import { GetJoltQuat, GetJoltVec3, LAYER_MOVING, SetJoltVec3 } from "./jolt-util";
 import { PhysicsImpostor } from "@babylonjs/core/Physics/v1/physicsImpostor";
-import { JoltJSPlugin } from ".";
+import { JoltJSPlugin as JoltJSPluginV1 } from "./v1/index";
+import { JoltJSPlugin as JoltJSPluginV2, JoltPhysicsBody } from "./v2/index";
 
 export namespace Vehicle {
   export type VehicleType = 'wheeled' | 'motorcycle' | 'track'
@@ -301,16 +302,15 @@ export interface VehicleInputState {
 }
 
 export interface WheeledVehicleInput<T extends Jolt.VehicleController> {
+  set body(body: Jolt.Body);
+  set bodyId (id: Jolt.BodyID);
   onPrePhysicsUpdate(bodyInterface: Jolt.BodyInterface, controller: T, deltaTime: number): void;
 }
 
 export class DefaultVehicleInput {
   public input: VehicleInputState = { forward: 0, right: 0, handBrake: false };
-  protected bodyId: Jolt.BodyID;
-
-  constructor(protected body: Jolt.Body) {
-    this.bodyId = body.GetID();
-  }
+  public body!: Jolt.Body;
+  public bodyId!: Jolt.BodyID;
 
   private _linearV: Vector3 = new Vector3();
   private _rotationQ: Quaternion = new Quaternion();
@@ -324,9 +324,6 @@ export class DefaultVehicleInput {
 
 export class DefaultWheeledVehicleInput extends DefaultVehicleInput implements WheeledVehicleInput<Jolt.WheeledVehicleController> {
   private previousForward = 1.0;
-  constructor(body: Jolt.Body) {
-    super(body);
-  }
 
   onPrePhysicsUpdate(bodyInterface: Jolt.BodyInterface, controller: Jolt.WheeledVehicleController, _deltaTime: number): void {
     let forward = 0.0, right = 0.0, brake = 0.0, handBrake = 0.0;
@@ -364,9 +361,6 @@ export class DefaultMotorcycleInput extends DefaultVehicleInput implements Wheel
 
   private previousForward = 1.0;
   private currentRight = 0;
-  constructor(body: Jolt.Body) {
-    super(body);
-  }
 
   onPrePhysicsUpdate(bodyInterface: Jolt.BodyInterface, controller: Jolt.MotorcycleController, deltaTime: number): void {
     let forward = 0.0, right = 0.0, brake = 0.0, handBrake = 0.0;
@@ -522,12 +516,19 @@ export class WheeledVehicleController {
   private _physicsStepListener: (delta: number) => void;
 
   static fromPhysicsImpostor(impostor: PhysicsImpostor, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController>): WheeledVehicleController {
-    const pluginV1: JoltJSPlugin = impostor._pluginData.plugin;
+    const pluginV1: JoltJSPluginV1 = impostor._pluginData.plugin;
     return pluginV1.createWheeledVehicleController(impostor, settings, input);
+  }
+
+  static async fromPhysicsBody(impostor: JoltPhysicsBody, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController>): Promise<WheeledVehicleController> {
+    const pluginV2: JoltJSPluginV2 = impostor._pluginData.plugin;
+    return pluginV2.createWheeledVehicleController(impostor, settings, input);
   }
 
   constructor(data: VehicleRequired, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController>) {
     const physicsBody: Jolt.Body = data.body;
+    input.body = data.body;
+    input.bodyId = data.body.GetID();
     const constraintSettings = createWheeledVehicleConstraint(settings);
     const constraint = new Jolt.VehicleConstraint(physicsBody, constraintSettings);
     Jolt.destroy(constraintSettings);
@@ -560,11 +561,19 @@ export class MotorcycleController {
   private _physicsStepListener: (delta: number) => void;
 
   static fromPhysicsImpostor(impostor: PhysicsImpostor, settings: Vehicle.MotorcycleVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController>): MotorcycleController {
-    const pluginV1: JoltJSPlugin = impostor._pluginData.plugin;
+    const pluginV1: JoltJSPluginV1 = impostor._pluginData.plugin;
     return pluginV1.createMotorcycleVehicleController(impostor, settings, input);
   }
+
+  static async fromPhysicsBody(impostor: JoltPhysicsBody, settings: Vehicle.MotorcycleVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController>): Promise<MotorcycleController> {
+    const pluginV2: JoltJSPluginV2 = impostor._pluginData.plugin;
+    return pluginV2.createMotorcycleVehicleController(impostor, settings, input);
+  }
+
   constructor(data: VehicleRequired, settings: Vehicle.MotorcycleVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController>) {
     const physicsBody: Jolt.Body = data.body;
+    input.body = data.body;
+    input.bodyId = data.body.GetID();
     const constraintSettings = createMotorcycleConstraint(settings);
     const constraint = new Jolt.VehicleConstraint(physicsBody, constraintSettings);
     Jolt.destroy(constraintSettings);

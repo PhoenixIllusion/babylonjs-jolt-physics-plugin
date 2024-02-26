@@ -194,12 +194,10 @@ function createMotorcycleConstraint(settings) {
     return configureWheeledVehicleConstraint(settings, motorcycleSettings);
 }
 export class DefaultVehicleInput {
-    constructor(body) {
-        this.body = body;
+    constructor() {
         this.input = { forward: 0, right: 0, handBrake: false };
         this._linearV = new Vector3();
         this._rotationQ = new Quaternion();
-        this.bodyId = body.GetID();
     }
     getVelocity() {
         GetJoltVec3(this.body.GetLinearVelocity(), this._linearV);
@@ -208,8 +206,8 @@ export class DefaultVehicleInput {
     }
 }
 export class DefaultWheeledVehicleInput extends DefaultVehicleInput {
-    constructor(body) {
-        super(body);
+    constructor() {
+        super(...arguments);
         this.previousForward = 1.0;
     }
     onPrePhysicsUpdate(bodyInterface, controller, _deltaTime) {
@@ -238,8 +236,8 @@ export class DefaultWheeledVehicleInput extends DefaultVehicleInput {
     }
 }
 export class DefaultMotorcycleInput extends DefaultVehicleInput {
-    constructor(body) {
-        super(body);
+    constructor() {
+        super(...arguments);
         this.steerSpeed = 4.0;
         this.previousForward = 1.0;
         this.currentRight = 0;
@@ -377,9 +375,15 @@ export class WheeledVehicleController {
         const pluginV1 = impostor._pluginData.plugin;
         return pluginV1.createWheeledVehicleController(impostor, settings, input);
     }
+    static async fromPhysicsBody(impostor, settings, input) {
+        const pluginV2 = impostor._pluginData.plugin;
+        return pluginV2.createWheeledVehicleController(impostor, settings, input);
+    }
     constructor(data, settings, input) {
         this.wheelTransforms = [];
         const physicsBody = data.body;
+        input.body = data.body;
+        input.bodyId = data.body.GetID();
         const constraintSettings = createWheeledVehicleConstraint(settings);
         const constraint = new Jolt.VehicleConstraint(physicsBody, constraintSettings);
         Jolt.destroy(constraintSettings);
@@ -408,9 +412,15 @@ export class MotorcycleController {
         const pluginV1 = impostor._pluginData.plugin;
         return pluginV1.createMotorcycleVehicleController(impostor, settings, input);
     }
+    static async fromPhysicsBody(impostor, settings, input) {
+        const pluginV2 = impostor._pluginData.plugin;
+        return pluginV2.createMotorcycleVehicleController(impostor, settings, input);
+    }
     constructor(data, settings, input) {
         this.wheelTransforms = [];
         const physicsBody = data.body;
+        input.body = data.body;
+        input.bodyId = data.body.GetID();
         const constraintSettings = createMotorcycleConstraint(settings);
         const constraint = new Jolt.VehicleConstraint(physicsBody, constraintSettings);
         Jolt.destroy(constraintSettings);

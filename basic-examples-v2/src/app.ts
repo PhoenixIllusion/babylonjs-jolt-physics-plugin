@@ -50,7 +50,7 @@ export class App {
         // Default intensity is 1. Let's dim the light a small amount
         light.intensity = 0.7;
 
-        const callback = this.createScene();
+        const callback = this.createScene(scene);
 
         /*
         // hide/show the Inspector

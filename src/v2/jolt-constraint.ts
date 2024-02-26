@@ -118,7 +118,7 @@ export class JoltConstraintManager {
         setPoints(constraintSettings);
         setSliderAxis(constraintSettings);
         setNormalAxis(constraintSettings);
-        [constraintSettings.mLimitsMin, constraintSettings.mLimitsMax] = getMinMax(0, -1, 1000);
+        [constraintSettings.mLimitsMin, constraintSettings.mLimitsMax] = getMinMax(0, -1, joint.options.maxDistance || 1000);
       }
         break;
       case PhysicsConstraintType.LOCK: {
@@ -127,6 +127,11 @@ export class JoltConstraintManager {
         setPoints(constraintSettings);
         setAxisXY(constraintSettings);
       }
+        break;
+      case PhysicsConstraintType.BALL_AND_SOCKET: {
+          let constraintSettings = twoBodySettings =new Jolt.PointConstraintSettings();
+          setPoints(constraintSettings);
+        }
         break;
     }
     let constraint: Jolt.Constraint | undefined = undefined;

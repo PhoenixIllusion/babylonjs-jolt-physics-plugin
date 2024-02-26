@@ -4,6 +4,7 @@ import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PhysicsMassProperties, PhysicsMotionType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
 import { JoltPhysicsShape } from "./jolt-shape";
+import { JoltJSPlugin } from "./jolt-physics";
 export interface IJoltBodyData {
     body: Jolt.Body | null;
     massProperties: PhysicsMassProperties;
@@ -12,6 +13,8 @@ export interface IJoltBodyData {
     position: Vector3;
     orientation: Quaternion;
     toDispose: any[];
+    plugin: JoltJSPlugin;
+    onAdd: ((body: Jolt.Body) => void)[];
 }
 export declare class JoltPhysicsBody extends PhysicsBody {
     _pluginDataInstances: IJoltBodyData[];

@@ -39,23 +39,24 @@ export default (): SceneCallback => {
   document.addEventListener("keydown", onDocumentKeyDown, false);
   document.addEventListener("keyup", onDocumentKeyUp, false);
 
-  const physicSetting = { mass: 800, restitution: 0, friction: 0, 'offset-center-of-mass': new Vector3(0, -.2, 0) };
+  const physicSetting = { mass: 800, restitution: 0, friction: 0, center: new Vector3(0, -.2, 0) };
   const car = createBox(new Vector3(0, 2, 0), Quaternion.FromEulerAngles(0, Math.PI, 0), new Vector3(0.05, .2, 2), physicSetting, '#FF0000');
   car.box.material!.wireframe = true;
 
   const wheeledConfig: Vehicle.MotorcycleVehicleSettings = createBasicMotorcycle({ height: .4, length: 4 }, { radius: 0.3, width: 0.1 });
-  const vehicleInput = new DefaultMotorcycleInput(car.physics.physicsBody);
-  const controller = MotorcycleController.fromPhysicsImpostor(car.physics, wheeledConfig, vehicleInput);
-
-  const carWheels: Mesh[] = []
-  wheeledConfig.wheels.forEach((o, i) => {
-    const mesh = MeshBuilder.CreateCylinder('cylinder', { diameter: o.radius * 2, height: o.width, tessellation: 16 });
-    mesh.position = controller.wheelTransforms[i].position;
-    mesh.rotationQuaternion = controller.wheelTransforms[i].rotation;
-    mesh.material = material;
-    mesh.parent = car.box;
-    carWheels.push(mesh);
+  const vehicleInput = new DefaultMotorcycleInput();
+  MotorcycleController.fromPhysicsBody(car.physics.body, wheeledConfig, vehicleInput).then( controller => {
+    const carWheels: Mesh[] = []
+    wheeledConfig.wheels.forEach((o, i) => {
+      const mesh = MeshBuilder.CreateCylinder('cylinder', { diameter: o.radius * 2, height: o.width, tessellation: 16 });
+      mesh.position = controller.wheelTransforms[i].position;
+      mesh.rotationQuaternion = controller.wheelTransforms[i].rotation;
+      mesh.material = material;
+      mesh.parent = car.box;
+      carWheels.push(mesh);
+    })
   })
+
   const followPoint = new Mesh('camera-follow');
   followPoint.rotate(new Vector3(0, 1, 0), Math.PI);
   followPoint.parent = car.box;

@@ -129,7 +129,7 @@ export function createShape(type, parameters, _tmpVec) {
             break;
         case PhysicsShapeType.BOX:
             {
-                const extents = parameters.extents;
+                const extents = parameters.extents.scale(0.5);
                 _tmpVec.Set(ep(extents.x), ep(extents.y), ep(extents.z));
                 returnValue = new Jolt.BoxShapeSettings(_tmpVec);
             }
@@ -182,8 +182,8 @@ export function createShape(type, parameters, _tmpVec) {
     if (returnValue === undefined) {
         throw new Error('Unsupported Shape: Impostor Type' + type);
     }
-    if (parameters.center) {
-        const offset = SetJoltVec3(parameters.center, _tmpVec);
+    if (parameters.center && parameters.center.length() > 0) {
+        const offset = SetJoltVec3(parameters.center, new Jolt.Vec3());
         const newVal = new Jolt.OffsetCenterOfMassShapeSettings(offset, returnValue);
         Jolt.destroy(offset);
         returnValue = newVal;

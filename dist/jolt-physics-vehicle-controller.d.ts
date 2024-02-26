@@ -1,6 +1,7 @@
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import Jolt from "./jolt-import";
 import { PhysicsImpostor } from "@babylonjs/core/Physics/v1/physicsImpostor";
+import { JoltPhysicsBody } from "./v2/index";
 export declare namespace Vehicle {
     type VehicleType = 'wheeled' | 'motorcycle' | 'track';
     interface SpringSetting {
@@ -88,27 +89,26 @@ export interface VehicleInputState {
     handBrake: boolean;
 }
 export interface WheeledVehicleInput<T extends Jolt.VehicleController> {
+    set body(body: Jolt.Body);
+    set bodyId(id: Jolt.BodyID);
     onPrePhysicsUpdate(bodyInterface: Jolt.BodyInterface, controller: T, deltaTime: number): void;
 }
 export declare class DefaultVehicleInput {
-    protected body: Jolt.Body;
     input: VehicleInputState;
-    protected bodyId: Jolt.BodyID;
-    constructor(body: Jolt.Body);
+    body: Jolt.Body;
+    bodyId: Jolt.BodyID;
     private _linearV;
     private _rotationQ;
     getVelocity(): number;
 }
 export declare class DefaultWheeledVehicleInput extends DefaultVehicleInput implements WheeledVehicleInput<Jolt.WheeledVehicleController> {
     private previousForward;
-    constructor(body: Jolt.Body);
     onPrePhysicsUpdate(bodyInterface: Jolt.BodyInterface, controller: Jolt.WheeledVehicleController, _deltaTime: number): void;
 }
 export declare class DefaultMotorcycleInput extends DefaultVehicleInput implements WheeledVehicleInput<Jolt.MotorcycleController> {
     steerSpeed: number;
     private previousForward;
     private currentRight;
-    constructor(body: Jolt.Body);
     onPrePhysicsUpdate(bodyInterface: Jolt.BodyInterface, controller: Jolt.MotorcycleController, deltaTime: number): void;
 }
 export declare function createBasicCar(vehicle: {
@@ -139,6 +139,7 @@ export declare class WheeledVehicleController {
     }[];
     private _physicsStepListener;
     static fromPhysicsImpostor(impostor: PhysicsImpostor, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController>): WheeledVehicleController;
+    static fromPhysicsBody(impostor: JoltPhysicsBody, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController>): Promise<WheeledVehicleController>;
     constructor(data: VehicleRequired, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController>);
 }
 export declare class MotorcycleController {
@@ -148,6 +149,7 @@ export declare class MotorcycleController {
     }[];
     private _physicsStepListener;
     static fromPhysicsImpostor(impostor: PhysicsImpostor, settings: Vehicle.MotorcycleVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController>): MotorcycleController;
+    static fromPhysicsBody(impostor: JoltPhysicsBody, settings: Vehicle.MotorcycleVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController>): Promise<MotorcycleController>;
     constructor(data: VehicleRequired, settings: Vehicle.MotorcycleVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController>);
 }
 export declare class TreadedVehicleController {

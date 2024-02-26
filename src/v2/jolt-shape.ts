@@ -6,8 +6,8 @@ import { VertexBuffer } from "@babylonjs/core/Buffers/buffer";
 import { Quaternion, TmpVectors, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { IndicesArray } from "@babylonjs/core/types";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
-import { SetJoltVec3 } from "../jolt-util";
 import { PhysicsMaterial } from "@babylonjs/core/Physics/v2/physicsMaterial";
+import { SetJoltVec3 } from "../jolt-util";
 
 interface IChildShape {
   child: JoltPhysicsShape, translation?: Vector3 | undefined, rotation?: Quaternion | undefined, scale?: Vector3 | undefined
@@ -155,7 +155,7 @@ export function createShape(type: PhysicsShapeType, parameters: PhysicsShapePara
       }
       break;
     case PhysicsShapeType.BOX: {
-        const extents = parameters.extents!;
+        const extents = parameters.extents!.scale(0.5);
         _tmpVec.Set(ep(extents.x),ep(extents.y),ep(extents.z));
         returnValue = new Jolt.BoxShapeSettings(_tmpVec);
       }
@@ -208,12 +208,13 @@ export function createShape(type: PhysicsShapeType, parameters: PhysicsShapePara
     throw new Error('Unsupported Shape: Impostor Type' + type);
   }
 
-  if (parameters.center) {
-    const offset = SetJoltVec3(parameters.center!, _tmpVec);
+  if (parameters.center && parameters.center.length() > 0) {
+    const offset = SetJoltVec3(parameters.center, new Jolt.Vec3());
     const newVal = new Jolt.OffsetCenterOfMassShapeSettings(offset, returnValue);
     Jolt.destroy(offset);
     returnValue = newVal;
   }
+
   const shapeResult: Jolt.ShapeResult = returnValue.Create();
   if (shapeResult.HasError()) {
     throw new Error('Creating Jolt Shape : Impostor Type -' + type + ' : Error - ' + shapeResult.GetError().c_str());

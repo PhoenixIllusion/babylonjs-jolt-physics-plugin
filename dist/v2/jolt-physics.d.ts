@@ -14,6 +14,7 @@ import { JoltPhysicsShape } from "./jolt-shape";
 import { IJoltBodyData, JoltPhysicsBody } from "./jolt-body";
 import { JoltPhysicsConstraint } from "./jolt-constraint";
 import { JoltContactSetting, OnContactValidateResponse } from "../jolt-contact";
+import { MotorcycleController, Vehicle, WheeledVehicleController, WheeledVehicleInput } from "../jolt-physics-vehicle-controller";
 export declare class JoltJSPlugin implements IPhysicsEnginePluginV2 {
     private jolt;
     private _useDeltaForWorldStep;
@@ -134,4 +135,6 @@ export declare class JoltJSPlugin implements IPhysicsEnginePluginV2 {
     onContactAdd(_body: number, _withBody: number, _contactSettings: JoltContactSetting): void;
     onContactPersist(_body: number, _withBody: number, _contactSettings: JoltContactSetting): void;
     onContactValidate(_body: number, _withBody: number): OnContactValidateResponse;
+    createWheeledVehicleController(impostor: JoltPhysicsBody, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController>): Promise<WheeledVehicleController>;
+    createMotorcycleVehicleController(impostor: JoltPhysicsBody, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController>): Promise<MotorcycleController>;
 }

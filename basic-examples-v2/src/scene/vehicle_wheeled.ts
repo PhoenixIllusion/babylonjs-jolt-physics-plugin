@@ -45,18 +45,19 @@ export default (): SceneCallback => {
   car.box.material!.wireframe = true;
 
   const wheeledConfig: Vehicle.WheeledVehicleSettings = createBasicCar({ height: .4, length: 4, width: 1.8 }, { radius: 0.5, width: 0.4 }, true);
-  const vehicleInput = new DefaultWheeledVehicleInput(car.physics.physicsBody);
-  const controller = WheeledVehicleController.fromPhysicsImpostor(car.physics, wheeledConfig, vehicleInput);
+  const vehicleInput = new DefaultWheeledVehicleInput();
+  WheeledVehicleController.fromPhysicsBody(car.physics.body, wheeledConfig, vehicleInput).then(controller => {
+    const carWheels: Mesh[] = []
+    wheeledConfig.wheels.forEach((o, i) => {
+      const mesh = MeshBuilder.CreateCylinder('cylinder', { diameter: 2 * o.radius, height: o.width, tessellation: 16 });
+      mesh.position = controller.wheelTransforms[i].position;
+      mesh.rotationQuaternion = controller.wheelTransforms[i].rotation;
+      mesh.material = material;
+      mesh.parent = car.box;
+      carWheels.push(mesh);
+    })
+  });
 
-  const carWheels: Mesh[] = []
-  wheeledConfig.wheels.forEach((o, i) => {
-    const mesh = MeshBuilder.CreateCylinder('cylinder', { diameter: 2 * o.radius, height: o.width, tessellation: 16 });
-    mesh.position = controller.wheelTransforms[i].position;
-    mesh.rotationQuaternion = controller.wheelTransforms[i].rotation;
-    mesh.material = material;
-    mesh.parent = car.box;
-    carWheels.push(mesh);
-  })
   const followPoint = new Mesh('camera-follow');
   followPoint.rotate(new Vector3(0, 1, 0), Math.PI);
   followPoint.parent = car.box;
