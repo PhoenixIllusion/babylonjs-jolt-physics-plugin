@@ -2,6 +2,7 @@ import Jolt from "../jolt-import";
 import { PhysicsConstraint } from "@babylonjs/core/Physics/v2/physicsConstraint";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { ConstrainedBodyPair, PhysicsConstraintType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
+import { JVec3 } from "../jolt-util";
 
 export enum JoltConstraintType {
   Fixed,
@@ -55,29 +56,29 @@ export class JoltConstraintManager {
     const p2 = jointData.pivotB;
 
 
-    const setPoints = (constraintSettings: { mPoint1: Jolt.Vec3, mPoint2: Jolt.Vec3 }) => {
+    const setPoints = (constraintSettings: { mPoint1: JVec3, mPoint2: JVec3 }) => {
       constraintSettings.mPoint1.Set(p1.x, p1.y, p1.z);
       constraintSettings.mPoint2.Set(p2.x, p2.y, p2.z);
     }
-    const setHindgeAxis = (constraintSettings: { mHingeAxis1: Jolt.Vec3, mHingeAxis2: Jolt.Vec3 }) => {
+    const setHindgeAxis = (constraintSettings: { mHingeAxis1: JVec3, mHingeAxis2: JVec3 }) => {
       const h1 = jointData.axisA!;
       const h2 = jointData.axisB!;
       constraintSettings.mHingeAxis1.Set(h1.x, h1.y, h1.z);
       constraintSettings.mHingeAxis2.Set(h2.x, h2.y, h2.z);
     }
-    const setSliderAxis = (constraintSettings: { mSliderAxis1: Jolt.Vec3, mSliderAxis2: Jolt.Vec3 }) => {
+    const setSliderAxis = (constraintSettings: { mSliderAxis1: JVec3, mSliderAxis2: JVec3 }) => {
       const h1 = jointData.axisA!;
       const h2 = jointData.axisB!;
       constraintSettings.mSliderAxis1.Set(h1.x, h1.y, h1.z);
       constraintSettings.mSliderAxis2.Set(h2.x, h2.y, h2.z);
     }
-    const setNormalAxis = (constraintSettings: { mNormalAxis1: Jolt.Vec3, mNormalAxis2: Jolt.Vec3 }) => {
+    const setNormalAxis = (constraintSettings: { mNormalAxis1: JVec3, mNormalAxis2: JVec3 }) => {
         const n1: Vector3 = jointData.perpAxisA!;
         const n2: Vector3 = jointData.perpAxisB!;
         constraintSettings.mNormalAxis1.Set(n1.x, n1.y, n1.z);
         constraintSettings.mNormalAxis2.Set(n2.x, n2.y, n2.z);
     }
-    const setAxisXY = (constraintSettings: { mAxisX1: Jolt.Vec3, mAxisX2: Jolt.Vec3, mAxisY1: Jolt.Vec3, mAxisY2: Jolt.Vec3, }) => {
+    const setAxisXY = (constraintSettings: { mAxisX1: JVec3, mAxisX2: JVec3, mAxisY1: JVec3, mAxisY2: JVec3, }) => {
         const x1 = jointData.axisA!;
         const x2 = jointData.axisB!;
         const y1: Vector3 = jointData.perpAxisA!;

@@ -1,6 +1,7 @@
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PhysicsJoint } from "@babylonjs/core/Physics/v1/physicsJoint";
 import Jolt from "../jolt-import";
+import { JVec3 } from "../jolt-util";
 
 export class JoltConstraintManager {
 
@@ -26,23 +27,23 @@ export class JoltConstraintManager {
       }
     }
 
-    const setPoints = (constraintSettings: { mPoint1: Jolt.Vec3, mPoint2: Jolt.Vec3 }) => {
+    const setPoints = (constraintSettings: { mPoint1: JVec3, mPoint2: JVec3 }) => {
       constraintSettings.mPoint1.Set(p1.x, p1.y, p1.z);
       constraintSettings.mPoint2.Set(p2.x, p2.y, p2.z);
     }
-    const setHindgeAxis = (constraintSettings: { mHingeAxis1: Jolt.Vec3, mHingeAxis2: Jolt.Vec3 }) => {
+    const setHindgeAxis = (constraintSettings: { mHingeAxis1: JVec3, mHingeAxis2: JVec3 }) => {
       const h1 = jointData.mainAxis!;
       const h2 = jointData.connectedAxis!;
       constraintSettings.mHingeAxis1.Set(h1.x, h1.y, h1.z);
       constraintSettings.mHingeAxis2.Set(h2.x, h2.y, h2.z);
     }
-    const setSliderAxis = (constraintSettings: { mSliderAxis1: Jolt.Vec3, mSliderAxis2: Jolt.Vec3 }) => {
+    const setSliderAxis = (constraintSettings: { mSliderAxis1: JVec3, mSliderAxis2: JVec3 }) => {
       const h1 = jointData.mainAxis!;
       const h2 = jointData.connectedAxis!;
       constraintSettings.mSliderAxis1.Set(h1.x, h1.y, h1.z);
       constraintSettings.mSliderAxis2.Set(h2.x, h2.y, h2.z);
     }
-    const setNormalAxis = (constraintSettings: { mNormalAxis1: Jolt.Vec3, mNormalAxis2: Jolt.Vec3 }) => {
+    const setNormalAxis = (constraintSettings: { mNormalAxis1: JVec3, mNormalAxis2: JVec3 }) => {
       if (options['normal-axis-1'] && options['normal-axis-2']) {
         const n1: Vector3 = options['normal-axis-1'];
         const n2: Vector3 = options['normal-axis-2'];
@@ -50,7 +51,7 @@ export class JoltConstraintManager {
         constraintSettings.mNormalAxis2.Set(n2.x, n2.y, n2.z);
       }
     }
-    const setAxisXY = (constraintSettings: { mAxisX1: Jolt.Vec3, mAxisX2: Jolt.Vec3, mAxisY1: Jolt.Vec3, mAxisY2: Jolt.Vec3, }) => {
+    const setAxisXY = (constraintSettings: { mAxisX1: JVec3, mAxisX2: JVec3, mAxisY1: JVec3, mAxisY2: JVec3, }) => {
       if (options['axis-x-1'] && options['axis-x-2'] && options['axis-y-1'] && options['axis-y-2']) {
         const x1: Vector3 = options['axis-x-1'];
         const x2: Vector3 = options['axis-x-2'];
@@ -66,12 +67,16 @@ export class JoltConstraintManager {
     const p1 = jointData.mainPivot;
     const p2 = jointData.connectedPivot;
     let twoBodySettings: Jolt.TwoBodyConstraintSettings | undefined;
+    let constraint: Jolt.Constraint | undefined = undefined;
     switch (joint.type) {
       case PhysicsJoint.DistanceJoint: {
         let constraintSettings = twoBodySettings = new Jolt.DistanceConstraintSettings();
         setPoints(constraintSettings);
         setIfAvailable(constraintSettings, 'mMinDistance', 'min-distance');
         setIfAvailable(constraintSettings, 'mMaxDistance', 'max-distance');
+        constraint = twoBodySettings.Create(mainBody, connectedBody);
+        Jolt.destroy(twoBodySettings);
+        constraint = Jolt.castObject(constraint, Jolt.DistanceConstraint);
       }
         break;
       case PhysicsJoint.HingeJoint: {
@@ -81,6 +86,9 @@ export class JoltConstraintManager {
         setNormalAxis(constraintSettings);
         setIfAvailable(constraintSettings, 'mLimitsMin', 'min-limit');
         setIfAvailable(constraintSettings, 'mLimitsMax', 'max-limit');
+        constraint = twoBodySettings.Create(mainBody, connectedBody);
+        Jolt.destroy(twoBodySettings);
+        constraint = Jolt.castObject(constraint, Jolt.HingeConstraint);
       }
         break;
       case PhysicsJoint.PrismaticJoint: {
@@ -90,6 +98,9 @@ export class JoltConstraintManager {
         setNormalAxis(constraintSettings);
         setIfAvailable(constraintSettings, 'mLimitsMin', 'min-limit');
         setIfAvailable(constraintSettings, 'mLimitsMax', 'max-limit');
+        constraint = twoBodySettings.Create(mainBody, connectedBody);
+        Jolt.destroy(twoBodySettings);
+        constraint = Jolt.castObject(constraint, Jolt.SliderConstraint);
       }
         break;
       case PhysicsJoint.LockJoint: {
@@ -97,18 +108,18 @@ export class JoltConstraintManager {
         constraintSettings.mAutoDetectPoint = true;
         setPoints(constraintSettings);
         setAxisXY(constraintSettings);
+        constraint = twoBodySettings.Create(mainBody, connectedBody);
+        Jolt.destroy(twoBodySettings);
       }
         break;
       case PhysicsJoint.PointToPointJoint: {
         let constraintSettings = twoBodySettings =new Jolt.PointConstraintSettings();
         setPoints(constraintSettings);
+        constraint = twoBodySettings.Create(mainBody, connectedBody);
+        Jolt.destroy(twoBodySettings);
+        constraint = Jolt.castObject(constraint, Jolt.PointConstraint);
       }
         break;
-    }
-    let constraint: Jolt.Constraint | undefined = undefined;
-    if(twoBodySettings) {
-      constraint = twoBodySettings.Create(mainBody, connectedBody);
-      Jolt.destroy(twoBodySettings);
     }
     return constraint;
   }

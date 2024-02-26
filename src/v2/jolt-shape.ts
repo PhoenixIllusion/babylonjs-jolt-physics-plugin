@@ -19,6 +19,7 @@ interface IJoltShapeData {
   children: IChildShape[];
   density?: number;
   material?: PhysicsMaterial;
+  bodies: Jolt.Body[];
 }
 
 export class JoltPhysicsShape extends PhysicsShape {

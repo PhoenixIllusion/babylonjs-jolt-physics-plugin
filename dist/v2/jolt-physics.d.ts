@@ -53,6 +53,7 @@ export declare class JoltJSPlugin implements IPhysicsEnginePluginV2 {
     private _stepSimulation;
     private setPhysicsBodyTransformation;
     getPluginVersion(): number;
+    _createBodyIfNeeded(physicsBody: JoltPhysicsBody, pluginData: IJoltBodyData, index?: number): void;
     _createPluginData(motionType: PhysicsMotionType, position: Vector3, orientation: Quaternion, massProperties: PhysicsMassProperties): IJoltBodyData;
     initBody(body: JoltPhysicsBody, motionType: PhysicsMotionType, position: Vector3, orientation: Quaternion): void;
     initBodyInstances(body: JoltPhysicsBody, motionType: PhysicsMotionType, mesh: Mesh): void;
@@ -135,6 +136,6 @@ export declare class JoltJSPlugin implements IPhysicsEnginePluginV2 {
     onContactAdd(_body: number, _withBody: number, _contactSettings: JoltContactSetting): void;
     onContactPersist(_body: number, _withBody: number, _contactSettings: JoltContactSetting): void;
     onContactValidate(_body: number, _withBody: number): OnContactValidateResponse;
-    createWheeledVehicleController(impostor: JoltPhysicsBody, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController>): Promise<WheeledVehicleController>;
-    createMotorcycleVehicleController(impostor: JoltPhysicsBody, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController>): Promise<MotorcycleController>;
+    createWheeledVehicleController(body: JoltPhysicsBody, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController>): Promise<WheeledVehicleController>;
+    createMotorcycleVehicleController(body: JoltPhysicsBody, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController>): Promise<MotorcycleController>;
 }

@@ -101,7 +101,7 @@ export class JoltBodyManager {
     }
     static _generatePhysicsBody(bodyInterface, motionType, shape, massProperties, material) {
         const mass = massProperties.mass || 0;
-        const layer = (mass == 0) ? LAYER_NON_MOVING : LAYER_MOVING;
+        const layer = (motionType == Jolt.EMotionType_Static) ? LAYER_NON_MOVING : LAYER_MOVING;
         const settings = new Jolt.BodyCreationSettings(shape, this.position, this.orientation, motionType, layer);
         if (material) {
             if (material.restitution != undefined)

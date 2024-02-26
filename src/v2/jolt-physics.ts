@@ -143,21 +143,11 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
   executeStep(delta: number, physicsBodies: JoltPhysicsBody[]): void {
     this._contactCollector.clear();
     for (const physicsBody of physicsBodies) {
-      JoltBodyManager.getAllPluginReference(physicsBody).forEach( (pluginData,i) => {
-        if(!pluginData.body && pluginData.shape) {
-            const body = pluginData.body = JoltBodyManager.generatePhysicsBody(this._bodyInterface, pluginData);
-            this._bodyInterface.AddBody(body.GetID(), Jolt.EActivation_Activate);
-            const bodyID = body.GetID().GetIndexAndSequenceNumber();
-            this._physicsBodyHash[bodyID] = { body: physicsBody, index: i};
-            this._bodyHash[bodyID] = pluginData.body;
-        }
+      JoltBodyManager.getAllPluginReference(physicsBody).forEach( (pluginData) => {
         if(pluginData.body) {
           const bodyID = pluginData.body.GetID().GetIndexAndSequenceNumber();
           if(this._collisionCallbacks.add.has(bodyID)) {
             this._contactCollector.registerImpostor(bodyID);
-          }
-          while(pluginData.onAdd.length > 0) {
-            pluginData.onAdd.pop()!(pluginData.body);
           }
         }
       })
@@ -201,6 +191,18 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
     return 2;
   }
 
+  _createBodyIfNeeded(physicsBody: JoltPhysicsBody, pluginData: IJoltBodyData, index?: number) {
+    if(!pluginData.body && pluginData.shape) {
+      const body = pluginData.body = JoltBodyManager.generatePhysicsBody(this._bodyInterface, pluginData);
+      this._bodyInterface.AddBody(body.GetID(), Jolt.EActivation_Activate);
+      const bodyID = body.GetID().GetIndexAndSequenceNumber();
+      this._physicsBodyHash[bodyID] = { body: physicsBody, index: index || -1 };
+      this._bodyHash[bodyID] = pluginData.body;
+      pluginData.shape._pluginData.bodies = pluginData.shape._pluginData.bodies || [];
+      pluginData.shape._pluginData.bodies.push(body);
+    }
+  }
+
   _createPluginData(motionType: PhysicsMotionType, position: Vector3, orientation: Quaternion, massProperties: PhysicsMassProperties): IJoltBodyData {
     const $this: IJoltBodyData = {
       body: null,
@@ -210,7 +212,6 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
       orientation: orientation.clone(),
       massProperties,
       toDispose: [],
-      onAdd: [],
       plugin: this
     }
     return $this;
@@ -253,6 +254,9 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
                 pluginData.shape = body._pluginDataInstances[0].shape;
             }
             body._pluginDataInstances.push(pluginData);
+            if(body.shape) {
+              this._createBodyIfNeeded(body, pluginData, i);
+            }
         } else {
           const data = JoltBodyManager.getPluginReference(body, i);
           data.position.copyFrom(position);
@@ -305,10 +309,13 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
 
   setShape(body: JoltPhysicsBody, shape: Nullable<JoltPhysicsShape>): void {
     if(shape) {
-      JoltBodyManager.getAllPluginReference(body).forEach( data => {
+      JoltBodyManager.getAllPluginReference(body).forEach( (data, i) => {
+        //TODO - remove bodies from old shape if available
         data.shape = shape;
         if(data.body) {
           this._bodyInterface.SetShape(data.body.GetID(), this._getJoltShape(shape), true, Jolt.EActivation_Activate);
+        } else {
+          this._createBodyIfNeeded(body, data, i)
         }
       });
     }
@@ -341,9 +348,9 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
     body._pluginData.motionType = motionType;
     const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
     _body.motionType = motionType;
-    _body.onAdd.push(body => 
-      this._bodyInterface.SetMotionType(body.GetID(), JoltBodyManager.GetMotionType(motionType), Jolt.EActivation_Activate)
-    );
+    if(_body.body) {
+      this._bodyInterface.SetMotionType(_body.body.GetID(), JoltBodyManager.GetMotionType(motionType), Jolt.EActivation_Activate)
+    }
   }
   getMotionType(body: JoltPhysicsBody, instanceIndex?: number | undefined): PhysicsMotionType {
     const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
@@ -356,10 +363,25 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
   setMassProperties(body: JoltPhysicsBody, massProps: PhysicsMassProperties, instanceIndex?: number | undefined): void {
     body._pluginData.massProperties = massProps;
     const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
-    _body.onAdd.push(body => {
-      if(massProps.mass)
-        body.GetMotionProperties().SetInverseMass(1/massProps.mass);
-    });
+    if(_body.body) {
+      if(massProps.mass) {
+        const jBody = _body.body;
+        const motionProps = jBody.GetMotionProperties();
+        const jMassProps = jBody.GetShape().GetMassProperties();
+        const inertia = jMassProps.mInertia;
+        let mass_scale = jMassProps.mMass;
+        if(jMassProps.mMass > 0) {
+          mass_scale = massProps.mass / jMassProps.mMass;
+        } else {
+          mass_scale = massProps.mass;
+        }
+        inertia.SetAxisX(inertia.GetAxisX().Mul(mass_scale));
+        inertia.SetAxisY(inertia.GetAxisY().Mul(mass_scale));
+        inertia.SetAxisZ(inertia.GetAxisZ().Mul(mass_scale));
+        jMassProps.mInertia = inertia;
+        motionProps.SetMassProperties(Jolt.EAllowedDOFs_All, jMassProps);
+      }
+    }
   }
   getMassProperties(body: JoltPhysicsBody, instanceIndex?: number | undefined): PhysicsMassProperties {
     const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
@@ -367,9 +389,9 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
   }
   setLinearDamping(body: JoltPhysicsBody, damping: number, instanceIndex?: number | undefined): void {
     const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
-    _body.onAdd.push(body => 
-      body.GetMotionProperties().SetLinearDamping(damping)
-    );
+    if(_body.body) {
+      _body.body.GetMotionProperties().SetLinearDamping(damping)
+    }
   }
   getLinearDamping(body: JoltPhysicsBody, instanceIndex?: number | undefined): number {
     const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
@@ -380,9 +402,9 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
   }
   setAngularDamping(body: JoltPhysicsBody, damping: number, instanceIndex?: number | undefined): void {
     const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
-    _body.onAdd.push(body => 
-      body.GetMotionProperties().SetAngularDamping(damping)
-    );
+    if(_body.body) {
+      _body.body.GetMotionProperties().SetAngularDamping(damping)
+    }
   }
   getAngularDamping(body: JoltPhysicsBody, instanceIndex?: number | undefined): number {
     const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
@@ -393,9 +415,9 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
   }
   setLinearVelocity(body: JoltPhysicsBody, linVel: Vector3, instanceIndex?: number | undefined): void {
     const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
-    _body.onAdd.push(body => 
-      body.SetLinearVelocity(SetJoltVec3(linVel, this._tempVec3A))
-    );
+    if(_body.body) {
+      _body.body.SetLinearVelocity(SetJoltVec3(linVel, this._tempVec3A))
+    }
   }
   getLinearVelocityToRef(body: JoltPhysicsBody, linVel: Vector3, instanceIndex?: number | undefined): void {
     const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
@@ -404,10 +426,10 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
     };
   }
   applyImpulse(body: JoltPhysicsBody, impulse: Vector3, location: Vector3, instanceIndex?: number | undefined): void {
-    const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
-    _body.onAdd.push(body => 
-      body.AddImpulse(SetJoltVec3(impulse, this._tempVec3A),SetJoltVec3(location, this._tempVec3B))
-    );
+    const _body = JoltBodyManager.getPluginReference(body, instanceIndex) 
+    if(_body.body) { 
+      _body.body.AddImpulse(SetJoltVec3(impulse, this._tempVec3A),SetJoltVec3(location, this._tempVec3B))
+    }
   }
   applyForce(body: JoltPhysicsBody, force: Vector3, location: Vector3, instanceIndex?: number | undefined): void {
     const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
@@ -417,9 +439,9 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
   }
   setAngularVelocity(body: JoltPhysicsBody, angVel: Vector3, instanceIndex?: number | undefined): void {
     const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
-    _body.onAdd.push(body => 
-      body.SetAngularVelocity(SetJoltVec3(angVel, this._tempVec3A))
-    );
+    if(_body.body) {
+      _body.body.SetAngularVelocity(SetJoltVec3(angVel, this._tempVec3A));
+    }
   }
   getAngularVelocityToRef(body: JoltPhysicsBody, angVel: Vector3, instanceIndex?: number | undefined): void {
     const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
@@ -511,7 +533,14 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
   }
 
   setMaterial(shape: JoltPhysicsShape, material: PhysicsMaterial): void {
-    shape._pluginData.material = material;
+    const data = shape._pluginData;
+    data.material = material;
+    if(data.bodies) {
+      data.bodies.forEach(body => {
+        if(material.friction !== undefined) body.SetFriction(material.friction);
+        if(material.restitution !== undefined) body.SetRestitution(material.restitution);
+      })
+    }
   }
 
   getMaterial(shape: JoltPhysicsShape): PhysicsMaterial {
@@ -594,14 +623,17 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
   initConstraint(constraint: JoltPhysicsConstraint, body: JoltPhysicsBody, childBody: JoltPhysicsBody, instanceIndex?: number | undefined, childInstanceIndex?: number | undefined): void {
     constraint._pluginData = constraint._pluginData || {};
     constraint._pluginData.bodyPair = { parentBody: body, parentBodyIndex: instanceIndex || -1, childBody, childBodyIndex: childInstanceIndex || -1 };
+    const bodyA = JoltBodyManager.getPluginReference(body, instanceIndex);
+    if(!bodyA.body) {
+      throw new Error("Unable to add constraint to uninitialized body.")
+    }
+    const bodyB = JoltBodyManager.getPluginReference(childBody, childInstanceIndex);
+    if(!bodyB.body) {
+      throw new Error("Unable to add constraint to uninitialized body.")
+    }
 
-    const bodyA = new Promise<Jolt.Body>(resolve => JoltBodyManager.getPluginReference(body, instanceIndex).onAdd.push((body: Jolt.Body) => resolve(body)));
-    const bodyB = new Promise<Jolt.Body>(resolve => JoltBodyManager.getPluginReference(childBody, childInstanceIndex).onAdd.push((body: Jolt.Body) => resolve(body)));
-
-    Promise.all([bodyA, bodyB]).then(([bodyA, bodyB]) => {
-      const jConstraint = constraint._pluginData.constraint = JoltConstraintManager.CreateClassicConstraint(bodyA, bodyB, constraint);
-      this.world.AddConstraint(jConstraint);
-    })
+    const jConstraint = constraint._pluginData.constraint = JoltConstraintManager.CreateClassicConstraint(bodyA.body, bodyB.body, constraint);
+    this.world.AddConstraint(jConstraint);
   }
   setEnabled(constraint: JoltPhysicsConstraint, isEnabled: boolean): void {
     const _constraint = constraint._pluginData.constraint;
@@ -700,13 +732,16 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
   }
 
 
-  async createWheeledVehicleController(impostor: JoltPhysicsBody, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController> ): Promise<WheeledVehicleController> {
-    const body = await new Promise<Jolt.Body>(resolve => impostor._pluginData.onAdd.push((body: Jolt.Body) => resolve(body)));
+  async createWheeledVehicleController(body: JoltPhysicsBody, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController> ): Promise<WheeledVehicleController> {
+    const pluginData = JoltBodyManager.getPluginReference(body);
+    if(!pluginData.body) {
+      throw new Error("Attempted to create Motorcycle with uninitialized body");
+    }
     return new WheeledVehicleController(
       {
-        body,
+        body: pluginData.body,
         world: this.world,
-        toDispose: impostor._pluginData.toDispose,
+        toDispose: pluginData.toDispose,
         registerPerPhysicsStepCallback: (cb) => this.registerPerPhysicsStepCallback(cb)
       },
       settings,
@@ -714,13 +749,16 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
     )
   }
 
-  async createMotorcycleVehicleController(impostor: JoltPhysicsBody, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController> ): Promise<MotorcycleController> {
-    const body = await new Promise<Jolt.Body>(resolve => impostor._pluginData.onAdd.push((body: Jolt.Body) => resolve(body)));
+  async createMotorcycleVehicleController(body: JoltPhysicsBody, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController> ): Promise<MotorcycleController> {
+    const pluginData = JoltBodyManager.getPluginReference(body);
+    if(!pluginData.body) {
+      throw new Error("Attempted to create Motorcycle with uninitialized body");
+    }
     return new MotorcycleController(
       {
-        body,
+        body: pluginData.body,
         world: this.world,
-        toDispose: impostor._pluginData.toDispose,
+        toDispose: pluginData.toDispose,
         registerPerPhysicsStepCallback: (cb) => this.registerPerPhysicsStepCallback(cb)
       },
       settings,

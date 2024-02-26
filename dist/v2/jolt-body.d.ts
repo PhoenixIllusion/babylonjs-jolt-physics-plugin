@@ -14,7 +14,6 @@ export interface IJoltBodyData {
     orientation: Quaternion;
     toDispose: any[];
     plugin: JoltJSPlugin;
-    onAdd: ((body: Jolt.Body) => void)[];
 }
 export declare class JoltPhysicsBody extends PhysicsBody {
     _pluginDataInstances: IJoltBodyData[];

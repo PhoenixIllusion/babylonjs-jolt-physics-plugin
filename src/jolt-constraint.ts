@@ -2,6 +2,7 @@ import { float } from "@babylonjs/core/types";
 import Jolt from "./jolt-import";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { JoltConstraintPath } from "./jolt-constraint-path";
+import { JVec3 } from "./jolt-util";
 
 export type JoltConstraintTypeS = 'Fixed' | 'Point' | 'Hinge' | 'Slider' | 'Distance' | 'Cone' | 'SwingTwist' | 'SixDOF' | 'Path' | 'RackAndPinion' | 'Gear' | 'Pulley';
 
@@ -97,11 +98,11 @@ export interface PulleyConstraintParams extends JoltConstraint {
 
 export function CreateJoltConstraint(mainBody: Jolt.Body, connectedBody: Jolt.Body, constraintParams: JoltConstraint): Jolt.Constraint | undefined {
 
-  const setPoints = (constraintSettings: { mPoint1: Jolt.Vec3, mPoint2: Jolt.Vec3 }, params: { point1: float3, point2: float3 }) => {
+  const setPoints = (constraintSettings: { mPoint1: JVec3, mPoint2: JVec3 }, params: { point1: float3, point2: float3 }) => {
     constraintSettings.mPoint1.Set(...params.point1);
     constraintSettings.mPoint2.Set(...params.point2);
   }
-  const setNormalAxis = (constraintSettings: { mNormalAxis1: Jolt.Vec3, mNormalAxis2: Jolt.Vec3 }, params: { normalAxis1: float3, normalAxis2: float3 }) => {
+  const setNormalAxis = (constraintSettings: { mNormalAxis1: JVec3, mNormalAxis2: JVec3 }, params: { normalAxis1: float3, normalAxis2: float3 }) => {
     constraintSettings.mNormalAxis1.Set(...params.normalAxis1);
     constraintSettings.mNormalAxis2.Set(...params.normalAxis2);
   }

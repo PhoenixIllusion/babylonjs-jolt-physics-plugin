@@ -4,6 +4,10 @@ export const SetJoltVec3 = (vec3, jVec3) => {
     jVec3.Set(vec3.x, vec3.y, vec3.z);
     return jVec3;
 };
+export const SetJoltRVec3 = (vec3, jVec3) => {
+    jVec3.Set(vec3.x, vec3.y, vec3.z);
+    return jVec3;
+};
 export const GetJoltVec3 = (jVec3, vec3) => {
     vec3.set(jVec3.GetX(), jVec3.GetY(), jVec3.GetZ());
     return vec3;

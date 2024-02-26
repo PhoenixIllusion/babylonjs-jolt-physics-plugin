@@ -3,7 +3,6 @@ import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { SceneCallback, createBox, createFloor } from './example';
 
 import Jolt from '@phoenixillusion/babylonjs-jolt-plugin/import'
-import { PhysicsJoint } from '@babylonjs/core/Physics/v1/physicsJoint';
 import { Scene } from '@babylonjs/core/scene';
 import { PhysicsConstraint } from '@babylonjs/core/Physics/v2/physicsConstraint';
 import { PhysicsConstraintType } from '@babylonjs/core/Physics/v2/IPhysicsEnginePlugin';
@@ -37,7 +36,7 @@ export default (scene: Scene): SceneCallback => {
 
       // Add an impulse (gravity is really boring, many constraints look the same)
       if (z == len-1)
-        box.physics.body.applyImpulse(new Vector3(100, 0, 0), pos);
+        box.physics.applyImpulse(new Vector3(100, 0, 0), pos);
 
       return box;
     }
@@ -54,7 +53,7 @@ export default (scene: Scene): SceneCallback => {
           let point = position.clone();
           point.z = z - 0.5;
           const joint = new PhysicsConstraint(PhysicsConstraintType.LOCK, { pivotA: point, pivotB: point }, scene );
-          prevBody.physics.body.addConstraint(box.physics.body, joint);
+          prevBody.physics.addConstraint(box.physics, joint);
         }
 
         prevBody = box;
@@ -73,7 +72,7 @@ export default (scene: Scene): SceneCallback => {
           let point = position.clone();
           point.z = pZ - 0.6;
           const joint = new PhysicsConstraint(PhysicsConstraintType.BALL_AND_SOCKET, { pivotA: point, pivotB: point }, scene );
-          prevBody.physics.body.addConstraint(box.physics.body, joint);
+          prevBody.physics.addConstraint(box.physics, joint);
         }
 
         prevBody = box;
@@ -91,7 +90,7 @@ export default (scene: Scene): SceneCallback => {
           let point = position.clone();
           point.z = z - 0.5;
           const joint = new PhysicsConstraint(PhysicsConstraintType.DISTANCE, { pivotA: point, pivotB: point, maxDistance: 1 }, scene );
-          prevBody.physics.body.addConstraint(box.physics.body, joint);
+          prevBody.physics.addConstraint(box.physics, joint);
         }
 
         prevBody = box;
@@ -116,7 +115,7 @@ export default (scene: Scene): SceneCallback => {
             axisA: hingeAxis, axisB: hingeAxis,
             perpAxisA: perpAxis, perpAxisB: perpAxis
           }, scene );
-          prevBody.physics.body.addConstraint(box.physics.body, joint);
+          prevBody.physics.addConstraint(box.physics, joint);
         }
 
         prevBody = box;
@@ -142,7 +141,7 @@ export default (scene: Scene): SceneCallback => {
             axisA: slideAxis, axisB: slideAxis,
             perpAxisA: normalAxis, perpAxisB: normalAxis,
             maxDistance: 1 }, scene );
-          prevBody.physics.body.addConstraint(box.physics.body, joint);
+          prevBody.physics.addConstraint(box.physics, joint);
         }
 
         prevBody = box;

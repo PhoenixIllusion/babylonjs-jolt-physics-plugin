@@ -46,7 +46,7 @@ export default (): SceneCallback => {
 
   const wheeledConfig: Vehicle.WheeledVehicleSettings = createBasicCar({ height: .4, length: 4, width: 1.8 }, { radius: 0.5, width: 0.4 }, true);
   const vehicleInput = new DefaultWheeledVehicleInput();
-  WheeledVehicleController.fromPhysicsBody(car.physics.body, wheeledConfig, vehicleInput).then(controller => {
+  WheeledVehicleController.fromPhysicsBody(car.physics, wheeledConfig, vehicleInput).then(controller => {
     const carWheels: Mesh[] = []
     wheeledConfig.wheels.forEach((o, i) => {
       const mesh = MeshBuilder.CreateCylinder('cylinder', { diameter: 2 * o.radius, height: o.width, tessellation: 16 });

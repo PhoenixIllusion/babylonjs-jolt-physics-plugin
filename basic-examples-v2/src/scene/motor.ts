@@ -1,6 +1,5 @@
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { SceneCallback, createBox, createFloor, createSphere } from './example';
-import { HingeJoint, MotorEnabledJoint } from '@babylonjs/core/Physics/v1/physicsJoint';
 import { PhysicsConstraintParameters, PhysicsConstraintType } from '@babylonjs/core/Physics/v2/IPhysicsEnginePlugin';
 import { Scene } from '@babylonjs/core/scene';
 import { PhysicsConstraint } from '@babylonjs/core/Physics/v2/physicsConstraint';
@@ -25,13 +24,13 @@ const createWindmill = (scene: Scene) => {
   };
   wings.forEach(box => {
     const joint = new PhysicsConstraint(PhysicsConstraintType.HINGE, jointConfig, scene );
-    box1.physics.body.addConstraint(box.physics.body, joint);
+    box1.physics.addConstraint(box.physics, joint);
     //joint.
   });
 
 
   const ball = createSphere(new Vector3(20, 0, 0), 2, { mass: 5, friction: 0, restitution: 0 }, '#118811');
-  ball.physics.body.applyImpulse(new Vector3(-25, 0, 0), new Vector3(20, 0, 0));
+  ball.physics.applyImpulse(new Vector3(-25, 0, 0), new Vector3(20, 0, 0));
 }
 
 const createSlider = (scene: Scene) => {
@@ -51,7 +50,7 @@ const createSlider = (scene: Scene) => {
     perpAxisB: normalAxis
   };
   const joint = new PhysicsConstraint(PhysicsConstraintType.PRISMATIC, jointConfig, scene );
-  target.physics.body.addConstraint(box.physics.body, joint);
+  target.physics.addConstraint(box.physics, joint);
 
   const setStart = () => {};//joint.setMotor(0);
   const setEnd = () => {};//joint.setMotor(10);

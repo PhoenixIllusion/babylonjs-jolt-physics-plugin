@@ -18,7 +18,6 @@ export interface IJoltBodyData {
   orientation: Quaternion;
   toDispose: any[];
   plugin: JoltJSPlugin;
-  onAdd: ((body: Jolt.Body)=>void)[]
 }
 
 export class JoltPhysicsBody extends PhysicsBody {
@@ -132,7 +131,7 @@ export class JoltBodyManager {
       motionType: Jolt.EMotionType, shape: Jolt.Shape,
       massProperties: PhysicsMassProperties, material?: PhysicsMaterial): Jolt.Body {
     const mass = massProperties.mass || 0;
-    const layer = (mass == 0) ? LAYER_NON_MOVING : LAYER_MOVING;
+    const layer = (motionType == Jolt.EMotionType_Static) ? LAYER_NON_MOVING : LAYER_MOVING;
     const settings = new Jolt.BodyCreationSettings(shape, this.position, this.orientation, motionType, layer);
     if(material) {
       if(material.restitution != undefined)

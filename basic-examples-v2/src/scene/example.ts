@@ -14,9 +14,13 @@ import { Quaternion } from '@babylonjs/core/Maths/math.vector';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { Scene } from '@babylonjs/core/scene';
-import { PhysicsShapeType } from '@babylonjs/core/Physics/v2/IPhysicsEnginePlugin';
+import { PhysicsMotionType, PhysicsShapeType } from '@babylonjs/core/Physics/v2/IPhysicsEnginePlugin';
 import { PhysicsAggregate } from '@babylonjs/core/Physics/v2/physicsAggregate';
 import { Engine } from '@babylonjs/core/Engines/engine';
+import Jolt from '../../../dist/jolt-import';
+import { PhysicsShape, PhysicsShapeCapsule, PhysicsShapeConvexHull, PhysicsShapeCylinder, PhysicsShapeMesh, PhysicsShapeSphere } from '@babylonjs/core/Physics/v2/physicsShape';
+import { PhysicsBody } from '@babylonjs/core/Physics/v2/physicsBody';
+import { PhysicsShapeBox } from '@babylonjs/core';
 
 export const MeshBuilder = {
   CreateSphere,
@@ -41,12 +45,22 @@ const NullPhysics: ()=>PhysicsOptions = () => ({
   restitution: 0
 })
 
+function makePhysics(mesh: Mesh, shapeClass: { FromMesh: (mesh: Mesh, scene?: Scene) => PhysicsShape}, physicsOptions: PhysicsOptions) {
+  const scene = Engine.LastCreatedScene!;
+  const shape = shapeClass.FromMesh(mesh, scene);
+  shape.material = physicsOptions;
+  const physics = new PhysicsBody(mesh, physicsOptions.mass == 0 ? PhysicsMotionType.STATIC : PhysicsMotionType.DYNAMIC, false, scene);
+  physics.setMassProperties(physicsOptions);
+  physics.shape = shape;
+  return physics;
+}
+
+
 export const createFloor = (physicsOptions: PhysicsOptions = NullPhysics(), color: string = '#FFFFFF') => {
   const ground = MeshBuilder.CreateGround('ground', { width: 100, height: 100 });
   ground.position.y = -0.5;
   ground.material = getMaterial(color);
-  const scene = Engine.LastCreatedScene!;
-  const physics = new PhysicsAggregate(ground, PhysicsShapeType.BOX, physicsOptions, scene);
+  const physics = makePhysics(ground, PhysicsShapeBox, physicsOptions);
   return { ground, physics };
 }
 
@@ -61,22 +75,18 @@ export const getMaterial = (color: string) => {
   }
   return COLOR_HASH[color];
 }
-
-
 export const createSphere = (position: Vector3, radius: number, physicsOptions: PhysicsOptions = NullPhysics(), color: string = '#FFFFFF') => {
   const sphere = MeshBuilder.CreateSphere('sphere', { diameter: radius, segments: 32 });
   sphere.position.copyFrom(position);
   sphere.material = getMaterial(color);
-  const scene = Engine.LastCreatedScene!;
-  const physics = new PhysicsAggregate(sphere, PhysicsShapeType.SPHERE, physicsOptions, scene);
+  const physics = makePhysics(sphere, PhysicsShapeSphere, physicsOptions);
   return { sphere, physics };
 }
 export const createCylinder = (position: Vector3, radius: number, height: number, physicsOptions: PhysicsOptions = NullPhysics(), color: string = '#FFFFFF') => {
   const cylinder = MeshBuilder.CreateCylinder('cylinder', { diameter: radius, height, tessellation: 16 });
   cylinder.position.copyFrom(position);
   cylinder.material = getMaterial(color);
-  const scene = Engine.LastCreatedScene!;
-  const physics = new PhysicsAggregate(cylinder, PhysicsShapeType.CYLINDER, physicsOptions, scene);
+  const physics = makePhysics(cylinder, PhysicsShapeCylinder, physicsOptions);
   return { cylinder, physics };
 }
 
@@ -85,8 +95,7 @@ export const createBox = (position: Vector3, rotation: Quaternion, halfExtent: V
   box.position.copyFrom(position);
   box.rotationQuaternion = rotation.clone();
   box.material = getMaterial(color);
-  const scene = Engine.LastCreatedScene!;
-  const physics = new PhysicsAggregate(box, PhysicsShapeType.BOX, physicsOptions, scene);
+  const physics = makePhysics(box, PhysicsShapeBox, physicsOptions);
   return { box, physics };
 }
 
@@ -97,8 +106,7 @@ export const createCapsule = (position: Vector3, radiusTop: number, radiusBottom
     : MeshBuilder.CreateCapsule('capsule', { radius: radiusBottom, ...capsuleProps })
   capsule.position.copyFrom(position);
   capsule.material = getMaterial(color);
-  const scene = Engine.LastCreatedScene!;
-  const physics = new PhysicsAggregate(capsule, PhysicsShapeType.CAPSULE, physicsOptions, scene);
+  const physics = makePhysics(capsule, PhysicsShapeCapsule, physicsOptions);
   return { capsule, physics };
 }
 
@@ -130,8 +138,7 @@ export const createConvexHull = (position: Vector3, points: Vector3[], physicsOp
   mesh.position.copyFrom(position);
   mesh.material = getMaterial(color);
   mesh.material.wireframe = true;
-  const scene = Engine.LastCreatedScene!;
-  const physics = new PhysicsAggregate(mesh, PhysicsShapeType.CONVEX_HULL, physicsOptions, scene);
+  const physics = makePhysics(mesh, { FromMesh: (mesh, scene) => new PhysicsShapeConvexHull(mesh, scene!)}, physicsOptions);
   return { mesh, physics };
 }
 
@@ -180,7 +187,40 @@ export const createMeshFloor = (n: number, cell_size: number, amp: number, posit
   vertexData.applyToMesh(mesh);
   mesh.position.copyFrom(position);
   mesh.material = getMaterial(color);
-  const scene = Engine.LastCreatedScene!;
-  const physics = new PhysicsAggregate(mesh, PhysicsShapeType.MESH, physicsOptions, scene);
+  const physics = makePhysics(mesh, { FromMesh: (mesh, scene) => new PhysicsShapeMesh(mesh, scene!)}, physicsOptions);
   return { mesh, physics };
+}
+
+export function enableDebugMesh(mesh: Mesh, physics: PhysicsAggregate) {
+  if(mesh.getChildren().length == 0) {
+    let joltBody: Jolt.Body = physics.body._pluginData.body;
+    if(joltBody) {
+        const mesh = createMeshForShape(joltBody.GetShape());
+        mesh.parent = mesh;
+        mesh.material = getMaterial('#00ff00')
+        mesh.material.wireframe = true;
+    }
+  }
+}
+function createMeshForShape(shape: Jolt.Shape) {
+	// Get triangle data
+	let scale = new Jolt.Vec3(1, 1, 1);
+	let triContext = new Jolt.ShapeGetTriangles(shape, Jolt.AABox.prototype.sBiggest(), shape.GetCenterOfMass(), Jolt.Quat.prototype.sIdentity(), scale);
+	Jolt.destroy(scale);
+	// Get a view on the triangle data (does not make a copy)
+	let vertices = new Float32Array(Jolt.HEAPF32.buffer, triContext.GetVerticesData(), triContext.GetVerticesSize() / Float32Array.BYTES_PER_ELEMENT);
+	Jolt.destroy(triContext);
+
+  const indices: number[] = [];
+  for (let i = 0; i < vertices.length / 3; i++) {
+    indices.push(i);
+  }
+	// Create a three mesh
+  var vertexData = new VertexData();
+  vertexData.positions = vertices;
+  vertexData.indices = indices;
+
+  const mesh = new Mesh('debug-mesh');
+  vertexData.applyToMesh(mesh);
+	return mesh;
 }

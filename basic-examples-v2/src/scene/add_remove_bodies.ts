@@ -1,16 +1,16 @@
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { SceneCallback, createBox, createFloor } from './example';
-import { PhysicsAggregate } from '@babylonjs/core/Physics/v2/physicsAggregate';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { PhysicsBody } from '@babylonjs/core';
 
 export default (): SceneCallback => {
-  const objectTimePeriod = 0.1;
+  const objectTimePeriod = 0.3;
   let timeNextSpawn = 0;
 
   createFloor();
   const maxBoxes = 200;
 
-  const boxes: {box: Mesh, physics: PhysicsAggregate }[] = []
+  const boxes: {box: Mesh, physics: PhysicsBody }[] = []
   function generateObject() {
     // Position and rotate body
     const axis = new Vector3(0.001 + Math.random(), Math.random(), Math.random());
@@ -22,6 +22,7 @@ export default (): SceneCallback => {
     while (boxes.length > maxBoxes) {
       const last = boxes.shift();
       last?.box.dispose();
+      last?.physics.dispose();
     }
   }
 
