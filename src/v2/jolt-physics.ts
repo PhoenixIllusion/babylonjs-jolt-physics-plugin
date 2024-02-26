@@ -7,36 +7,25 @@ import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import { Observable } from "@babylonjs/core/Misc/observable";
 import { PhysicsRaycastResult, IRaycastQuery } from "@babylonjs/core/Physics/physicsRaycastResult";
 import { ConstrainedBodyPair, IBasePhysicsCollisionEvent, IPhysicsCollisionEvent, IPhysicsEnginePluginV2, PhysicsConstraintAxis, PhysicsConstraintAxisLimitMode, PhysicsConstraintMotorType, PhysicsMassProperties, PhysicsMotionType, PhysicsShapeParameters, PhysicsShapeType } from "@babylonjs/core/Physics/v2/IPhysicsEnginePlugin";
-import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
-import { PhysicsConstraint } from "@babylonjs/core/Physics/v2/physicsConstraint";
 import { PhysicsMaterial } from "@babylonjs/core/Physics/v2/physicsMaterial";
-import { PhysicsShape } from "@babylonjs/core/Physics/v2/physicsShape";
 import { Nullable } from "@babylonjs/core/types";
 import Jolt, { loadJolt } from "../jolt-import";
-import { GetJoltQuat, GetJoltVec3, LAYER_MOVING, LAYER_NON_MOVING, SetJoltQuat, SetJoltVec3 } from "../jolt-util";
+import { GetJoltVec3, LAYER_MOVING, LAYER_NON_MOVING, SetJoltVec3 } from "../jolt-util";
 import { RayCastUtility } from "../jolt-raycast";
 import { CollisionMap, ContactCollectorV2 } from "./jolt-contact";
-import { castJoltShape } from "./jolt-shape";
-import { JoltBodyManager } from "./jolt-body";
-
-interface IJoltBodyData {
-  body: Jolt.Body;
-  massProperties: PhysicsMassProperties
-}
-
-export class JoltPhysicsBody extends PhysicsBody {
-  _pluginDataInstances: IJoltBodyData[] = [];
-  _pluginData!: IJoltBodyData;
-}
+import { JoltPhysicsShape, castJoltShape, createShape } from "./jolt-shape";
+import { IJoltBodyData, JoltBodyManager, JoltPhysicsBody } from "./jolt-body";
+import { JoltConstraintManager, JoltPhysicsConstraint } from "./jolt-constraint";
+import { JoltContactSetting, OnContactValidateResponse } from "../jolt-contact";
 
 
 export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
 
   world: Jolt.PhysicsSystem;
 
-  onCollisionObservable: Observable<IPhysicsCollisionEvent>;
-  onCollisionEndedObservable: Observable<IBasePhysicsCollisionEvent>;
-  onTriggerCollisionObservable: Observable<IBasePhysicsCollisionEvent>;
+  onCollisionObservable: Observable<IPhysicsCollisionEvent> = new Observable<IPhysicsCollisionEvent>();
+  onCollisionEndedObservable: Observable<IBasePhysicsCollisionEvent> = new Observable<IBasePhysicsCollisionEvent>();
+  onTriggerCollisionObservable: Observable<IBasePhysicsCollisionEvent> = new Observable<IBasePhysicsCollisionEvent>();
 
 
   public name = 'JoltJSPlugin';
@@ -49,7 +38,6 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
   private _tempVec3B: Jolt.Vec3;
 
   private _tempQuaternion: Jolt.Quat;
-  private _tempQuaternionBJS = new Quaternion();
   private _bodyInterface: Jolt.BodyInterface;
 
   private _raycaster: RayCastUtility;
@@ -57,7 +45,7 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
   private _contactCollector: ContactCollectorV2;
   private _contactListener: Jolt.ContactListenerJS;
 
-  private _physicsBodyHash: { [hash: number]: PhysicsBody} = {};
+  private _physicsBodyHash: { [hash: number]: {body: JoltPhysicsBody, index: number} } = {};
   private _bodyHash: { [hash: number]: Jolt.Body} = {};
 
   private toDispose: any[] = []; 
@@ -107,10 +95,11 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
     this._contactCollector = new ContactCollectorV2(this, this._contactListener, this._collisionCallbacks);
     this.world.SetContactListener(this._contactListener);
 
+    JoltBodyManager.init();
     this.toDispose.push(this.jolt, this._tempVec3A, this._tempVec3B, this._tempQuaternion, this._contactListener);
   }
 
-  private GetPhysicsBodyForBodyId(seqAndNum: number): PhysicsBody {
+  private GetPhysicsBodyForBodyId(seqAndNum: number): {body: JoltPhysicsBody, index: number} {
     return this._physicsBodyHash[seqAndNum];
   }
 
@@ -150,18 +139,20 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
     }
   }
 
-  executeStep(delta: number, physicsBodies: PhysicsBody[]): void {
+  executeStep(delta: number, physicsBodies: JoltPhysicsBody[]): void {
     this._contactCollector.clear();
     for (const physicsBody of physicsBodies) {
+      JoltBodyManager.getAllPluginReference(physicsBody).forEach( bodyData => {
+        const body = bodyData.body;
+        if(body) {
+          const bodyID = body.GetID().GetIndexAndSequenceNumber();
+          if(this._collisionCallbacks.add.has(bodyID)) {
+            this._contactCollector.registerImpostor(bodyID);
+          }
+        }
+      })
       if (physicsBody.disablePreStep) {
           continue;
-      }
-      if (physicsBody._pluginData.body instanceof Jolt.Body) {
-        const body: Jolt.Body = physicsBody._pluginData.body;
-        const bodyID = body.GetID().GetIndexAndSequenceNumber();
-        if(this._collisionCallbacks.add.has(bodyID)) {
-          this._contactCollector.registerImpostor(bodyID);
-        }
       }
       this.setPhysicsBodyTransformation(physicsBody, physicsBody.transformNode);
     }
@@ -193,150 +184,137 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
     }
   }
   private setPhysicsBodyTransformation(physicsBody: JoltPhysicsBody, node: TransformNode) {
-    const transformNode = physicsBody.transformNode;
-    if (physicsBody.numInstances > 0) {
-        // instances
-        const m = transformNode as Mesh;
-        const matrixData = m._thinInstanceDataStorage.matrixData;
-        if (!matrixData) {
-            return; // TODO: error handling
-        }
-        const instancesCount = physicsBody.numInstances;
-        this._createOrUpdateBodyInstances(physicsBody, physicsBody.getMotionType(), matrixData, 0, instancesCount, true);
-    } else {
-        // regular
-        const _body = this._getPluginReference(physicsBody);
-        if (node.parent) {
-          node.computeWorldMatrix(true);
-          const position = node.absolutePosition;
-          const rotation = node.absoluteRotationQuaternion;
-          this._bodyInterface.SetPositionAndRotationWhenChanged(_body.GetID(),
-                SetJoltVec3(position, this._tempVec3A),
-                SetJoltQuat(rotation, this._tempQuaternion), Jolt.EActivation_Activate);
-        } else {
-          let rotation = TmpVectors.Quaternion[0];
-          const position =  node.position;
-          if (node.rotationQuaternion) {
-            rotation = node.rotationQuaternion;
-          } else {
-              const r = node.rotation;
-              Quaternion.FromEulerAnglesToRef(r.x, r.y, r.z, rotation);
-          }
-          this._bodyInterface.SetPositionAndRotationWhenChanged(_body.GetID(),
-                SetJoltVec3(position, this._tempVec3A),
-                SetJoltQuat(rotation, this._tempQuaternion), Jolt.EActivation_Activate);
-        }
-    }
-  }
-
-  private _getPluginReference(body: JoltPhysicsBody, instanceIndex?: number): IJoltBodyData {
-    return body._pluginDataInstances?.length ? body._pluginDataInstances[instanceIndex ?? 0] : body._pluginData;
+    JoltBodyManager.syncTransform(physicsBody, node);
   }
 
   getPluginVersion(): number {
     return 2;
   }
 
-  initBody(body: PhysicsBody, motionType: PhysicsMotionType, position: Vector3, orientation: Quaternion): void {
-    throw new Error("Method not implemented.");
+  _createPluginData(motionType: PhysicsMotionType, position: Vector3, orientation: Quaternion, massProperties: PhysicsMassProperties): IJoltBodyData {
+    return {
+      body: null,
+      shape: null,
+      motionType,
+      position: position.clone(),
+      orientation: orientation.clone(),
+      massProperties,
+      toDispose: []
+    }
   }
 
-  initBodyInstances(body: PhysicsBody, motionType: PhysicsMotionType, mesh: Mesh): void {
-    throw new Error("Method not implemented.");
+  initBody(body: JoltPhysicsBody, motionType: PhysicsMotionType, position: Vector3, orientation: Quaternion): void {
+    body._pluginData = this._createPluginData(motionType, position, orientation, {});
   }
 
-  private _createOrUpdateBodyInstances(body: PhysicsBody, motionType: PhysicsMotionType, matrixData: Float32Array, startIndex: number, endIndex: number, update: boolean): void {
-    const rotation = TmpVectors.Quaternion[0];
-    const rotationMatrix = Matrix.Identity();
+  initBodyInstances(body: JoltPhysicsBody, motionType: PhysicsMotionType, mesh: Mesh): void {
+    const instancesCount = mesh._thinInstanceDataStorage?.instancesCount ?? 0;
+    const matrixData = mesh._thinInstanceDataStorage.worldMatrices;
+    if (!matrixData) {
+        return; // TODO: error handling
+    }
+    body._pluginData = this._createPluginData(motionType,  new Vector3(),  new Quaternion(), {});
+    body._pluginDataInstances = [];
+    const position = TmpVectors.Vector3[0];
+    const scale = TmpVectors.Vector3[1];
+    const orientation = TmpVectors.Quaternion[0];
+    for(let i=0; i< instancesCount; i++) {
+      const mat44 = matrixData[i];
+      mat44.decompose(scale, orientation, position);
+      body._pluginDataInstances[i] = this._createPluginData(motionType, position, orientation, {});
+    }
+  }
+
+  private _createOrUpdateBodyInstances(body: JoltPhysicsBody, motionType: PhysicsMotionType, matrixData: Matrix[], startIndex: number, endIndex: number, update: boolean): void {
+    const position = TmpVectors.Vector3[0];
+    const scale = TmpVectors.Vector3[1];
+    const orientation = TmpVectors.Quaternion[0];
     for (let i = startIndex; i < endIndex; i++) {
-        const position = [matrixData[i * 16 + 12], matrixData[i * 16 + 13], matrixData[i * 16 + 14]];
-        let hkbody;
+        const mat44 = matrixData[i];
+        mat44.decompose(scale, orientation, position);
         if (!update) {
-            hkbody = this._hknp.HP_Body_Create()[1];
-        } else {
-            hkbody = body._pluginDataInstances[i].hpBodyId;
-        }
-        rotationMatrix.setRowFromFloats(0, matrixData[i * 16 + 0], matrixData[i * 16 + 1], matrixData[i * 16 + 2], 0);
-        rotationMatrix.setRowFromFloats(1, matrixData[i * 16 + 4], matrixData[i * 16 + 5], matrixData[i * 16 + 6], 0);
-        rotationMatrix.setRowFromFloats(2, matrixData[i * 16 + 8], matrixData[i * 16 + 9], matrixData[i * 16 + 10], 0);
-        Quaternion.FromRotationMatrixToRef(rotationMatrix, rotation);
-        const transform = [position, [rotation.x, rotation.y, rotation.z, rotation.w]];
-        this._hknp.HP_Body_SetQTransform(hkbody, transform);
-        if (!update) {
-            const pluginData = new BodyPluginData(hkbody);
+            const pluginData = this._createPluginData(motionType, position, orientation, {});
             if (body._pluginDataInstances.length) {
                 // If an instance already exists, copy any user-provided mass properties
-                pluginData.userMassProps = body._pluginDataInstances[0].userMassProps;
+                pluginData.massProperties = body._pluginDataInstances[0].massProperties;
+                pluginData.shape = body._pluginDataInstances[0].shape;
             }
-            this._internalSetMotionType(pluginData, motionType);
-            this._internalUpdateMassProperties(pluginData);
             body._pluginDataInstances.push(pluginData);
-            this._hknp.HP_World_AddBody(this.world, hkbody, body.startAsleep);
-            pluginData.worldTransformOffset = this._hknp.HP_Body_GetWorldTransformOffset(hkbody)[1];
+            if(pluginData.shape) {
+              pluginData.body = JoltBodyManager.generatePhysicsBody(this._bodyInterface, pluginData);
+              const bodyID = pluginData.body.GetID().GetIndexAndSequenceNumber();
+              this._physicsBodyHash[bodyID] = { body, index: i};
+              this._bodyHash[bodyID] = pluginData.body;
+            }
+        } else {
+          const data = JoltBodyManager.getPluginReference(body, i);
+          data.position.copyFrom(position);
+          data.orientation.copyFrom(orientation);
+          if(data.body) {
+            JoltBodyManager.syncBody(position, orientation, data.body, this._bodyInterface);
+          }
         }
     }
 }
 
-  updateBodyInstances(body: PhysicsBody, mesh: Mesh): void {
+  updateBodyInstances(body: JoltPhysicsBody, mesh: Mesh): void {
     const instancesCount = mesh._thinInstanceDataStorage?.instancesCount ?? 0;
-    const matrixData = mesh._thinInstanceDataStorage.matrixData;
+    const matrixData = mesh._thinInstanceDataStorage.worldMatrices;
     if (!matrixData) {
         return; // TODO: error handling
     }
     const pluginInstancesCount = body._pluginDataInstances.length;
     const motionType = this.getMotionType(body);
+    this._createOrUpdateBodyInstances(body, motionType, matrixData, 0, Math.min(instancesCount, pluginInstancesCount), true);
     if (instancesCount > pluginInstancesCount) {
         this._createOrUpdateBodyInstances(body, motionType, matrixData, pluginInstancesCount, instancesCount, false);
-         for (let i = pluginInstancesCount; i < instancesCount; i++) {
-          this._hknp.HP_Body_SetShape(body._pluginDataInstances[i].hpBodyId, firstBodyShape);
-          this._internalUpdateMassProperties(body._pluginDataInstances[i]);
-          this._bodies.set(body._pluginDataInstances[i].hpBodyId[0], { body: body, index: i });
-      }
-  } else if (instancesCount < pluginInstancesCount) {
-      const instancesToRemove = pluginInstancesCount - instancesCount;
-      for (let i = 0; i < instancesToRemove; i++) {
-          const hkbody = body._pluginDataInstances.pop();
-          this._bodies.delete(hkbody.hpBodyId[0]);
-          this._hknp.HP_World_RemoveBody(this.world, hkbody.hpBodyId);
-          this._hknp.HP_Body_Release(hkbody.hpBodyId);
-      }
-      this._createOrUpdateBodyInstances(body, motionType, matrixData, 0, instancesCount, true);
-  }
+    } else if (instancesCount < pluginInstancesCount) {
+        const instancesToRemove = pluginInstancesCount - instancesCount;
+        for (let i = 0; i < instancesToRemove; i++) {
+          const data = body._pluginDataInstances.pop()!;
+          this._disposeJoltBody(data);
+        }
+        this._createOrUpdateBodyInstances(body, motionType, matrixData, 0, instancesCount, true);
+    }
   }
 
-  removeBody(body: PhysicsBody): void {
-    const _body = this._getPluginReference(body);
-    this._bodyInterface.RemoveBody(_body.GetID());
+  removeBody(body: JoltPhysicsBody): void {
+    const _body = JoltBodyManager.getPluginReference(body);
+    if(_body.body) {
+      this._bodyInterface.RemoveBody(_body.body.GetID());
+    }
   }
 
-  sync(body: PhysicsBody): void {
+  sync(body: JoltPhysicsBody): void {
     this.syncTransform(body, body.transformNode);
   }
 
-  syncTransform(body: PhysicsBody, transformNode: TransformNode): void {
+  syncTransform(body: JoltPhysicsBody, transformNode: TransformNode): void {
     JoltBodyManager.syncTransform(body, transformNode);
   }
 
-  setShape(body: PhysicsBody, shape: Nullable<PhysicsShape>): void {
-    const shapeHandle = shape && shape._pluginData ? shape._pluginData : BigInt(0);
-    if (!(body.transformNode instanceof Mesh) || !body.transformNode._thinInstanceDataStorage?.matrixData) {
-        const _body = this._getPluginReference(body);
-        this._jol
-        this._internalUpdateMassProperties(body._pluginData);
-        return;
+  setShape(body: JoltPhysicsBody, shape: Nullable<JoltPhysicsShape>): void {
+    if(shape) {
+      JoltBodyManager.getAllPluginReference(body).forEach( data => {
+        data.shape = shape;
+        if(!data.body) {
+          data.body = JoltBodyManager.generatePhysicsBody(this._bodyInterface, data);
+        } else {
+          this._bodyInterface.SetShape(data.body.GetID(), this._getJoltShape(shape), true, Jolt.EActivation_Activate);
+        }
+      });
     }
-    const m = body.transformNode as Mesh;
-    const instancesCount = m._thinInstanceDataStorage?.instancesCount ?? 0;
-    for (let i = 0; i < instancesCount; i++) {
-        this._hknp.HP_Body_SetShape(body._pluginDataInstances[i].hpBodyId, shapeHandle);
-        this._internalUpdateMassProperties(body._pluginDataInstances[i]);
-    }
+  }
+  getShape(body: JoltPhysicsBody): Nullable<JoltPhysicsShape> {
+    const _body = JoltBodyManager.getPluginReference(body);
+    return _body.shape;
+  }
 
+  private _getJoltShape(shape: JoltPhysicsShape): Jolt.Shape {
+    return shape._pluginData.shape as Jolt.Shape;
   }
-  getShape(body: PhysicsBody): Nullable<PhysicsShape> {
-    throw new Error("Method not implemented.");
-  }
-  getShapeType(shape: PhysicsShape): PhysicsShapeType {
+
+  getShapeType(shape: JoltPhysicsShape): PhysicsShapeType {
     if (shape.type) {
         return shape.type;
     } else {
@@ -345,281 +323,371 @@ export class JoltJSPlugin implements IPhysicsEnginePluginV2 {
         return _shape.GetSubType();
     }
   }
-  setEventMask(body: PhysicsBody, eventMask: number, instanceIndex?: number | undefined): void {
+  setEventMask(_body: JoltPhysicsBody, _eventMask: number, _instanceIndex?: number | undefined): void {
     throw new Error("Method not implemented.");
   }
-  getEventMask(body: PhysicsBody, instanceIndex?: number | undefined): number {
+  getEventMask(_body: JoltPhysicsBody, _instanceIndex?: number | undefined): number {
     throw new Error("Method not implemented.");
   }
-  setMotionType(body: PhysicsBody, motionType: PhysicsMotionType, instanceIndex?: number | undefined): void {
-    const _body = this._getPluginReference(body, instanceIndex);
-    this._bodyInterface.SetMotionType(_body.GetID(), JoltBodyManager.GetMotionType(motionType), Jolt.EActivation_Activate);
-  }
-  getMotionType(body: PhysicsBody, instanceIndex?: number | undefined): PhysicsMotionType {
-    const _body = this._getPluginReference(body, instanceIndex);
-    switch(_body.GetMotionType()) {
-      case Jolt.EMotionType_Static:
-        return PhysicsMotionType.STATIC;
-      case Jolt.EMotionType_Dynamic:
-        return PhysicsMotionType.DYNAMIC;
-      case Jolt.EMotionType_Kinematic:
-        return PhysicsMotionType.ANIMATED;
-    }
-    throw new Error('Unknown Motion Type: '+_body.GetMotionType());
-  }
-  computeMassProperties(body: PhysicsBody, instanceIndex?: number | undefined): PhysicsMassProperties {
-    return this.getMassProperties(body, instanceIndex);
-  }
-  setMassProperties(body: PhysicsBody, massProps: PhysicsMassProperties, instanceIndex?: number | undefined): void {
-    const _body = this._getPluginReference(body, instanceIndex);
-    if(massProps.mass)
-      _body.GetMotionProperties().SetInverseMass(1/massProps.mass);
-  }
-  getMassProperties(body: PhysicsBody, instanceIndex?: number | undefined): PhysicsMassProperties {
-    const _body = this._getPluginReference(body, instanceIndex);
-    const _COM = _body.GetCenterOfMassPosition();
-    const _mass = _body.GetMotionProperties().GetInverseMass();
-    return {
-      mass: 1/_mass,
-      centerOfMass: GetJoltVec3 (_COM, new Vector3())
+  setMotionType(body: JoltPhysicsBody, motionType: PhysicsMotionType, instanceIndex?: number | undefined): void {
+    body._pluginData.motionType = motionType;
+    const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
+    _body.motionType = motionType;
+    if(_body.body) {
+      this._bodyInterface.SetMotionType(_body.body.GetID(), JoltBodyManager.GetMotionType(motionType), Jolt.EActivation_Activate);
     }
   }
-  setLinearDamping(body: PhysicsBody, damping: number, instanceIndex?: number | undefined): void {
-    const _body = this._getPluginReference(body, instanceIndex);
-    _body.GetMotionProperties().SetLinearDamping(damping);
+  getMotionType(body: JoltPhysicsBody, instanceIndex?: number | undefined): PhysicsMotionType {
+    const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
+    return _body.motionType;
   }
-  getLinearDamping(body: PhysicsBody, instanceIndex?: number | undefined): number {
-    const _body = this._getPluginReference(body, instanceIndex);
-    return _body.GetMotionProperties().GetLinearDamping();
+  computeMassProperties(body: JoltPhysicsBody, instanceIndex?: number | undefined): PhysicsMassProperties {
+    const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
+    return _body.massProperties;
   }
-  setAngularDamping(body: PhysicsBody, damping: number, instanceIndex?: number | undefined): void {
-    const _body = this._getPluginReference(body, instanceIndex);
-    _body.GetMotionProperties().SetAngularDamping(damping);
+  setMassProperties(body: JoltPhysicsBody, massProps: PhysicsMassProperties, instanceIndex?: number | undefined): void {
+    body._pluginData.massProperties = massProps;
+    const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
+    if(_body.body) {
+      if(massProps.mass)
+        _body.body.GetMotionProperties().SetInverseMass(1/massProps.mass);
+    }
   }
-  getAngularDamping(body: PhysicsBody, instanceIndex?: number | undefined): number {
-    const _body = this._getPluginReference(body, instanceIndex);
-    return _body.GetMotionProperties().GetAngularDamping();
+  getMassProperties(body: JoltPhysicsBody, instanceIndex?: number | undefined): PhysicsMassProperties {
+    const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
+    return _body.massProperties;
   }
-  setLinearVelocity(body: PhysicsBody, linVel: Vector3, instanceIndex?: number | undefined): void {
-    const _body = this._getPluginReference(body, instanceIndex);
-    _body.SetLinearVelocity(SetJoltVec3(linVel, this._tempVec3A));
+  setLinearDamping(body: JoltPhysicsBody, damping: number, instanceIndex?: number | undefined): void {
+    const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
+    if(_body.body) {
+      _body.body.GetMotionProperties().SetLinearDamping(damping);
+    };
   }
-  getLinearVelocityToRef(body: PhysicsBody, linVel: Vector3, instanceIndex?: number | undefined): void {
-    const _body = this._getPluginReference(body, instanceIndex);
-    GetJoltVec3(_body.GetLinearVelocity(), linVel)
+  getLinearDamping(body: JoltPhysicsBody, instanceIndex?: number | undefined): number {
+    const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
+    if(_body.body) {
+      _body.body.GetMotionProperties().GetLinearDamping();
+    };
+    return -1;
   }
-  applyImpulse(body: PhysicsBody, impulse: Vector3, location: Vector3, instanceIndex?: number | undefined): void {
-    const _body = this._getPluginReference(body, instanceIndex);
-    _body.AddImpulse(SetJoltVec3(impulse, this._tempVec3A),SetJoltVec3(location, this._tempVec3B))
+  setAngularDamping(body: JoltPhysicsBody, damping: number, instanceIndex?: number | undefined): void {
+    const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
+    if(_body.body) {
+      _body.body.GetMotionProperties().SetAngularDamping(damping);
+    };
   }
-  applyForce(body: PhysicsBody, force: Vector3, location: Vector3, instanceIndex?: number | undefined): void {
-    const _body = this._getPluginReference(body, instanceIndex);
-    _body.AddForce(SetJoltVec3(force, this._tempVec3A),SetJoltVec3(location, this._tempVec3B))
+  getAngularDamping(body: JoltPhysicsBody, instanceIndex?: number | undefined): number {
+    const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
+    if(_body.body) {
+      _body.body.GetMotionProperties().GetAngularDamping();
+    };
+    return -1;
   }
-  setAngularVelocity(body: PhysicsBody, angVel: Vector3, instanceIndex?: number | undefined): void {
-    const _body = this._getPluginReference(body, instanceIndex);
-    _body.SetAngularVelocity(SetJoltVec3(angVel, this._tempVec3A));
+  setLinearVelocity(body: JoltPhysicsBody, linVel: Vector3, instanceIndex?: number | undefined): void {
+    const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
+    if(_body.body) {
+      _body.body.SetLinearVelocity(SetJoltVec3(linVel, this._tempVec3A));
+    };
   }
-  getAngularVelocityToRef(body: PhysicsBody, angVel: Vector3, instanceIndex?: number | undefined): void {
-    const _body = this._getPluginReference(body, instanceIndex);
-    GetJoltVec3(_body.GetAngularVelocity(), angVel)
+  getLinearVelocityToRef(body: JoltPhysicsBody, linVel: Vector3, instanceIndex?: number | undefined): void {
+    const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
+    if(_body.body) {
+      GetJoltVec3(_body.body.GetLinearVelocity(), linVel)
+    };
   }
-  getBodyGeometry(body: PhysicsBody): {} {
+  applyImpulse(body: JoltPhysicsBody, impulse: Vector3, location: Vector3, instanceIndex?: number | undefined): void {
+    const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
+    if(_body.body) {
+      _body.body.AddImpulse(SetJoltVec3(impulse, this._tempVec3A),SetJoltVec3(location, this._tempVec3B))
+    };
+  }
+  applyForce(body: JoltPhysicsBody, force: Vector3, location: Vector3, instanceIndex?: number | undefined): void {
+    const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
+    if(_body.body) {
+      _body.body.AddForce(SetJoltVec3(force, this._tempVec3A),SetJoltVec3(location, this._tempVec3B))
+    };
+  }
+  setAngularVelocity(body: JoltPhysicsBody, angVel: Vector3, instanceIndex?: number | undefined): void {
+    const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
+    if(_body.body) {
+      _body.body.SetAngularVelocity(SetJoltVec3(angVel, this._tempVec3A));
+    };
+  }
+  getAngularVelocityToRef(body: JoltPhysicsBody, angVel: Vector3, instanceIndex?: number | undefined): void {
+    const _body = JoltBodyManager.getPluginReference(body, instanceIndex);
+    if(_body.body) {
+      GetJoltVec3(_body.body.GetAngularVelocity(), angVel)
+    };
+    
+  }
+
+  getBodyGeometry(_body: JoltPhysicsBody): {} {
     throw new Error("Method not implemented.");
   }
-  disposeBody(body: PhysicsBody): void {
+
+  _disposeJoltBody(instance: IJoltBodyData) {
+    const _body = instance.body;
+    if(_body) {
+      this._bodyInterface.RemoveBody(_body.GetID());
+      this._bodyInterface.DestroyBody(_body.GetID());
+      delete this._physicsBodyHash[_body.GetID().GetIndexAndSequenceNumber()]
+      delete this._bodyHash[_body.GetID().GetIndexAndSequenceNumber()]
+    }
+
+    instance.toDispose.forEach((d: any) => {
+      Jolt.destroy(d);
+    });
+    instance.toDispose = [];
+  }
+
+  disposeBody(body: JoltPhysicsBody): void {
     if (this.world) {
       if (body._pluginDataInstances && body._pluginDataInstances.length > 0) {
         for (const instance of body._pluginDataInstances) {
-            const _body: Jolt.Body = instance.body;
-            this._bodyInterface.RemoveBody(_body.GetID());
-            this._bodyInterface.DestroyBody(_body.GetID());
-    
-            instance.toDispose.forEach((d: any) => {
-              Jolt.destroy(d);
-            });
-            instance.toDispose = [];
-            delete this._physicsBodyHash[_body.GetID().GetIndexAndSequenceNumber()]
-            delete this._bodyHash[_body.GetID().GetIndexAndSequenceNumber()]
+            this._disposeJoltBody(instance);
         }
       }
 
       if (body._pluginData) {
-        const _body: Jolt.Body = body._pluginData.body;
-        this._bodyInterface.RemoveBody(_body.GetID());
-        this._bodyInterface.DestroyBody(_body.GetID());
-
-        body._pluginData.toDispose.forEach((d: any) => {
-          Jolt.destroy(d);
-        });
-        body._pluginData.toDispose = [];
-        delete this._physicsBodyHash[_body.GetID().GetIndexAndSequenceNumber()]
-        delete this._bodyHash[_body.GetID().GetIndexAndSequenceNumber()]
+        this._disposeJoltBody(body._pluginData);
       }
     }
   }
 
-  setCollisionCallbackEnabled(body: PhysicsBody, enabled: boolean, instanceIndex?: number | undefined): void {
-    throw new Error("Method not implemented.");
-  }
-  setCollisionEndedCallbackEnabled(body: PhysicsBody, enabled: boolean, instanceIndex?: number | undefined): void {
+  setCollisionCallbackEnabled(_body: JoltPhysicsBody, _enabled: boolean, _instanceIndex?: number | undefined): void {
     throw new Error("Method not implemented.");
   }
 
-  getCollisionObservable(body: PhysicsBody, instanceIndex?: number | undefined): Observable<IPhysicsCollisionEvent> {
-    throw new Error("Method not implemented.");
-  }
-  getCollisionEndedObservable(body: PhysicsBody, instanceIndex?: number | undefined): Observable<IBasePhysicsCollisionEvent> {
-    throw new Error("Method not implemented.");
-  }
-  setGravityFactor(body: PhysicsBody, factor: number, instanceIndex?: number | undefined): void {
-    throw new Error("Method not implemented.");
-  }
-  getGravityFactor(body: PhysicsBody, instanceIndex?: number | undefined): number {
-    throw new Error("Method not implemented.");
-  }
-  setTargetTransform(body: PhysicsBody, position: Vector3, rotation: Quaternion, instanceIndex?: number | undefined): void {
-    throw new Error("Method not implemented.");
-  }
-  initShape(shape: PhysicsShape, type: PhysicsShapeType, options: PhysicsShapeParameters): void {
-    throw new Error("Method not implemented.");
-  }
-  setShapeFilterMembershipMask(shape: PhysicsShape, membershipMask: number): void {
-    throw new Error("Method not implemented.");
-  }
-  getShapeFilterMembershipMask(shape: PhysicsShape): number {
-    throw new Error("Method not implemented.");
-  }
-  setShapeFilterCollideMask(shape: PhysicsShape, collideMask: number): void {
-    throw new Error("Method not implemented.");
-  }
-  getShapeFilterCollideMask(shape: PhysicsShape): number {
+  setCollisionEndedCallbackEnabled(_body: JoltPhysicsBody, _enabled: boolean, _instanceIndex?: number | undefined): void {
     throw new Error("Method not implemented.");
   }
 
-  setMaterial(shape: PhysicsShape, material: PhysicsMaterial): void {
+  getCollisionObservable(_body: JoltPhysicsBody, _instanceIndex?: number | undefined): Observable<IPhysicsCollisionEvent> {
     throw new Error("Method not implemented.");
   }
-  getMaterial(shape: PhysicsShape): PhysicsMaterial {
+
+  getCollisionEndedObservable(_body: JoltPhysicsBody, _instanceIndex?: number | undefined): Observable<IBasePhysicsCollisionEvent> {
     throw new Error("Method not implemented.");
   }
-  setDensity(shape: PhysicsShape, density: number): void {
-    const _shape = castJoltShape(shape._pluginData.shape as Jolt.Shape);
-    if(_shape instanceof Jolt.ConvexShape) {
-      _shape.SetDensity(density)
+
+  setGravityFactor(_body: JoltPhysicsBody, _factor: number, _instanceIndex?: number | undefined): void {
+    throw new Error("Method not implemented.");
+  }
+
+  getGravityFactor(_body: JoltPhysicsBody, _instanceIndex?: number | undefined): number {
+    throw new Error("Method not implemented.");
+  }
+
+  setTargetTransform(_body: JoltPhysicsBody, _position: Vector3, _rotation: Quaternion, _instanceIndex?: number | undefined): void {
+    throw new Error("Method not implemented.");
+  }
+
+  initShape(shape: JoltPhysicsShape, type: PhysicsShapeType, options: PhysicsShapeParameters): void {
+    shape._pluginData.shape = createShape(type, options, this._tempVec3A);
+  }
+
+  setShapeFilterMembershipMask(_shape: JoltPhysicsShape, _membershipMask: number): void {
+    throw new Error("Method not implemented.");
+  }
+
+  getShapeFilterMembershipMask(_shape: JoltPhysicsShape): number {
+    throw new Error("Method not implemented.");
+  }
+
+  setShapeFilterCollideMask(_shape: JoltPhysicsShape, _collideMask: number): void {
+    throw new Error("Method not implemented.");
+  }
+
+  getShapeFilterCollideMask(_shape: JoltPhysicsShape): number {
+    throw new Error("Method not implemented.");
+  }
+
+  setMaterial(shape: JoltPhysicsShape, material: PhysicsMaterial): void {
+    shape._pluginData.material = material;
+  }
+
+  getMaterial(shape: JoltPhysicsShape): PhysicsMaterial {
+    return shape._pluginData.material || {};
+  }
+
+  setDensity(shape: JoltPhysicsShape, density: number): void {
+    shape._pluginData.density = density;
+    if(shape._pluginData.shape) {
+      const _shape = castJoltShape(shape._pluginData.shape);
+      if(_shape instanceof Jolt.ConvexShape) {
+        _shape.SetDensity(density)
+      }
     }
   }
-  getDensity(shape: PhysicsShape): number {
-    const _shape = castJoltShape(shape._pluginData.shape as Jolt.Shape);
+
+  getDensity(shape: JoltPhysicsShape): number {
     let density = 0;
-    if(_shape instanceof Jolt.ConvexShape) {
-      density = _shape.GetDensity()
+    if(shape._pluginData.shape) {
+      const _shape = castJoltShape(shape._pluginData.shape);
+      if(_shape instanceof Jolt.ConvexShape) {
+        density = _shape.GetDensity()
+      }
+      shape._pluginData.density = density;
     }
-    return density;
-  }
-  addChild(shape: PhysicsShape, newChild: PhysicsShape, translation?: Vector3 | undefined, rotation?: Quaternion | undefined, scale?: Vector3 | undefined): void {
-    throw new Error("Method not implemented.");
-  }
-  removeChild(shape: PhysicsShape, childIndex: number): void {
-    throw new Error("Method not implemented.");
-  }
-  getNumChildren(shape: PhysicsShape): number {
-    throw new Error("Method not implemented.");
-  }
-  getBoundingBox(shape: PhysicsShape): BoundingBox {
-    throw new Error("Method not implemented.");
-  }
-  disposeShape(shape: PhysicsShape): void {
-    const _shape = shape._pluginData.shape as Jolt.Shape;
-    Jolt.destroy(_shape);
+    return shape._pluginData.density || 0;
   }
 
-  setTrigger(shape: PhysicsShape, isTrigger: boolean): void {
-    throw new Error("Method not implemented.");
+  addChild(shape: JoltPhysicsShape, newChild: JoltPhysicsShape, translation?: Vector3 | undefined, rotation?: Quaternion | undefined, scale?: Vector3 | undefined): void {
+    if(shape.type != PhysicsShapeType.CONTAINER) {
+      throw Error('Unable to add shapes to non-container');
+    }
+    if(shape._pluginData.shape != null) {
+      shape._pluginData.children = shape._pluginData.children || [];
+      shape._pluginData.children.push({ child: newChild, translation, rotation, scale}) 
+    } else {
+      throw Error('Container Shape already initialized. Static Containers only support modification prior to being added to Body .')
+    }
+    
   }
 
-  addConstraint(body: PhysicsBody, childBody: PhysicsBody, constraint: PhysicsConstraint, instanceIndex?: number | undefined, childInstanceIndex?: number | undefined): void {
-    throw new Error("Method not implemented.");
+  removeChild(shape: JoltPhysicsShape, childIndex: number): void {
+    if(shape.type != PhysicsShapeType.CONTAINER) {
+      throw Error('Unable to remove shapes from non-container');
+    }
+    if(shape._pluginData.shape != null) {
+      shape._pluginData.children = shape._pluginData.children || [];
+      shape._pluginData.children.splice(childIndex, 1);
+    } else {
+      throw Error('Container Shape already initialized. Static Containers only support modification prior to being added to Body .')
+    }
   }
-  initConstraint(constraint: PhysicsConstraint, body: PhysicsBody, childBody: PhysicsBody): void {
-    throw new Error("Method not implemented.");
+
+  getNumChildren(shape: JoltPhysicsShape): number {
+    if(shape.type != PhysicsShapeType.CONTAINER) {
+      throw Error('Unable to add shapes to non-container');
+    }
+    return shape._pluginData.children.length;
   }
-  setEnabled(constraint: PhysicsConstraint, isEnabled: boolean): void {
-    const _constraint = constraint._pluginData.constraint as Jolt.Constraint;
+  
+  getBoundingBox(_shape: JoltPhysicsShape): BoundingBox {
+    return {} as BoundingBox;
+  }
+
+  disposeShape(shape: JoltPhysicsShape): void {
+    const _shape = shape._pluginData.shape;
+    if(_shape) {
+      Jolt.destroy(_shape);
+    }
+  }
+
+  setTrigger(shape: JoltPhysicsShape, isTrigger: boolean): void {
+    shape._pluginData.isTrigger = isTrigger;
+  }
+
+  addConstraint(body: JoltPhysicsBody, childBody: JoltPhysicsBody, constraint: JoltPhysicsConstraint, instanceIndex?: number | undefined, childInstanceIndex?: number | undefined): void {
+    this.initConstraint(constraint, body, childBody, instanceIndex, childInstanceIndex);
+  }
+
+  initConstraint(constraint: JoltPhysicsConstraint, body: JoltPhysicsBody, childBody: JoltPhysicsBody, instanceIndex?: number | undefined, childInstanceIndex?: number | undefined): void {
+    const bodyA = JoltBodyManager.getPluginReference(body, instanceIndex);
+    if(!bodyA.body) {
+      throw new Error("Unable to add constraint to uninitialized body.")
+    }
+    const bodyB = JoltBodyManager.getPluginReference(childBody, childInstanceIndex);
+    if(!bodyB.body) {
+      throw new Error("Unable to add constraint to uninitialized body.")
+    }
+    constraint._pluginData.constraint = JoltConstraintManager.CreateClassicConstraint(bodyA.body, bodyB.body, constraint);
+    constraint._pluginData.bodyPair = { parentBody: body, parentBodyIndex: instanceIndex || -1, childBody, childBodyIndex: childInstanceIndex || -1 };
+  }
+  setEnabled(constraint: JoltPhysicsConstraint, isEnabled: boolean): void {
+    const _constraint = constraint._pluginData.constraint;
     _constraint.SetEnabled(isEnabled);
   }
-  getEnabled(constraint: PhysicsConstraint): boolean {
-    const _constraint = constraint._pluginData.constraint as Jolt.Constraint;
+  getEnabled(constraint: JoltPhysicsConstraint): boolean {
+    const _constraint = constraint._pluginData.constraint;
     return _constraint.GetEnabled();
   }
-  setCollisionsEnabled(constraint: PhysicsConstraint, isEnabled: boolean): void {
+
+  setCollisionsEnabled(_constraint: JoltPhysicsConstraint, _isEnabled: boolean): void {
     throw new Error("Method not implemented.");
   }
-  getCollisionsEnabled(constraint: PhysicsConstraint): boolean {
+  getCollisionsEnabled(_constraint: JoltPhysicsConstraint): boolean {
     throw new Error("Method not implemented.");
   }
-  setAxisFriction(constraint: PhysicsConstraint, axis: PhysicsConstraintAxis, friction: number): void {
+  setAxisFriction(_constraint: JoltPhysicsConstraint, _axis: PhysicsConstraintAxis, _friction: number): void {
     throw new Error("Method not implemented.");
   }
-  getAxisFriction(constraint: PhysicsConstraint, axis: PhysicsConstraintAxis): Nullable<number> {
+  getAxisFriction(_constraint: JoltPhysicsConstraint, _axis: PhysicsConstraintAxis): Nullable<number> {
     throw new Error("Method not implemented.");
   }
-  setAxisMode(constraint: PhysicsConstraint, axis: PhysicsConstraintAxis, limitMode: PhysicsConstraintAxisLimitMode): void {
+  setAxisMode(_constraint: JoltPhysicsConstraint, _axis: PhysicsConstraintAxis, _limitMode: PhysicsConstraintAxisLimitMode): void {
     throw new Error("Method not implemented.");
   }
-  getAxisMode(constraint: PhysicsConstraint, axis: PhysicsConstraintAxis): Nullable<PhysicsConstraintAxisLimitMode> {
+  getAxisMode(_constraint: JoltPhysicsConstraint, _axis: PhysicsConstraintAxis): Nullable<PhysicsConstraintAxisLimitMode> {
     throw new Error("Method not implemented.");
   }
-  setAxisMinLimit(constraint: PhysicsConstraint, axis: PhysicsConstraintAxis, minLimit: number): void {
+  setAxisMinLimit(_constraint: JoltPhysicsConstraint, _axis: PhysicsConstraintAxis, _minLimit: number): void {
     throw new Error("Method not implemented.");
   }
-  getAxisMinLimit(constraint: PhysicsConstraint, axis: PhysicsConstraintAxis): Nullable<number> {
+  getAxisMinLimit(_constraint: JoltPhysicsConstraint, _axis: PhysicsConstraintAxis): Nullable<number> {
     throw new Error("Method not implemented.");
   }
-  setAxisMaxLimit(constraint: PhysicsConstraint, axis: PhysicsConstraintAxis, limit: number): void {
+  setAxisMaxLimit(_constraint: JoltPhysicsConstraint, _axis: PhysicsConstraintAxis, _limit: number): void {
     throw new Error("Method not implemented.");
   }
-  getAxisMaxLimit(constraint: PhysicsConstraint, axis: PhysicsConstraintAxis): Nullable<number> {
+  getAxisMaxLimit(_constraint: JoltPhysicsConstraint, _axis: PhysicsConstraintAxis): Nullable<number> {
     throw new Error("Method not implemented.");
   }
-  setAxisMotorType(constraint: PhysicsConstraint, axis: PhysicsConstraintAxis, motorType: PhysicsConstraintMotorType): void {
+  setAxisMotorType(_constraint: JoltPhysicsConstraint, _axis: PhysicsConstraintAxis, _motorType: PhysicsConstraintMotorType): void {
     throw new Error("Method not implemented.");
   }
-  getAxisMotorType(constraint: PhysicsConstraint, axis: PhysicsConstraintAxis): Nullable<PhysicsConstraintMotorType> {
+  getAxisMotorType(_constraint: JoltPhysicsConstraint, _axis: PhysicsConstraintAxis): Nullable<PhysicsConstraintMotorType> {
     throw new Error("Method not implemented.");
   }
-  setAxisMotorTarget(constraint: PhysicsConstraint, axis: PhysicsConstraintAxis, target: number): void {
+  setAxisMotorTarget(_constraint: JoltPhysicsConstraint, _axis: PhysicsConstraintAxis, _target: number): void {
     throw new Error("Method not implemented.");
   }
-  getAxisMotorTarget(constraint: PhysicsConstraint, axis: PhysicsConstraintAxis): Nullable<number> {
+  getAxisMotorTarget(_constraint: JoltPhysicsConstraint, _axis: PhysicsConstraintAxis): Nullable<number> {
     throw new Error("Method not implemented.");
   }
-  setAxisMotorMaxForce(constraint: PhysicsConstraint, axis: PhysicsConstraintAxis, maxForce: number): void {
+  setAxisMotorMaxForce(_constraint: JoltPhysicsConstraint, _axis: PhysicsConstraintAxis, _maxForce: number): void {
     throw new Error("Method not implemented.");
   }
-  getAxisMotorMaxForce(constraint: PhysicsConstraint, axis: PhysicsConstraintAxis): Nullable<number> {
+  getAxisMotorMaxForce(_constraint: JoltPhysicsConstraint, _axis: PhysicsConstraintAxis): Nullable<number> {
     throw new Error("Method not implemented.");
   }
-  disposeConstraint(constraint: PhysicsConstraint): void {
-    throw new Error("Method not implemented.");
+  disposeConstraint(constraint: JoltPhysicsConstraint): void {
+    const _constraint = constraint._pluginData.constraint;
+    this.world.RemoveConstraint(_constraint);
   }
-  getBodiesUsingConstraint(constraint: PhysicsConstraint): ConstrainedBodyPair[] {
-    throw new Error("Method not implemented.");
+
+  getBodiesUsingConstraint(constraint: JoltPhysicsConstraint): ConstrainedBodyPair[] {
+    return [ constraint._pluginData.bodyPair ]
   }
-  raycast(from: Vector3, to: Vector3, result: PhysicsRaycastResult, query?: IRaycastQuery | undefined): void {
-    throw new Error("Method not implemented.");
+
+  raycast(from: Vector3, to: Vector3, result: PhysicsRaycastResult, _query?: IRaycastQuery | undefined): void {
+    return this._raycaster.raycastToRef(from, to, result);
   }
+
   dispose(): void {
     const outstandingBodies = Object.values(this._physicsBodyHash);
     outstandingBodies.forEach(impostor => {
-      impostor.dispose();
+      impostor.body.dispose();
     })
     this.toDispose.forEach(joltObj => {
       Jolt.destroy(joltObj);
     });
     this._raycaster.dispose();
     (this.world as any) = null;
+    JoltBodyManager.dispose();
   }
 
+  onContactRemove(_body: number, _withBody: number): void {
+  }
+
+  onContactAdd(_body: number, _withBody: number, _contactSettings: JoltContactSetting): void {
+  }
+
+  onContactPersist(_body: number, _withBody: number, _contactSettings: JoltContactSetting): void {
+  }
+
+  onContactValidate(_body: number, _withBody: number): OnContactValidateResponse {
+    return OnContactValidateResponse.AcceptAllContactsForThisBodyPair;
   }
 }

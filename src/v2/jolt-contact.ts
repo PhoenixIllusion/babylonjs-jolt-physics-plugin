@@ -1,4 +1,3 @@
-import { PhysicsBody } from "@babylonjs/core/Physics/v2/physicsBody";
 import { ContactCollector, JoltContactSetting, OnContactValidateResponse } from "../jolt-contact";
 import Jolt from "../jolt-import";
 import { JoltJSPlugin } from "./jolt-physics";
@@ -7,7 +6,6 @@ export type CollisionMap = {'add': Set<number>, 'remove': Set<number>, 'persist'
 
 export class ContactCollectorV2 {
   private _contactCollector;
-  private _imposterBodyHash: { [hash: number]: PhysicsBody} = {};
 
   constructor( private joltV2: JoltJSPlugin, contactListener: Jolt.ContactListenerJS, private collisionMap: CollisionMap) {
     this._contactCollector = new ContactCollector(contactListener, this);
@@ -15,16 +13,19 @@ export class ContactCollectorV2 {
 
 
   onContactRemove(body: number, withBody: number): void {
+    this.joltV2.onContactRemove(body, withBody);
   }
 
   onContactAdd(body: number, withBody: number, contactSettings: JoltContactSetting): void {
+    this.joltV2.onContactAdd(body, withBody, contactSettings);
   }
 
   onContactPersist(body: number, withBody: number, contactSettings: JoltContactSetting): void {
+    this.joltV2.onContactPersist(body, withBody, contactSettings);
   }
 
   onContactValidate(body: number, withBody: number): OnContactValidateResponse {
-    return OnContactValidateResponse.AcceptAllContactsForThisBodyPair;
+    return this.joltV2.onContactValidate(body, withBody);
   }
 
   registerImpostor(bodyID: number) {
@@ -40,7 +41,6 @@ export class ContactCollectorV2 {
   }
 
   clear() {
-    this._imposterBodyHash = {};
     this._contactCollector.clear();
   }
 }

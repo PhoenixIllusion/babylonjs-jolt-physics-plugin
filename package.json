@@ -28,6 +28,7 @@
     "./v1": "./dist/v1/index.js",
     "./v1/impostor": "./dist/v1/jolt-impostor.js",
     "./v1/character-virtual": "./dist/v1/jolt-physics-character-virtual.js",
+    "./v2": "./dist/v2/index.js",
     "./import": "./dist/jolt-import.js",
     "./contact": "./dist/jolt-contact.js",
     "./util": "./dist/jolt-util.js",
@@ -35,25 +36,6 @@
   },
   "files": [
     "README.md",
-    "./dist/v1/index.d.ts",
-    "./dist/v1/index.js",
-    "./dist/v1/jolt-contact.d.ts",
-    "./dist/v1/jolt-contact.js",
-    "./dist/v1/jolt-impostor.d.ts",
-    "./dist/v1/jolt-impostor.js",
-    "./dist/v1/jolt-physics.d.ts",
-    "./dist/v1/jolt-physics.js",
-    "./dist/v1/jolt-physics-character-virtual.d.ts",
-    "./dist/v1/jolt-physics-character-virtual.js",
-    "./dist/jolt-import.d.ts",
-    "./dist/jolt-import.js",
-    "./dist/jolt-physics-character-virtual.d.ts",
-    "./dist/jolt-physics-character-virtual.js",
-    "./dist/jolt-physics-vehicle-controller.d.ts",
-    "./dist/jolt-physics-vehicle-controller.js",
-    "./dist/jolt-raycast.d.ts",
-    "./dist/jolt-raycast.js",
-    "./dist/jolt-util.d.ts",
-    "./dist/jolt-util.js"
+    "./dist/*"
   ]
 }

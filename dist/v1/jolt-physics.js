@@ -1,16 +1,16 @@
-import { JoltCharacterVirtual } from '../jolt-physics-character-virtual';
-import Jolt, { loadJolt } from '../jolt-import';
-import { RayCastUtility } from '../jolt-raycast';
-import { LAYER_MOVING, LAYER_NON_MOVING, SetJoltVec3 } from '../jolt-util';
+import { JoltCharacterVirtualImpostor, JoltCharacterVirtual } from './jolt-physics-character-virtual';
 import { Epsilon, Quaternion, Vector3 } from '@babylonjs/core/Maths/math';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Logger } from '@babylonjs/core/Misc/logger';
 import { VertexBuffer } from '@babylonjs/core/Buffers/buffer';
 import { MotorEnabledJoint, PhysicsJoint } from '@babylonjs/core/Physics/v1/physicsJoint';
-import { MotorcycleController, WheeledVehicleController } from '../jolt-physics-vehicle-controller';
-import { JoltCharacterVirtualImpostor } from './jolt-physics-character-virtual';
+import Jolt, { loadJolt } from '../jolt-import';
+import { RayCastUtility } from '../jolt-raycast';
+import { LAYER_MOVING, LAYER_NON_MOVING, SetJoltQuat, SetJoltVec3 } from '../jolt-util';
+import { CreateJoltConstraint } from '../jolt-constraint';
+import { JoltConstraintManager } from './jolt-constraint';
 import { ContactCollectorV1 } from './jolt-contact';
-export { setJoltModule } from '../jolt-import';
+import { MotorcycleController, WheeledVehicleController } from '../jolt-physics-vehicle-controller';
 export var Jolt_Type;
 (function (Jolt_Type) {
     Jolt_Type[Jolt_Type["CHARACTER"] = 200] = "CHARACTER";
@@ -224,7 +224,7 @@ export class JoltJSPlugin {
             const collisionFilter = impostor.getParam('collision-filter');
             impostor.object.computeWorldMatrix(true);
             SetJoltVec3(impostor.object.position, this._tempVec3A);
-            this._tempQuaternion.Set(impostor.object.rotationQuaternion.x, impostor.object.rotationQuaternion.y, impostor.object.rotationQuaternion.z, impostor.object.rotationQuaternion.w);
+            SetJoltQuat(impostor.object.rotationQuaternion, this._tempQuaternion);
             const isStatic = (mass === 0) ? Jolt.EMotionType_Static : Jolt.EMotionType_Dynamic;
             const layer = (mass === 0) ? LAYER_NON_MOVING : LAYER_MOVING;
             const settings = new Jolt.BodyCreationSettings(shape, this._tempVec3A, this._tempQuaternion, isStatic, layer);
@@ -420,121 +420,14 @@ export class JoltJSPlugin {
         if (!mainBody || !connectedBody) {
             return;
         }
-        const jointData = impostorJoint.joint.jointData;
-        if (!jointData.mainPivot) {
-            jointData.mainPivot = new Vector3(0, 0, 0);
+        const joint = impostorJoint.joint;
+        const nativeParams = joint.jointData.nativeParams;
+        let constraint;
+        if (nativeParams && nativeParams.constraint) {
+            constraint = CreateJoltConstraint(mainBody, connectedBody, nativeParams.constraint);
         }
-        if (!jointData.connectedPivot) {
-            jointData.connectedPivot = new Vector3(0, 0, 0);
-        }
-        if (!jointData.mainAxis) {
-            jointData.mainAxis = new Vector3(0, 0, 0);
-        }
-        if (!jointData.connectedAxis) {
-            jointData.connectedAxis = new Vector3(0, 0, 0);
-        }
-        const options = jointData.nativeParams || {};
-        const setIfAvailable = (setting, k, key) => {
-            if (options[key] !== undefined) {
-                setting[k] = options[key];
-            }
-        };
-        const setPoints = (constraintSettings) => {
-            constraintSettings.mPoint1.Set(p1.x, p1.y, p1.z);
-            constraintSettings.mPoint2.Set(p2.x, p2.y, p2.z);
-        };
-        const setHindgeAxis = (constraintSettings) => {
-            const h1 = jointData.mainAxis;
-            const h2 = jointData.connectedAxis;
-            constraintSettings.mHingeAxis1.Set(h1.x, h1.y, h1.z);
-            constraintSettings.mHingeAxis2.Set(h2.x, h2.y, h2.z);
-        };
-        const setSliderAxis = (constraintSettings) => {
-            const h1 = jointData.mainAxis;
-            const h2 = jointData.connectedAxis;
-            constraintSettings.mSliderAxis1.Set(h1.x, h1.y, h1.z);
-            constraintSettings.mSliderAxis2.Set(h2.x, h2.y, h2.z);
-        };
-        const setNormalAxis = (constraintSettings) => {
-            if (options['normal-axis-1'] && options['normal-axis-2']) {
-                const n1 = options['normal-axis-1'];
-                const n2 = options['normal-axis-2'];
-                constraintSettings.mNormalAxis1.Set(n1.x, n1.y, n1.z);
-                constraintSettings.mNormalAxis2.Set(n2.x, n2.y, n2.z);
-            }
-        };
-        const setAxisXY = (constraintSettings) => {
-            if (options['axis-x-1'] && options['axis-x-2'] && options['axis-y-1'] && options['axis-y-2']) {
-                const x1 = options['axis-x-1'];
-                const x2 = options['axis-x-2'];
-                const y1 = options['axis-y-1'];
-                const y2 = options['axis-y-2'];
-                constraintSettings.mAxisX1.Set(x1.x, x1.y, x1.z);
-                constraintSettings.mAxisX2.Set(x2.x, x2.y, x2.z);
-                constraintSettings.mAxisY1.Set(y1.x, y1.y, y1.z);
-                constraintSettings.mAxisY2.Set(y2.x, y2.y, y2.z);
-            }
-        };
-        const p1 = jointData.mainPivot;
-        const p2 = jointData.connectedPivot;
-        let constraint = undefined;
-        switch (impostorJoint.joint.type) {
-            case PhysicsJoint.DistanceJoint:
-                {
-                    let constraintSettings = new Jolt.DistanceConstraintSettings();
-                    setPoints(constraintSettings);
-                    setIfAvailable(constraintSettings, 'mMinDistance', 'min-distance');
-                    setIfAvailable(constraintSettings, 'mMaxDistance', 'max-distance');
-                    constraint = constraintSettings.Create(mainBody, connectedBody);
-                    constraint = Jolt.castObject(constraint, Jolt.DistanceConstraint);
-                    Jolt.destroy(constraintSettings);
-                }
-                break;
-            case PhysicsJoint.HingeJoint:
-                {
-                    let constraintSettings = new Jolt.HingeConstraintSettings();
-                    setPoints(constraintSettings);
-                    setHindgeAxis(constraintSettings);
-                    setNormalAxis(constraintSettings);
-                    setIfAvailable(constraintSettings, 'mLimitsMin', 'min-limit');
-                    setIfAvailable(constraintSettings, 'mLimitsMax', 'max-limit');
-                    constraint = constraintSettings.Create(mainBody, connectedBody);
-                    constraint = Jolt.castObject(constraint, Jolt.HingeConstraint);
-                    Jolt.destroy(constraintSettings);
-                }
-                break;
-            case PhysicsJoint.PrismaticJoint:
-                {
-                    let constraintSettings = new Jolt.SliderConstraintSettings();
-                    setPoints(constraintSettings);
-                    setSliderAxis(constraintSettings);
-                    setNormalAxis(constraintSettings);
-                    setIfAvailable(constraintSettings, 'mLimitsMin', 'min-limit');
-                    setIfAvailable(constraintSettings, 'mLimitsMax', 'max-limit');
-                    constraint = constraintSettings.Create(mainBody, connectedBody);
-                    constraint = Jolt.castObject(constraint, Jolt.SliderConstraint);
-                    Jolt.destroy(constraintSettings);
-                }
-                break;
-            case PhysicsJoint.LockJoint:
-                {
-                    let constraintSettings = new Jolt.FixedConstraintSettings();
-                    constraintSettings.mAutoDetectPoint = true;
-                    setPoints(constraintSettings);
-                    setAxisXY(constraintSettings);
-                    constraint = constraintSettings.Create(mainBody, connectedBody);
-                    Jolt.destroy(constraintSettings);
-                }
-                break;
-            case PhysicsJoint.PointToPointJoint:
-                {
-                    let constraintSettings = new Jolt.PointConstraintSettings();
-                    setPoints(constraintSettings);
-                    constraint = constraintSettings.Create(mainBody, connectedBody);
-                    constraint = Jolt.castObject(constraint, Jolt.PointConstraint);
-                    Jolt.destroy(constraintSettings);
-                }
-                break;
+        else {
+            constraint = JoltConstraintManager.CreateClassicConstraint(mainBody, connectedBody, joint);
         }
         if (constraint) {
             this.world.AddConstraint(constraint);

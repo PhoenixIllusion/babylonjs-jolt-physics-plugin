@@ -1,13 +1,12 @@
 import { IPhysicsEnginePlugin, PhysicsImpostorJoint } from '@babylonjs/core/Physics/v1/IPhysicsEnginePlugin';
-import Jolt from '../jolt-import';
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { IMotorEnabledJoint, PhysicsJoint } from '@babylonjs/core/Physics/v1/physicsJoint';
 import { Nullable } from '@babylonjs/core/types';
 import { PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResult';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
+import Jolt from '../jolt-import';
 import { MotorcycleController, Vehicle, WheeledVehicleController, WheeledVehicleInput } from '../jolt-physics-vehicle-controller';
-export { setJoltModule } from '../jolt-import';
 export declare const enum Jolt_Type {
     CHARACTER = 200,
     VIRTUAL_CHARACTER = 201
