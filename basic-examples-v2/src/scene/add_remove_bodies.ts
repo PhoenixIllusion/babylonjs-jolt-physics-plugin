@@ -8,7 +8,7 @@ export default (): SceneCallback => {
   let timeNextSpawn = 0;
 
   createFloor();
-  const maxBoxes = 100;
+  const maxBoxes = 200;
 
   const boxes: {box: Mesh, physics: PhysicsAggregate }[] = []
   function generateObject() {

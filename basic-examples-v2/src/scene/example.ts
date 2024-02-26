@@ -35,13 +35,13 @@ export type SceneFunction = (scene: Scene) => SceneCallback;
 
 export const DegreesToRadians = (deg: number) => deg * (Math.PI / 180.0);
 
-const NullPhysics: PhysicsOptions = {
+const NullPhysics: ()=>PhysicsOptions = () => ({
   mass: 0,
   friction: 0,
   restitution: 0
-}
+})
 
-export const createFloor = (physicsOptions: PhysicsOptions = NullPhysics, color: string = '#FFFFFF') => {
+export const createFloor = (physicsOptions: PhysicsOptions = NullPhysics(), color: string = '#FFFFFF') => {
   const ground = MeshBuilder.CreateGround('ground', { width: 100, height: 100 });
   ground.position.y = -0.5;
   ground.material = getMaterial(color);
@@ -63,7 +63,7 @@ export const getMaterial = (color: string) => {
 }
 
 
-export const createSphere = (position: Vector3, radius: number, physicsOptions: PhysicsOptions = NullPhysics, color: string = '#FFFFFF') => {
+export const createSphere = (position: Vector3, radius: number, physicsOptions: PhysicsOptions = NullPhysics(), color: string = '#FFFFFF') => {
   const sphere = MeshBuilder.CreateSphere('sphere', { diameter: radius, segments: 32 });
   sphere.position.copyFrom(position);
   sphere.material = getMaterial(color);
@@ -71,7 +71,7 @@ export const createSphere = (position: Vector3, radius: number, physicsOptions: 
   const physics = new PhysicsAggregate(sphere, PhysicsShapeType.SPHERE, physicsOptions, scene);
   return { sphere, physics };
 }
-export const createCylinder = (position: Vector3, radius: number, height: number, physicsOptions: PhysicsOptions = NullPhysics, color: string = '#FFFFFF') => {
+export const createCylinder = (position: Vector3, radius: number, height: number, physicsOptions: PhysicsOptions = NullPhysics(), color: string = '#FFFFFF') => {
   const cylinder = MeshBuilder.CreateCylinder('cylinder', { diameter: radius, height, tessellation: 16 });
   cylinder.position.copyFrom(position);
   cylinder.material = getMaterial(color);
@@ -80,7 +80,7 @@ export const createCylinder = (position: Vector3, radius: number, height: number
   return { cylinder, physics };
 }
 
-export const createBox = (position: Vector3, rotation: Quaternion, halfExtent: Vector3, physicsOptions: PhysicsOptions = NullPhysics, color = '#FFFFFF') => {
+export const createBox = (position: Vector3, rotation: Quaternion, halfExtent: Vector3, physicsOptions: PhysicsOptions = NullPhysics(), color = '#FFFFFF') => {
   const box = MeshBuilder.CreateBox('box', { width: halfExtent.x * 2, height: halfExtent.y * 2, depth: halfExtent.z * 2 });
   box.position.copyFrom(position);
   box.rotationQuaternion = rotation.clone();
@@ -90,7 +90,7 @@ export const createBox = (position: Vector3, rotation: Quaternion, halfExtent: V
   return { box, physics };
 }
 
-export const createCapsule = (position: Vector3, radiusTop: number, radiusBottom: number, height: number, physicsOptions: PhysicsOptions = NullPhysics, color = '#FFFFFF') => {
+export const createCapsule = (position: Vector3, radiusTop: number, radiusBottom: number, height: number, physicsOptions: PhysicsOptions = NullPhysics(), color = '#FFFFFF') => {
   const capsuleProps = { height: height + radiusTop + radiusBottom, tessellation: 16 }
   const capsule = (radiusTop !== radiusBottom)
     ? MeshBuilder.CreateCapsule('capsule', { radiusTop, radiusBottom, ...capsuleProps })
@@ -102,7 +102,7 @@ export const createCapsule = (position: Vector3, radiusTop: number, radiusBottom
   return { capsule, physics };
 }
 
-export const createConvexHull = (position: Vector3, points: Vector3[], physicsOptions: PhysicsOptions = NullPhysics, color = '#FFFFFF') => {
+export const createConvexHull = (position: Vector3, points: Vector3[], physicsOptions: PhysicsOptions = NullPhysics(), color = '#FFFFFF') => {
   const rawPoints = points.map(x => [x.x, x.y, x.z]);
   const faces = QuickHull(points.map(x => [x.x, x.y, x.z]));
 
@@ -140,7 +140,7 @@ export const getRandomQuat = () => {
   return Quaternion.RotationAxis(randomV3, 2 * Math.PI * Math.random());
 }
 
-export const createMeshFloor = (n: number, cell_size: number, amp: number, position: Vector3, physicsOptions: PhysicsOptions = NullPhysics, color = '#FFFFFF') => {
+export const createMeshFloor = (n: number, cell_size: number, amp: number, position: Vector3, physicsOptions: PhysicsOptions = NullPhysics(), color = '#FFFFFF') => {
   const mesh = new Mesh('mesh-floor');
   const height = function (x: number, y: number) { return Math.sin(x / 2) * Math.cos(y / 3) * amp; };
   const positions: number[] = [];
