@@ -3,6 +3,7 @@ import { PhysicsJoint } from "@babylonjs/core/Physics/v1/physicsJoint";
 import Jolt from "./jolt-import";
 import type { float } from "@babylonjs/core/types";
 import { JoltConstraintPath } from "./jolt-constraint-path";
+import { JVec3 } from "./jolt-util";
 
 export type JoltConstraintType = 'Fixed' | 'Point' | 'Hinge' | 'Slider' | 'Distance' | 'Cone' | 'SwingTwist' | 'SixDOF' | 'Path' | 'RackAndPinion' | 'Gear' | 'Pulley';
 
@@ -98,11 +99,11 @@ export interface PulleyConstraintParams extends JoltConstraint {
 export class JoltConstraintManager {
   static CreateJoltConstraint(mainBody: Jolt.Body, connectedBody: Jolt.Body, constraintParams: JoltConstraint): Jolt.Constraint | undefined {
 
-    const setPoints = (constraintSettings: { mPoint1: Jolt.Vec3, mPoint2: Jolt.Vec3 }, params: { point1: float3, point2: float3 }) => {
+    const setPoints = (constraintSettings: { mPoint1: JVec3, mPoint2: JVec3 }, params: { point1: float3, point2: float3 }) => {
       constraintSettings.mPoint1.Set(...params.point1);
       constraintSettings.mPoint2.Set(...params.point2);
     }
-    const setNormalAxis = (constraintSettings: { mNormalAxis1: Jolt.Vec3, mNormalAxis2: Jolt.Vec3 }, params: { normalAxis1: float3, normalAxis2: float3 }) => {
+    const setNormalAxis = (constraintSettings: { mNormalAxis1: JVec3, mNormalAxis2: JVec3 }, params: { normalAxis1: float3, normalAxis2: float3 }) => {
       constraintSettings.mNormalAxis1.Set(...params.normalAxis1);
       constraintSettings.mNormalAxis2.Set(...params.normalAxis2);
     }
@@ -263,23 +264,23 @@ export class JoltConstraintManager {
       }
     }
 
-    const setPoints = (constraintSettings: { mPoint1: Jolt.Vec3, mPoint2: Jolt.Vec3 }) => {
+    const setPoints = (constraintSettings: { mPoint1: JVec3, mPoint2: JVec3 }) => {
       constraintSettings.mPoint1.Set(p1.x, p1.y, p1.z);
       constraintSettings.mPoint2.Set(p2.x, p2.y, p2.z);
     }
-    const setHindgeAxis = (constraintSettings: { mHingeAxis1: Jolt.Vec3, mHingeAxis2: Jolt.Vec3 }) => {
+    const setHindgeAxis = (constraintSettings: { mHingeAxis1: JVec3, mHingeAxis2: JVec3 }) => {
       const h1 = jointData.mainAxis!;
       const h2 = jointData.connectedAxis!;
       constraintSettings.mHingeAxis1.Set(h1.x, h1.y, h1.z);
       constraintSettings.mHingeAxis2.Set(h2.x, h2.y, h2.z);
     }
-    const setSliderAxis = (constraintSettings: { mSliderAxis1: Jolt.Vec3, mSliderAxis2: Jolt.Vec3 }) => {
+    const setSliderAxis = (constraintSettings: { mSliderAxis1: JVec3, mSliderAxis2: JVec3 }) => {
       const h1 = jointData.mainAxis!;
       const h2 = jointData.connectedAxis!;
       constraintSettings.mSliderAxis1.Set(h1.x, h1.y, h1.z);
       constraintSettings.mSliderAxis2.Set(h2.x, h2.y, h2.z);
     }
-    const setNormalAxis = (constraintSettings: { mNormalAxis1: Jolt.Vec3, mNormalAxis2: Jolt.Vec3 }) => {
+    const setNormalAxis = (constraintSettings: { mNormalAxis1: JVec3, mNormalAxis2: JVec3 }) => {
       if (options['normal-axis-1'] && options['normal-axis-2']) {
         const n1: Vector3 = options['normal-axis-1'];
         const n2: Vector3 = options['normal-axis-2'];
@@ -287,7 +288,7 @@ export class JoltConstraintManager {
         constraintSettings.mNormalAxis2.Set(n2.x, n2.y, n2.z);
       }
     }
-    const setAxisXY = (constraintSettings: { mAxisX1: Jolt.Vec3, mAxisX2: Jolt.Vec3, mAxisY1: Jolt.Vec3, mAxisY2: Jolt.Vec3, }) => {
+    const setAxisXY = (constraintSettings: { mAxisX1: JVec3, mAxisX2: JVec3, mAxisY1: JVec3, mAxisY2: JVec3, }) => {
       if (options['axis-x-1'] && options['axis-x-2'] && options['axis-y-1'] && options['axis-y-2']) {
         const x1: Vector3 = options['axis-x-1'];
         const x2: Vector3 = options['axis-x-2'];

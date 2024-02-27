@@ -1,7 +1,7 @@
 
 import { PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResult';
 import Jolt from './jolt-import';
-import { SetJoltVec3, GetJoltVec3, LAYER_MOVING } from './jolt-util';
+import { SetJoltVec3, GetJoltVec3, LAYER_MOVING, SetJoltRVec3 } from './jolt-util';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { JoltJSPlugin } from '.';
 
@@ -49,7 +49,7 @@ export class RayCastUtility {
 
   raycastToRef(from: Vector3, to: Vector3, result: PhysicsRaycastResult): void {
     const delta = to.subtract(from);
-    SetJoltVec3(from, this._ray.mOrigin);
+    SetJoltRVec3(from, this._ray.mOrigin);
     SetJoltVec3(delta, this._ray.mDirection);
     this._ray_collector.Reset();
     this.plugin.world.GetNarrowPhaseQuery().CastRay(
