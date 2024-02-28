@@ -540,7 +540,7 @@ export class WheeledVehicleController {
       input.onPrePhysicsUpdate(bodyInterface, controller, delta);
     };
     joltPlugin.registerPerPhysicsStepCallback(this._physicsStepListener);
-    impostor._pluginData.toDispose.push(wheelRight, wheelUp, ... toDispose);
+    impostor._pluginData.toDispose.push(wheelRight, wheelUp, ...toDispose);
   }
 }
 export class MotorcycleController {
@@ -572,7 +572,7 @@ export class MotorcycleController {
       input.onPrePhysicsUpdate(bodyInterface, controller, delta);
     };
     joltPlugin.registerPerPhysicsStepCallback(this._physicsStepListener);
-    impostor._pluginData.toDispose.push(wheelRight, wheelUp, ... toDispose);
+    impostor._pluginData.toDispose.push(wheelRight, wheelUp, ...toDispose);
   }
 }
 export class TreadedVehicleController {

@@ -1,5 +1,8 @@
-import { Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { SceneCallback, createBox, createCapsule, createConvexHull, createCylinder, createMeshFloor, createSphere, getRandomQuat } from './example';
+import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { MeshBuilder, SceneCallback, createBox, createCapsule, createConvexHull, createCylinder, createMeshFloor, createSphere, getMaterial, getRandomQuat } from './example';
+import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { JoltPhysicsImpostor } from '@phoenixillusion/babylonjs-jolt-plugin';
 
 export default (): SceneCallback => {
 
@@ -12,7 +15,7 @@ export default (): SceneCallback => {
 
   let meshesCreated = 0;
   const generateObject = () => {
-    let numTypes = 6;
+    let numTypes = 7;
     let objectType = Math.ceil(Math.random() * numTypes);
 
     let colors = ['#ff0000', '#d9b1a3', '#4d4139', '#ccad33', '#f2ff40', '#00ff00', '#165943', '#567371', '#80d5ff', '#69778c',
@@ -72,6 +75,32 @@ export default (): SceneCallback => {
           points.push(new Vector3(-0.5 + 2 * Math.random(), -0.5 + 2 * Math.random(), -0.5 + 2 * Math.random()));
 
         createConvexHull(pos, points, physicSetting, colors[objectType - 1]);
+        meshesCreated++;
+        break;
+      }
+      case 7: {
+        const staticShape = new Mesh('static-shape');
+        let l = 1.0 + Math.random();
+        let r2 = 0.5 + 0.5 * Math.random();
+        let r1 = 0.5 * r2;
+        const color = colors[objectType - 1];
+        const sphere1 = MeshBuilder.CreateSphere('sphere', { diameter: r2, segments: 32 });
+        sphere1.position.set(-l, 0, 0);
+        sphere1.parent = staticShape;
+        sphere1.physicsImpostor = new JoltPhysicsImpostor(sphere1, PhysicsImpostor.SphereImpostor, physicSetting);
+        const sphere2 = MeshBuilder.CreateSphere('sphere', { diameter: r2, segments: 32 });
+        sphere2.position.set(l, 0, 0);
+        sphere2.parent = staticShape;
+        sphere2.physicsImpostor = new JoltPhysicsImpostor(sphere2, PhysicsImpostor.SphereImpostor, physicSetting);
+        const cylinder = MeshBuilder.CreateCylinder('cylinder', { diameter: r1, height: l * 2, tessellation: 16 });
+        cylinder.position.set(0, 0, 0);
+        cylinder.rotationQuaternion = Quaternion.RotationAxis(new Vector3(0, 0, 1), 0.5 * Math.PI);
+        cylinder.parent = staticShape;
+        cylinder.material = sphere1.material = sphere2.material = getMaterial(color);
+        cylinder.physicsImpostor = new JoltPhysicsImpostor(cylinder, PhysicsImpostor.CylinderImpostor, physicSetting);
+        new JoltPhysicsImpostor(staticShape, PhysicsImpostor.NoImpostor, physicSetting);
+        staticShape.position.copyFrom(pos);
+        staticShape.rotationQuaternion = rot.clone();
         meshesCreated++;
         break;
       }

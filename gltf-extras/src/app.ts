@@ -12,7 +12,7 @@ export type SceneFunction = (scene: Scene) => Promise<SceneCallback>;
 
 export class App {
     private canvas: HTMLCanvasElement;
-    public static ui: AdvancedDynamicTexture; 
+    public static ui: AdvancedDynamicTexture;
 
     constructor(private createScene: SceneFunction) {
         // create the canvas html element and attach it to the webpage

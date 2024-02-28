@@ -82,13 +82,13 @@ export class JoystickControl {
     this.joystickContainer.top = screenSize.y - this.joystickContainer.heightInPixels;
     this.ui.addControl(this.joystickContainer);
 
-    const button = this.jumpButton = Button.CreateSimpleButton('jump','jump');
+    const button = this.jumpButton = Button.CreateSimpleButton('jump', 'jump');
     button.color = "white";
     button.background = "green";
-    button.leftInPixels = -screenSize.x/2 + screenSize.x/8 + 10;
+    button.leftInPixels = -screenSize.x / 2 + screenSize.x / 8 + 10;
     button.widthInPixels = screenSize.x / 4;
     button.heightInPixels = 80;
-    button.topInPixels = screenSize.y /2 - 50;
+    button.topInPixels = screenSize.y / 2 - 50;
     button.onPointerDownObservable.add(() => {
       this.useJumpButton = true;
       this.jumpState = true;

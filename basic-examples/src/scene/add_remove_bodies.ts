@@ -10,13 +10,13 @@ export default (): SceneCallback => {
   createFloor();
   const maxBoxes = 200;
 
-  const boxes: {box: Mesh, physics: PhysicsImpostor }[] = []
+  const boxes: { box: Mesh, physics: PhysicsImpostor }[] = []
   function generateObject() {
     // Position and rotate body
     const axis = new Vector3(0.001 + Math.random(), Math.random(), Math.random());
-    const rot = Quaternion.RotationAxis(axis.normalize(),2 * Math.PI * Math.random());
+    const rot = Quaternion.RotationAxis(axis.normalize(), 2 * Math.PI * Math.random());
     const box = createBox(new Vector3(-(Math.random() - 0.5) * 25, 15, (Math.random() - 0.5) * 25),
-    rot, new Vector3(0.5, 0.5, 0.5), { mass: 10, restitution: 0.5, friction: 1 }, '#ff0000');
+      rot, new Vector3(0.5, 0.5, 0.5), { mass: 10, restitution: 0.5, friction: 1 }, '#ff0000');
 
     boxes.push(box);
     while (boxes.length > maxBoxes) {

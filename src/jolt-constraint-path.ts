@@ -13,7 +13,7 @@ export class JoltConstraintPath {
   private path3d: Path3D;
   private ptr: Jolt.PathConstraintPathJS;
   constructor(points: Vector3[], normal: Vector3) {
-    
+
 
     this.looping = (Vector3.Distance(points[0], points[points.length - 1]) == 0);
     this.path3d = new Path3D(points, normal, false, true);
@@ -53,13 +53,13 @@ export class JoltConstraintPath {
     const outPathNormal = Jolt.wrapPointer(outPathNormalPtr as any, Jolt.Vec3);
     const outPathBinormal = Jolt.wrapPointer(outPathBinormalPtr as any, Jolt.Vec3);
 
-    const position = this.path3d.getPointAt(inFraction/ this.length);
+    const position = this.path3d.getPointAt(inFraction / this.length);
     SetJoltVec3(position, outPathPosition);
-    const tangent = this.path3d.getTangentAt(inFraction/ this.length, true);
+    const tangent = this.path3d.getTangentAt(inFraction / this.length, true);
     SetJoltVec3(tangent, outPathTangent);
-    const normal = this.path3d.getNormalAt(inFraction/ this.length, true);
+    const normal = this.path3d.getNormalAt(inFraction / this.length, true);
     SetJoltVec3(normal, outPathNormal);
-    const binormal = this.path3d.getBinormalAt(inFraction/ this.length, true);
+    const binormal = this.path3d.getBinormalAt(inFraction / this.length, true);
     SetJoltVec3(binormal, outPathBinormal);
   }
 }

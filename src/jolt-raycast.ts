@@ -64,7 +64,7 @@ export class RayCastUtility {
       const body: Jolt.Body = this.plugin.GetImpostorForBodyId(hit.mBodyID.GetIndexAndSequenceNumber()).physicsBody;
       result.body = body as any;
       const hitPoint = this._ray.GetPointOnRay(hit.mFraction);
-      const hitNormal =  body.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, hitPoint);
+      const hitNormal = body.GetWorldSpaceSurfaceNormal(hit.mSubShapeID2, hitPoint);
       const point = GetJoltVec3(hitPoint, this.point)
       const normal = GetJoltVec3(hitNormal, this.normal)
       result.setHitData(point, normal)

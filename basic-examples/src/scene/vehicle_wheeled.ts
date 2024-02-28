@@ -61,7 +61,7 @@ export default (): SceneCallback => {
   followPoint.rotate(new Vector3(0, 1, 0), Math.PI);
   followPoint.parent = car.box;
 
-  if(camera)
+  if (camera)
     camera.lockedTarget = followPoint;
 
   const KEYCODE = {

@@ -23,7 +23,7 @@ export const MeshBuilder = {
 }
 
 interface PhysicsOptions {
-  mass: number, friction: number, restitution: number
+  mass: number, friction: number, restitution: number, frozen?: boolean
 }
 
 export type SceneCallback = (void | ((time: number, delta: number) => void))

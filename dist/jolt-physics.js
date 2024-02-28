@@ -8,13 +8,17 @@ import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Logger } from '@babylonjs/core/Misc/logger';
 import { VertexBuffer } from '@babylonjs/core/Buffers/buffer';
 import { MotorEnabledJoint, PhysicsJoint } from '@babylonjs/core/Physics/v1/physicsJoint';
+import '@babylonjs/core/Physics/physicsEngineComponent';
 import { JoltConstraintManager } from './jolt-constraints';
+import { Mesh } from '@babylonjs/core/Meshes/mesh';
 export { setJoltModule } from './jolt-import';
 export var Jolt_Type;
 (function (Jolt_Type) {
     Jolt_Type[Jolt_Type["CHARACTER"] = 200] = "CHARACTER";
     Jolt_Type[Jolt_Type["VIRTUAL_CHARACTER"] = 201] = "VIRTUAL_CHARACTER";
 })(Jolt_Type || (Jolt_Type = {}));
+class JoltImpostor extends PhysicsImpostor {
+}
 export class JoltJSPlugin {
     static async loadPlugin(_useDeltaForWorldStep = true, physicsSettings, importSettings) {
         await loadJolt(importSettings);
@@ -103,7 +107,7 @@ export class JoltJSPlugin {
         const characterVirtuals = [];
         for (const impostor of impostors) {
             // Update physics world objects to match babylon world
-            if (!impostor.soft) {
+            if (!impostor.soft && !impostor._pluginData.frozen) {
                 impostor.beforeStep();
             }
             if (impostor.physicsBody instanceof Jolt.Body) {
@@ -121,7 +125,7 @@ export class JoltJSPlugin {
         });
         for (const impostor of impostors) {
             // Update physics world objects to match babylon world
-            if (!impostor.soft) {
+            if (!impostor.soft && !impostor._pluginData.frozen) {
                 impostor.afterStep();
             }
         }
@@ -229,6 +233,7 @@ export class JoltJSPlugin {
             impostor._pluginData.mass = mass;
             impostor._pluginData.friction = friction;
             impostor._pluginData.restitution = restitution;
+            impostor._pluginData.frozen = !!impostor.getParam('frozen');
             impostor._pluginData.plugin = this;
             settings.mRestitution = restitution;
             settings.mFriction = friction;
@@ -307,6 +312,17 @@ export class JoltJSPlugin {
         };
     }
     _createShape(impostor) {
+        const settings = this._createShapeSettings(impostor);
+        const shapeResult = settings.Create();
+        if (shapeResult.HasError()) {
+            throw new Error('Creating Jolt Shape : Impostor Type -' + impostor.type + ' : Error - ' + shapeResult.GetError().c_str());
+        }
+        const shape = shapeResult.Get();
+        shape.AddRef();
+        Jolt.destroy(settings);
+        return shape;
+    }
+    _createShapeSettings(impostor) {
         const impostorExtents = impostor.getParam('extents') || impostor.getObjectExtents();
         const checkWithEpsilon = (value) => {
             return Math.max(value, Epsilon);
@@ -363,6 +379,20 @@ export class JoltJSPlugin {
                     Jolt.destroy(triangles);
                 }
                 break;
+            case PhysicsImpostor.NoImpostor:
+                {
+                    const staticSetting = returnValue = new Jolt.StaticCompoundShapeSettings();
+                    const meshes = impostor.object.getChildMeshes && impostor.object.getChildMeshes()
+                        .map((mesh) => { return (mesh instanceof Mesh) ? mesh.physicsImpostor : null; }).filter((impostor) => impostor != null);
+                    meshes && meshes.forEach(impostor => {
+                        const shape = this._createShapeSettings(impostor);
+                        impostor.object.computeWorldMatrix(true);
+                        SetJoltVec3(impostor.object.position, this._tempVec3A);
+                        SetJoltQuat(impostor.object.rotationQuaternion, this._tempQuaternion);
+                        staticSetting.AddShape(this._tempVec3A, this._tempQuaternion, shape, 0);
+                    });
+                }
+                break;
             case PhysicsImpostor.ConvexHullImpostor:
                 const vertexData = this._getMeshVertexData(impostor);
                 const hasIndex = vertexData.indices.length > 0;
@@ -394,14 +424,7 @@ export class JoltJSPlugin {
             Jolt.destroy(offset);
             returnValue = newVal;
         }
-        const shapeResult = returnValue.Create();
-        if (shapeResult.HasError()) {
-            throw new Error('Creating Jolt Shape : Impostor Type -' + impostor.type + ' : Error - ' + shapeResult.GetError().c_str());
-        }
-        const shape = shapeResult.Get();
-        shape.AddRef();
-        Jolt.destroy(returnValue);
-        return shape;
+        return returnValue;
     }
     generateJoint(impostorJoint) {
         const mainBody = impostorJoint.mainImpostor.physicsBody;

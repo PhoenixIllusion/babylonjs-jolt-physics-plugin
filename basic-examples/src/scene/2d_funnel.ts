@@ -1,16 +1,21 @@
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { createBox, createFloor, createSphere } from './example';
+import { MeshBuilder, createBox, createFloor, getMaterial } from './example';
 import { Quaternion } from '@babylonjs/core/Maths/math.vector';
+import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import { JoltPhysicsImpostor } from '@phoenixillusion/babylonjs-jolt-plugin';
 
 export default (): (void | ((time: number, delta: number) => void)) => {
 
-    createFloor();
+    createFloor({ mass: 0, restitution: 0, friction: 0, frozen: true });
 
-    createBox(new Vector3(-12, 8, -5), Quaternion.RotationAxis(new Vector3(0, 0, 1), 0.2 * Math.PI), new Vector3(0.1, 10, 1));
-    createBox(new Vector3(12, 8, -5), Quaternion.RotationAxis(new Vector3(0, 0, 1), -0.2 * Math.PI), new Vector3(0.1, 10, 1));
+    createBox(new Vector3(-12, 8, -5), Quaternion.RotationAxis(new Vector3(0, 0, 1), 0.2 * Math.PI), new Vector3(0.1, 10, 1), { mass: 0, restitution: 0, friction: 0, frozen: true });
+    createBox(new Vector3(12, 8, -5), Quaternion.RotationAxis(new Vector3(0, 0, 1), -0.2 * Math.PI), new Vector3(0.1, 10, 1), { mass: 0, restitution: 0, friction: 0, frozen: true });
 
     for (let x = 0; x < 20; ++x)
         for (let y = 0; y < 10; ++y) {
-            createSphere(new Vector3(-10 + x, 10 + y, -5), 1, { mass: 1, friction: 0, restitution: 0 }, '#ff0000');
+            const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 1, segments: 32 });
+            sphere.position.set(-10 + x, 10 + y, -5);
+            sphere.material = getMaterial('#ff0000');
+            new JoltPhysicsImpostor(sphere, PhysicsImpostor.SphereImpostor, { mass: 1, friction: 0, restitution: 0, disableBidirectionalTransformation: true });
         }
 }

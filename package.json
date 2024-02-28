@@ -6,7 +6,7 @@
   "scripts": {
     "build": "mkdir -p dist && cp src/jolt-import.js ./dist/. && tsc",
     "git-pages": "sh build-git-pages.sh",
-    "clean-examples": "rm -r basic-examples/dist basic-examples/node_modules trenchbroom-examples/dist trenchbroom-examples/node_modules" 
+    "clean-examples": "rm -r basic-examples/dist basic-examples/node_modules trenchbroom-examples/dist trenchbroom-examples/node_modules"
   },
   "devDependencies": {
     "@babylonjs/core": "6.40.0",
@@ -34,27 +34,6 @@
   },
   "files": [
     "README.md",
-    "./dist/index.d.ts",
-    "./dist/index.js",
-    "./dist/jolt-contact.d.ts",
-    "./dist/jolt-contact.js",
-    "./dist/jolt-constraint.d.ts",
-    "./dist/jolt-constraint.js",
-    "./dist/jolt-constraint-path.d.ts",
-    "./dist/jolt-constraint-path.js",
-    "./dist/jolt-import.d.ts",
-    "./dist/jolt-import.js",
-    "./dist/jolt-impostor.d.ts",
-    "./dist/jolt-impostor.js",
-    "./dist/jolt-physics-character-virtual.d.ts",
-    "./dist/jolt-physics-character-virtual.js",
-    "./dist/jolt-physics-vehicle-controller.d.ts",
-    "./dist/jolt-physics-vehicle-controller.js",
-    "./dist/jolt-physics.d.ts",
-    "./dist/jolt-physics.js",
-    "./dist/jolt-raycast.d.ts",
-    "./dist/jolt-raycast.js",
-    "./dist/jolt-util.d.ts",
-    "./dist/jolt-util.js"
+    "./dist/*"
   ]
 }

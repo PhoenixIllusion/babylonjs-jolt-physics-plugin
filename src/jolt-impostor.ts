@@ -1,8 +1,137 @@
 
-import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import { IPhysicsEnabledObject, PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { OnContactCallback, OnContactValidateCallback, JoltCollisionKey, JoltContactSetting, OnContactValidateResponse, JoltCollisionCallback, JoltPhysicsCollideCallbacks } from './jolt-contact';
-import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Matrix, Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Logger } from '@babylonjs/core/Misc/logger';
+import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
+import { BoundingInfo } from '@babylonjs/core/Culling/boundingInfo';
+import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
+import { IndicesArray, Nullable } from '@babylonjs/core/types';
+import { Space } from '@babylonjs/core/Maths/math.axis';
+
+
+export class MinimalPhysicsNode extends TransformNode implements IPhysicsEnabledObject {
+  boundingInfo: BoundingInfo;
+
+  constructor(name: string, extents: Vector3, private mesh: AbstractMesh) {
+    super(name);
+
+    const { x, y, z } = extents;
+    this.boundingInfo = new BoundingInfo(new Vector3(-x, -y, -z), new Vector3(x, y, z));
+  }
+
+  getBoundingInfo(): BoundingInfo {
+    return this.boundingInfo;
+  }
+  getVerticesData(kind: string): Nullable<number[] | Float32Array> {
+    return this.mesh.getVerticesData(kind);
+  }
+  getIndices?(): Nullable<IndicesArray> {
+    return this.mesh.getIndices();
+  }
+}
+
+export class ThinPhysicsNode implements IPhysicsEnabledObject {
+  boundingInfo: BoundingInfo;
+
+  public position = new class extends Vector3 {
+    constructor(public thin: ThinPhysicsNode) { super(); }
+    copyFrom(vec: Vector3): this {
+      super.copyFrom(vec);
+      this.thin._recompose();
+      return this;
+    }
+    set(x: number, y: number, z: number): this {
+      super.set(x, y, z);
+      this.thin._recompose();
+      return this;
+    }
+  }(this);
+  public rotationQuaternion = new class extends Quaternion {
+    constructor(public thin: ThinPhysicsNode) { super(); }
+    copyFrom(quat: Quaternion): this {
+      super.copyFrom(quat);
+      this.thin._recompose();
+      return this;
+    }
+    set(x: number, y: number, z: number, w: number): this {
+      super.set(x, y, z, w);
+      this.thin._recompose();
+      return this;
+    }
+  }(this);
+  public scaling = new class extends Vector3 {
+    constructor(public thin: ThinPhysicsNode) { super(); }
+    set(x: number, y: number, z: number): this {
+      super.set(x, y, z);
+      this.thin._recompose();
+      return this;
+    }
+    copyFrom(vec: Vector3): this {
+      super.copyFrom(vec);
+      this.thin._recompose();
+      return this;
+    }
+  }(this);
+  private matrix: Matrix;
+  rotation?: Vector3 | undefined;
+  parent?: any;
+
+  constructor(extents: Vector3, private index: number, private mesh: AbstractMesh & {
+    thinInstanceCount: number,
+    thinInstanceGetWorldMatrices(): Matrix[],
+    thinInstanceSetMatrixAt(index: number, matrix: Matrix, refresh: boolean): void
+  }) {
+    const { x, y, z } = extents;
+    this.boundingInfo = new BoundingInfo(new Vector3(-x, -y, -z), new Vector3(x, y, z));
+    this.matrix = mesh.thinInstanceGetWorldMatrices()[index];
+    this.matrix.decompose(this.scaling, this.rotationQuaternion, this.position);
+  }
+
+  getScene() {
+    return this.mesh.getScene();
+  }
+
+  protected _recompose() {
+    Matrix.ComposeToRef(this.scaling, this.rotationQuaternion, this.position, this.matrix);
+    this.mesh.thinInstanceSetMatrixAt(this.index, this.matrix, this.index == this.mesh.thinInstanceCount - 1);
+  }
+
+  computeWorldMatrix(_force: boolean): Matrix {
+    return this.matrix;
+  }
+
+  getAbsolutePosition(): Vector3 {
+    return this.position;
+  }
+  getAbsolutePivotPoint(): Vector3 {
+    return Vector3.Zero();
+  }
+  rotate(_axis: Vector3, _amount: number, _space?: Space | undefined): TransformNode {
+    return {} as TransformNode;
+  }
+  translate(_axis: Vector3, _distance: number, _space?: Space | undefined): TransformNode {
+    return {} as TransformNode;
+  }
+  setAbsolutePosition(_absolutePosition: Vector3): TransformNode {
+    return {} as TransformNode;
+  }
+  getClassName(): string {
+    return 'ThinPhysicsNode';
+  }
+
+
+  getBoundingInfo(): BoundingInfo {
+    return this.boundingInfo;
+  }
+  getVerticesData(kind: string): Nullable<number[] | Float32Array> {
+    return this.mesh.getVerticesData(kind);
+  }
+  getIndices?(): Nullable<IndicesArray> {
+    return this.mesh.getIndices();
+  }
+}
+
 
 export class JoltPhysicsImpostor extends PhysicsImpostor {
 

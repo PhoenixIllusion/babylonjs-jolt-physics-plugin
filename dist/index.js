@@ -6,4 +6,5 @@ export * from './jolt-impostor';
 export * from './jolt-contact';
 import Jolt from './jolt-import';
 export * from './jolt-import';
+export { JoltFixedJoint, JoltPointJoint, JoltHingeJoint, JoltDistanceJoint, MotorMode } from './jolt-constraints';
 export { Jolt };

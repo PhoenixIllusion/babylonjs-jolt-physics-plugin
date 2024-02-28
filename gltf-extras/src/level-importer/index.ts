@@ -17,8 +17,8 @@ import { LinesMesh } from "@babylonjs/core/Meshes/linesMesh";
 import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
-import Jolt from "../../../dist/jolt-import";
-import { GetJoltVec3 } from "../../../dist";
+import Jolt from '@phoenixillusion/babylonjs-jolt-plugin/import';
+import { GetJoltVec3 } from '@phoenixillusion/babylonjs-jolt-plugin/util';
 import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
 
@@ -57,12 +57,12 @@ interface GltfJoltExtras {
   jolt?: {
     id: number,
     collision?: JoltCollisionExtras
-    constraints?: {type: string, body1: number}[]
+    constraints?: { type: string, body1: number }[]
   }
 }
 
 function getImpostorShape(shape: JoltShapes): number {
-  switch(shape) {
+  switch (shape) {
     case 'Sphere': return PhysicsImpostor.SphereImpostor;
     case 'Box': return PhysicsImpostor.BoxImpostor;
     case 'Capsule': return PhysicsImpostor.CapsuleImpostor;
@@ -75,26 +75,26 @@ function getImpostorShape(shape: JoltShapes): number {
 }
 
 function createMeshForShape(shape: Jolt.Shape) {
-	// Get triangle data
-	let scale = new Jolt.Vec3(1, 1, 1);
-	let triContext = new Jolt.ShapeGetTriangles(shape, Jolt.AABox.prototype.sBiggest(), shape.GetCenterOfMass(), Jolt.Quat.prototype.sIdentity(), scale);
-	Jolt.destroy(scale);
-	// Get a view on the triangle data (does not make a copy)
-	let vertices = new Float32Array(Jolt.HEAPF32.buffer, triContext.GetVerticesData(), triContext.GetVerticesSize() / Float32Array.BYTES_PER_ELEMENT);
-	Jolt.destroy(triContext);
+  // Get triangle data
+  let scale = new Jolt.Vec3(1, 1, 1);
+  let triContext = new Jolt.ShapeGetTriangles(shape, Jolt.AABox.prototype.sBiggest(), shape.GetCenterOfMass(), Jolt.Quat.prototype.sIdentity(), scale);
+  Jolt.destroy(scale);
+  // Get a view on the triangle data (does not make a copy)
+  let vertices = new Float32Array(Jolt.HEAPF32.buffer, triContext.GetVerticesData(), triContext.GetVerticesSize() / Float32Array.BYTES_PER_ELEMENT);
+  Jolt.destroy(triContext);
 
   const indices: number[] = [];
   for (let i = 0; i < vertices.length / 3; i++) {
     indices.push(i);
   }
-	// Create a three mesh
+  // Create a three mesh
   var vertexData = new VertexData();
   vertexData.positions = vertices;
   vertexData.indices = indices;
 
   const mesh = new Mesh('debug-mesh');
   vertexData.applyToMesh(mesh);
-	return mesh;
+  return mesh;
 }
 
 const DEBUG = false;
@@ -114,55 +114,55 @@ class MinimalPhysicsNode extends TransformNode implements IPhysicsEnabledObject 
   private joltBoxMin: Vector3 = new Vector3();
   private joltBoxMax: Vector3 = new Vector3();
 
-  constructor(name: string, extents: Float3,  private mesh: AbstractMesh ) {
+  constructor(name: string, extents: Float3, private mesh: AbstractMesh) {
     super(name);
 
-    const [x,y,z] = extents;
-    this.boundingInfo = new BoundingInfo(new Vector3(-x,-y,-z), new Vector3(x,y,z));
+    const [x, y, z] = extents;
+    this.boundingInfo = new BoundingInfo(new Vector3(-x, -y, -z), new Vector3(x, y, z));
 
-    if(DEBUG)
-    this.registerAfterWorldMatrixUpdate(() => {
-      if(this.physicsImpostor) {
+    if (DEBUG)
+      this.registerAfterWorldMatrixUpdate(() => {
+        if (this.physicsImpostor) {
 
-        const debugBoxBabylonMat = getMaterial('#ff0000');
-        debugBoxBabylonMat.wireframe = true;
-        const debugBoxJoltMat = getMaterial('#ff00ff');
-        debugBoxJoltMat.wireframe = true;
+          const debugBoxBabylonMat = getMaterial('#ff0000');
+          debugBoxBabylonMat.wireframe = true;
+          const debugBoxJoltMat = getMaterial('#ff00ff');
+          debugBoxJoltMat.wireframe = true;
 
-        const jBody: Jolt.Body = this.physicsImpostor.physicsBody;
-        const jWorldBounds = jBody.GetWorldSpaceBounds();
-        GetJoltVec3(jWorldBounds.mMin, this.joltBoxMin);
-        GetJoltVec3(jWorldBounds.mMax, this.joltBoxMax);
-        this.joltBBox.reConstruct(this.joltBoxMin, this.joltBoxMax);
+          const jBody: Jolt.Body = this.physicsImpostor.physicsBody;
+          const jWorldBounds = jBody.GetWorldSpaceBounds();
+          GetJoltVec3(jWorldBounds.mMin, this.joltBoxMin);
+          GetJoltVec3(jWorldBounds.mMax, this.joltBoxMax);
+          this.joltBBox.reConstruct(this.joltBoxMin, this.joltBoxMax);
 
-        if(!this.debugBoxBabylon) {
-          /*const bWorldBounds = this.getBoundingInfo().boundingBox;
-          const bSize = bWorldBounds.extendSizeWorld;
-          this.debugBoxBabylon = MeshBuilder.CreateBox(`${name}: Debug Box`, { width: bSize.x*2, height: bSize.y*2, depth: bSize.z*2});
-          this.debugBoxBabylon.material = debugBoxBabylonMat;*/
+          if (!this.debugBoxBabylon) {
+            /*const bWorldBounds = this.getBoundingInfo().boundingBox;
+            const bSize = bWorldBounds.extendSizeWorld;
+            this.debugBoxBabylon = MeshBuilder.CreateBox(`${name}: Debug Box`, { width: bSize.x*2, height: bSize.y*2, depth: bSize.z*2});
+            this.debugBoxBabylon.material = debugBoxBabylonMat;*/
+          }
+
+          if (!this.debugBoxJolt) {
+            this.lineRef = MeshBuilder.CreateLines("lines", { points: this.positionLine, updatable: true });
+            const jSize = this.joltBBox.extendSizeWorld;
+            this.debugBoxJolt = MeshBuilder.CreateBox(`${name}: Debug Box`, { width: jSize.x * 2, height: jSize.y * 2, depth: jSize.z * 2 });;
+            this.debugBoxJolt.material = debugBoxJoltMat;
+
+            const mesh = createMeshForShape(jBody.GetShape());
+            mesh.parent = this;
+            mesh.material = getMaterial('#00ff00')
+            mesh.material.wireframe = true;
+          }
+          this.posBab.copyFrom(this.absolutePosition);
+          this.debugBoxBabylon && this.debugBoxBabylon.position.copyFrom(this.absolutePosition);
+          this.posJolt.copyFrom(this.joltBBox.centerWorld);
+          this.debugBoxJolt && this.debugBoxJolt.position.copyFrom(this.joltBBox.centerWorld);
+
+          if (this.lineRef) {
+            MeshBuilder.CreateLines("lines", { points: this.positionLine, instance: this.lineRef });
+          }
         }
-        
-        if(!this.debugBoxJolt) {
-          this.lineRef = MeshBuilder.CreateLines("lines", { points: this.positionLine, updatable: true });
-          const jSize = this.joltBBox.extendSizeWorld;
-          this.debugBoxJolt = MeshBuilder.CreateBox(`${name}: Debug Box`, { width: jSize.x*2, height: jSize.y*2, depth: jSize.z*2});;
-          this.debugBoxJolt.material = debugBoxJoltMat;
-
-          const mesh = createMeshForShape(jBody.GetShape());
-          mesh.parent = this;
-          mesh.material = getMaterial('#00ff00')
-          mesh.material.wireframe = true;
-        }
-        this.posBab.copyFrom(this.absolutePosition);
-        this.debugBoxBabylon && this.debugBoxBabylon.position.copyFrom(this.absolutePosition);
-        this.posJolt.copyFrom(this.joltBBox.centerWorld);
-        this.debugBoxJolt && this.debugBoxJolt.position.copyFrom(this.joltBBox.centerWorld);
-        
-        if(this.lineRef) {
-          MeshBuilder.CreateLines("lines", { points: this.positionLine, instance: this.lineRef });
-        }
-      }
-    })
+      })
   }
 
   getBoundingInfo(): BoundingInfo {
@@ -182,67 +182,67 @@ export default class {
     const gltf = await SceneLoader.AppendAsync("levels/", file + ".glb");
     const nodeLookup: Record<number, AbstractMesh> = {};
     gltf.meshes.forEach(node => {
-        if(node.metadata && node.metadata.gltf && node.metadata.gltf.extras) {
-          const extras = node.metadata.gltf.extras as GltfJoltExtras;
-          if(extras.jolt && extras.jolt.collision) {
-            nodeLookup[extras.jolt.id] = node;
-            const data = extras.jolt.collision;
-            
-            const [ex,ey,ez] = data.localBounds.extents;
-            const [sx,sy,sz] = data.worldScale;
-            node.computeWorldMatrix(true);
-            const transformParent = new MinimalPhysicsNode(node.name+": min", [ex*sx,ey*sy,ez*sz], node);
-            transformParent.position.set(... data.worldPosition);
-            transformParent.rotationQuaternion = new Quaternion();
-            transformParent.rotationQuaternion.set(... data.worldRotation);
-            
-            if(data.motionType == 'Dynamic' || data.motionType == 'Kinematic') {
-              node.parent = transformParent;
-              node.scaling.set(... data.worldScale);
-              node.position.set(0,0,0);
-              node.rotationQuaternion = new Quaternion();
-              if(DEBUG) {
-                node.material = getMaterial('#999999');
-                node.visibility = 0.25
-              }
+      if (node.metadata && node.metadata.gltf && node.metadata.gltf.extras) {
+        const extras = node.metadata.gltf.extras as GltfJoltExtras;
+        if (extras.jolt && extras.jolt.collision) {
+          nodeLookup[extras.jolt.id] = node;
+          const data = extras.jolt.collision;
+
+          const [ex, ey, ez] = data.localBounds.extents;
+          const [sx, sy, sz] = data.worldScale;
+          node.computeWorldMatrix(true);
+          const transformParent = new MinimalPhysicsNode(node.name + ": min", [ex * sx, ey * sy, ez * sz], node);
+          transformParent.position.set(...data.worldPosition);
+          transformParent.rotationQuaternion = new Quaternion();
+          transformParent.rotationQuaternion.set(...data.worldRotation);
+
+          if (data.motionType == 'Dynamic' || data.motionType == 'Kinematic') {
+            node.parent = transformParent;
+            node.scaling.set(...data.worldScale);
+            node.position.set(0, 0, 0);
+            node.rotationQuaternion = new Quaternion();
+            if (DEBUG) {
+              node.material = getMaterial('#999999');
+              node.visibility = 0.25
             }
-            transformParent.physicsImpostor = node.physicsImpostor = new PhysicsImpostor(transformParent, getImpostorShape(data.collisionShape),
-              {
-                friction: data.friction,
-                restitution: data.restitution,
-                mass: data.mass,
-                ignoreParent: true,
-                disableBidirectionalTransformation: true 
-              })
           }
+          transformParent.physicsImpostor = node.physicsImpostor = new PhysicsImpostor(transformParent, getImpostorShape(data.collisionShape),
+            {
+              friction: data.friction,
+              restitution: data.restitution,
+              mass: data.mass,
+              ignoreParent: true,
+              disableBidirectionalTransformation: true
+            })
+        }
       }
     });
     gltf.meshes.forEach(node => {
-      if(node.metadata && node.metadata.gltf && node.metadata.gltf.extras) {
+      if (node.metadata && node.metadata.gltf && node.metadata.gltf.extras) {
         const extras = node.metadata.gltf.extras as GltfJoltExtras;
-        if(extras.jolt && extras.jolt.constraints) {
+        if (extras.jolt && extras.jolt.constraints) {
           extras.jolt.constraints.forEach(constraint => {
-            if(!constraint.body1 || !node.physicsImpostor ) {
+            if (!constraint.body1 || !node.physicsImpostor) {
               console.error("Invalid Constraint. Missing impostor.")
               return;
             }
             const body1 = nodeLookup[constraint.body1];
-            if(!body1 || !body1.physicsImpostor) {
+            if (!body1 || !body1.physicsImpostor) {
               console.error("Invalid Constraint. Missing body1 impostor.")
               return;
             }
-            if(constraint.type === 'Path') {
-              const joint = new MotorEnabledJoint(0, {nativeParams: { constraint, 'motor-mode': 'velocity'} });
+            if (constraint.type === 'Path') {
+              const joint = new MotorEnabledJoint(0, { nativeParams: { constraint, 'motor-mode': 'velocity' } });
               body1.physicsImpostor?.addJoint(node.physicsImpostor, joint);
               joint.physicsJoint.SetPositionMotorState(1);
               joint.physicsJoint.SetTargetVelocity(1.5);
             } else {
-              const joint = new PhysicsJoint(0, {nativeParams: { constraint} });
+              const joint = new PhysicsJoint(0, { nativeParams: { constraint } });
               body1.physicsImpostor?.addJoint(node.physicsImpostor, joint);
             }
           });
         }
-    }
-  });
+      }
+    });
   }
 }

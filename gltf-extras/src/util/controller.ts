@@ -67,7 +67,7 @@ export class CameraCombinedInput<T extends Camera> extends BaseCameraPointersInp
       if (this.keyboard.state.ROTATE_UP) this.cameraSetup.changeTiltY(-this.SWIPE_SENSIBILITY * engine.getDeltaTime() / 500);
       if (this.keyboard.state.ROTATE_DOWN) this.cameraSetup.changeTiltY(this.SWIPE_SENSIBILITY * engine.getDeltaTime() / 500);
     }
-    if(this.joystick.useJumpButton) {
+    if (this.joystick.useJumpButton) {
       this.keyboard.state.JUMP = this.joystick.jumpState;
     }
     this._onInputCheck(this.camera, this.joystick.joystickDelta, this.keyboard.state)
@@ -81,7 +81,7 @@ export class CameraCombinedInput<T extends Camera> extends BaseCameraPointersInp
       this.onTouchSwipe(new Vector2(offsetX, offsetY));
     }
   }
-  
+
   onTouchSwipe(touchOffset: Vector2) {
     let directionAdjust = 1;
     if (this.camera.getScene().useRightHandedSystem) directionAdjust *= -1;

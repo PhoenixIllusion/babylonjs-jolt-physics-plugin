@@ -1,6 +1,6 @@
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { SceneCallback, createBox, createFloor, createSphere } from './example';
-import { HingeJoint, MotorEnabledJoint } from '@babylonjs/core/Physics/v1/physicsJoint';
+import { JoltSliderJoint, JoltHingeJoint, MotorMode } from '@phoenixillusion/babylonjs-jolt-plugin';
 
 const createWindmill = () => {
   const box1 = createBox(new Vector3(0, 10, 0), Quaternion.Identity(), new Vector3(0.25, 0.25, 0.25));
@@ -11,22 +11,11 @@ const createWindmill = () => {
     createBox(new Vector3(0, 5, 0), Quaternion.Identity(), new Vector3(0.5, 4, 0.5), { mass: 10, friction: 0, restitution: 0 })
   ]
 
-
-  const jointConfig = {
-    mainPivot: new Vector3(0, 10, 0),
-    connectedPivot: new Vector3(0, 10, 0),
-    mainAxis: new Vector3(0, 0, 1),
-    connectedAxis: new Vector3(0, 0, 1),
-    nativeParams: {
-      'normal-axis-1': new Vector3(0, 0, 1),
-      'normal-axis-2': new Vector3(0, 0, 1),
-      'motor-mode': 'velocity'
-    }
-  };
   wings.forEach(box => {
-    const joint = new HingeJoint(jointConfig);
+    const joint = new JoltHingeJoint(new Vector3(0, 10, 0), new Vector3(0, 0, 1), new Vector3(0, 0, 1));
     box1.physics.addJoint(box.physics, joint);
-    joint.setMotor(5);
+    joint.motor.mode = MotorMode.Velocity;
+    joint.motor.target = 3;
   });
 
 
@@ -39,25 +28,20 @@ const createSlider = () => {
   const box = createBox(new Vector3(-15, 0.75, 0), Quaternion.Identity(), new Vector3(.75, 0.75, .75), { mass: 10, friction: 0, restitution: 0 }, '#003366');
   const target = createBox(new Vector3(-23, 0.5, 0), Quaternion.Identity(), new Vector3(.5, 2, 2), undefined, '#666633');
 
-  const jointConfig = {
-    mainPivot: new Vector3(-21, 0.5, 0),
-    connectedPivot: new Vector3(-16, 0.75, 0),
-    mainAxis: new Vector3(1, 0, 0),
-    connectedAxis: new Vector3(1, 0, 0),
-    nativeParams: {
-      'normal-axis-1': new Vector3(0, 0, 1),
-      'normal-axis-2': new Vector3(0, 0, 1)
-    }
-  };
-  const joint = new MotorEnabledJoint(MotorEnabledJoint.PrismaticJoint, jointConfig);
-  target.physics.addJoint(box.physics, joint);
 
-  const setStart = () => joint.setMotor(0);
-  const setEnd = () => joint.setMotor(10);
+  const point1 = new Vector3(-21, 0.5, 0);
+  const point2 = new Vector3(-16, 0.75, 0);
+  const slideAxis = new Vector3(1, 0, 0);
+  const joint = new JoltSliderJoint(point1, slideAxis, 'World', point2);
+  target.physics.addJoint(box.physics, joint);
+  joint.motor.mode = MotorMode.Position;
+
+  const setStart = () => joint.motor.target = 0;
+  const setEnd = () => joint.motor.target = 10;
 
   let i = 0;
   const interval = setInterval(() => {
-    if(box.box.isDisposed()) {
+    if (box.box.isDisposed()) {
       clearInterval(interval);
       return;
     }

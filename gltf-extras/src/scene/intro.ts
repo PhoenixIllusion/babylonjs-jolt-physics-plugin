@@ -9,7 +9,7 @@ const run: SceneFunction = async (scene: Scene) => {
   LevelImporter.forFile('intro');
 
 
-  scene.getPhysicsEngine()?.setGravity(new Vector3(0,-5.5,0));
+  scene.getPhysicsEngine()?.setGravity(new Vector3(0, -5.5, 0));
   const camera = new FlyCamera('camera1', new Vector3(0, 15, 10), scene);
   camera.setTarget(new Vector3(0, 0, 0));
   camera.attachControl(true);
