@@ -11,14 +11,13 @@ import { MotorEnabledJoint, PhysicsJoint } from '@babylonjs/core/Physics/v1/phys
 import '@babylonjs/core/Physics/physicsEngineComponent';
 import { JoltConstraintManager } from './jolt-constraints';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import './jolt-impostor';
 export { setJoltModule } from './jolt-import';
 export var Jolt_Type;
 (function (Jolt_Type) {
     Jolt_Type[Jolt_Type["CHARACTER"] = 200] = "CHARACTER";
     Jolt_Type[Jolt_Type["VIRTUAL_CHARACTER"] = 201] = "VIRTUAL_CHARACTER";
 })(Jolt_Type || (Jolt_Type = {}));
-class JoltImpostor extends PhysicsImpostor {
-}
 export class JoltJSPlugin {
     static async loadPlugin(_useDeltaForWorldStep = true, physicsSettings, importSettings) {
         await loadJolt(importSettings);
@@ -107,7 +106,7 @@ export class JoltJSPlugin {
         const characterVirtuals = [];
         for (const impostor of impostors) {
             // Update physics world objects to match babylon world
-            if (!impostor.soft && !impostor._pluginData.frozen) {
+            if (!impostor.soft && !impostor.joltPluginData.frozen) {
                 impostor.beforeStep();
             }
             if (impostor.physicsBody instanceof Jolt.Body) {
@@ -125,7 +124,7 @@ export class JoltJSPlugin {
         });
         for (const impostor of impostors) {
             // Update physics world objects to match babylon world
-            if (!impostor.soft && !impostor._pluginData.frozen) {
+            if (!impostor.soft && !impostor.joltPluginData.frozen) {
                 impostor.afterStep();
             }
         }
@@ -187,7 +186,7 @@ export class JoltJSPlugin {
         }
     }
     generatePhysicsBody(impostor) {
-        impostor._pluginData.toDispose = [];
+        impostor.joltPluginData.toDispose = [];
         //parent-child relationship
         if (impostor.parent) {
             if (impostor.physicsBody) {
@@ -199,44 +198,44 @@ export class JoltJSPlugin {
         if (impostor.isBodyInitRequired()) {
             if (impostor instanceof JoltCharacterVirtualImpostor) {
                 const imp = impostor;
-                const shape = this._createShape(imp);
+                const shape = this._createShape(impostor);
                 const char = new JoltCharacterVirtual(imp, shape, { physicsSystem: this.world, jolt: this.jolt }, this);
                 char.init();
                 shape.Release();
                 imp.physicsBody = char.getCharacter();
                 imp._pluginData.controller = char;
-                this._impostorLookup[-performance.now()] = imp;
+                this._impostorLookup[-performance.now()] = impostor;
                 return;
             }
             const shape = this._createShape(impostor);
             const mass = impostor.getParam('mass');
             const friction = impostor.getParam('friction');
             const restitution = impostor.getParam('restitution');
-            const collisionGroup = impostor.getParam('collision-group');
-            const collisionSubGroup = impostor.getParam('collision-sub-group');
-            const collisionFilter = impostor.getParam('collision-filter');
+            const collision = impostor.getParam('collision');
             impostor.object.computeWorldMatrix(true);
             SetJoltVec3(impostor.object.position, this._tempVec3A);
             SetJoltQuat(impostor.object.rotationQuaternion, this._tempQuaternion);
             const isStatic = (mass === 0) ? Jolt.EMotionType_Static : Jolt.EMotionType_Dynamic;
             const layer = (mass === 0) ? LAYER_NON_MOVING : LAYER_MOVING;
             const settings = new Jolt.BodyCreationSettings(shape, this._tempVec3A, this._tempQuaternion, isStatic, layer);
-            if (collisionGroup !== undefined) {
-                settings.mCollisionGroup.SetGroupID(collisionGroup);
+            if (collision) {
+                if (collision.group !== undefined) {
+                    settings.mCollisionGroup.SetGroupID(collision.group);
+                }
+                if (collision.subGroup !== undefined) {
+                    settings.mCollisionGroup.SetSubGroupID(collision.subGroup);
+                }
+                if (collision.filter !== undefined) {
+                    settings.mCollisionGroup.SetGroupFilter(collision.filter);
+                }
             }
-            if (collisionSubGroup !== undefined) {
-                settings.mCollisionGroup.SetSubGroupID(collisionSubGroup);
-            }
-            if (collisionFilter !== undefined) {
-                settings.mCollisionGroup.SetGroupFilter(collisionFilter);
-            }
-            impostor._pluginData.mass = mass;
-            impostor._pluginData.friction = friction;
-            impostor._pluginData.restitution = restitution;
-            impostor._pluginData.frozen = !!impostor.getParam('frozen');
-            impostor._pluginData.plugin = this;
-            settings.mRestitution = restitution;
-            settings.mFriction = friction;
+            impostor.joltPluginData.mass = mass;
+            impostor.joltPluginData.friction = friction;
+            impostor.joltPluginData.restitution = restitution;
+            impostor.joltPluginData.frozen = !!impostor.getParam('frozen');
+            impostor.joltPluginData.plugin = this;
+            settings.mRestitution = restitution || 0;
+            settings.mFriction = friction || 0;
             if (mass !== 0) {
                 settings.mOverrideMassProperties = Jolt.EOverrideMassProperties_CalculateInertia;
                 settings.mMassPropertiesOverride.mMass = mass;
@@ -257,11 +256,11 @@ export class JoltJSPlugin {
     */
     removePhysicsBody(impostor) {
         if (impostor instanceof JoltCharacterVirtualImpostor) {
-            if (impostor._pluginData) {
-                impostor._pluginData.toDispose.forEach((d) => {
+            if (impostor.joltPluginData) {
+                impostor.joltPluginData.toDispose.forEach((d) => {
                     Jolt.destroy(d);
                 });
-                impostor._pluginData.toDispose = [];
+                impostor.joltPluginData.toDispose = [];
             }
             return;
         }
@@ -269,11 +268,11 @@ export class JoltJSPlugin {
             delete this._impostorLookup[impostor.physicsBody.GetID().GetIndexAndSequenceNumber()];
             this._bodyInterface.RemoveBody(impostor.physicsBody.GetID());
             this._bodyInterface.DestroyBody(impostor.physicsBody.GetID());
-            if (impostor._pluginData) {
-                impostor._pluginData.toDispose.forEach((d) => {
+            if (impostor.joltPluginData) {
+                impostor.joltPluginData.toDispose.forEach((d) => {
                     Jolt.destroy(d);
                 });
-                impostor._pluginData.toDispose = [];
+                impostor.joltPluginData.toDispose = [];
             }
         }
     }
@@ -336,10 +335,10 @@ export class JoltJSPlugin {
                 const size = Math.max(checkWithEpsilon(radiusX), checkWithEpsilon(radiusY), checkWithEpsilon(radiusZ)) / 2;
                 returnValue = new Jolt.SphereShapeSettings(size);
                 break;
-            case PhysicsImpostor.CapsuleImpostor:
-                if (impostor.getParam('radiusTop') && impostor.getParam('radiusBottom')) {
-                    const radiusTop = impostor.getParam('radiusTop');
-                    const radiusBottom = impostor.getParam('radiusBottom');
+            case PhysicsImpostor.CapsuleImpostor: {
+                const radiusTop = impostor.getParam('radiusTop');
+                const radiusBottom = impostor.getParam('radiusBottom');
+                if (radiusTop && radiusBottom) {
                     const capRadius = impostorExtents.x / 2;
                     returnValue = new Jolt.TaperedCapsuleShapeSettings(impostorExtents.y / 2 - capRadius, radiusTop, radiusBottom);
                 }
@@ -348,6 +347,7 @@ export class JoltJSPlugin {
                     returnValue = new Jolt.CapsuleShapeSettings(impostorExtents.y / 2 - capRadius, capRadius);
                 }
                 break;
+            }
             case PhysicsImpostor.CylinderImpostor:
                 returnValue = new Jolt.CylinderShapeSettings(0.5 * impostorExtents.y, 0.5 * impostorExtents.x);
                 break;
@@ -393,6 +393,37 @@ export class JoltJSPlugin {
                     });
                 }
                 break;
+            case PhysicsImpostor.HeightmapImpostor:
+                {
+                    const heightMap = impostor.getParam('heightMap');
+                    if (!heightMap) {
+                        throw new Error('Error: HeightMap missing heightMap parameter');
+                    }
+                    const shapeSettings = new Jolt.HeightFieldShapeSettings();
+                    shapeSettings.mScale.Set(impostorExtents.x / heightMap.size, 1, impostorExtents.z / heightMap.size);
+                    const squareSide = Math.sqrt(heightMap.data.length);
+                    if (squareSide != heightMap.size) {
+                        throw new Error('Error: HeightMap must be square. Ensure data-length is square-power');
+                    }
+                    const blockSize = heightMap.blockSize || 2;
+                    if (blockSize < 2 || blockSize > 8) {
+                        throw new Error('Error: HeightMap blockSize must be in the range [2,8]');
+                    }
+                    shapeSettings.mSampleCount = heightMap.size;
+                    shapeSettings.mBlockSize = blockSize;
+                    shapeSettings.mHeightSamples.resize(heightMap.data.length);
+                    let heightSamples = new Float32Array(Jolt.HEAPF32.buffer, Jolt.getPointer(shapeSettings.mHeightSamples.data()), heightMap.data.length);
+                    const { size } = heightMap;
+                    for (let y = 0; y < size; y++) {
+                        for (let x = 0; x < size; x++) {
+                            heightSamples[size - x + y * size] = heightMap.data[x + y * size];
+                        }
+                    }
+                    this._tempVec3A.Set(impostorExtents.x / 2, 0, impostorExtents.z / 2);
+                    this._tempVec3B.Set(0, 1, 0);
+                    returnValue = new Jolt.RotatedTranslatedShapeSettings(this._tempVec3A, Jolt.Quat.prototype.sRotation(this._tempVec3B, Math.PI), shapeSettings);
+                }
+                break;
             case PhysicsImpostor.ConvexHullImpostor:
                 const vertexData = this._getMeshVertexData(impostor);
                 const hasIndex = vertexData.indices.length > 0;
@@ -417,8 +448,8 @@ export class JoltJSPlugin {
         if (returnValue === undefined) {
             throw new Error('Unsupported Shape: Impostor Type' + impostor.type);
         }
-        if (impostor.getParam('offset-center-of-mass')) {
-            const CoM = impostor.getParam('offset-center-of-mass');
+        if (impostor.getParam('centerOffMass')) {
+            const CoM = impostor.getParam('centerOffMass');
             const offset = SetJoltVec3(CoM, new Jolt.Vec3());
             const newVal = new Jolt.OffsetCenterOfMassShapeSettings(offset, returnValue);
             Jolt.destroy(offset);
@@ -523,26 +554,26 @@ export class JoltJSPlugin {
     setBodyMass(impostor, mass) {
         const physicsBody = impostor.physicsBody;
         physicsBody.GetMotionProperties().SetInverseMass(1.0 / mass);
-        impostor._pluginData.mass = mass;
+        impostor.joltPluginData.mass = mass;
     }
     getBodyMass(impostor) {
-        return impostor._pluginData.mass || 0;
+        return impostor.joltPluginData.mass || 0;
     }
     getBodyFriction(impostor) {
-        return impostor._pluginData.friction || 0;
+        return impostor.joltPluginData.friction || 0;
     }
     setBodyFriction(impostor, friction) {
         const physicsBody = impostor.physicsBody;
         physicsBody.SetFriction(friction);
-        impostor._pluginData.friction = friction;
+        impostor.joltPluginData.friction = friction;
     }
     getBodyRestitution(impostor) {
-        return impostor._pluginData.restitution || 0;
+        return impostor.joltPluginData.restitution || 0;
     }
     setBodyRestitution(impostor, restitution) {
         const physicsBody = impostor.physicsBody;
         physicsBody.SetRestitution(restitution);
-        impostor._pluginData.restitution = restitution;
+        impostor.joltPluginData.restitution = restitution;
     }
     /*
     getBodyPressure?(impostor: PhysicsImpostor): number {

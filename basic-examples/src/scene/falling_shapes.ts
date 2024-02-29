@@ -2,7 +2,6 @@ import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { MeshBuilder, SceneCallback, createBox, createCapsule, createConvexHull, createCylinder, createMeshFloor, createSphere, getMaterial, getRandomQuat } from './example';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
-import { JoltPhysicsImpostor } from '@phoenixillusion/babylonjs-jolt-plugin';
 
 export default (): SceneCallback => {
 
@@ -87,18 +86,18 @@ export default (): SceneCallback => {
         const sphere1 = MeshBuilder.CreateSphere('sphere', { diameter: r2, segments: 32 });
         sphere1.position.set(-l, 0, 0);
         sphere1.parent = staticShape;
-        sphere1.physicsImpostor = new JoltPhysicsImpostor(sphere1, PhysicsImpostor.SphereImpostor, physicSetting);
+        sphere1.physicsImpostor = new PhysicsImpostor(sphere1, PhysicsImpostor.SphereImpostor, physicSetting);
         const sphere2 = MeshBuilder.CreateSphere('sphere', { diameter: r2, segments: 32 });
         sphere2.position.set(l, 0, 0);
         sphere2.parent = staticShape;
-        sphere2.physicsImpostor = new JoltPhysicsImpostor(sphere2, PhysicsImpostor.SphereImpostor, physicSetting);
+        sphere2.physicsImpostor = new PhysicsImpostor(sphere2, PhysicsImpostor.SphereImpostor, physicSetting);
         const cylinder = MeshBuilder.CreateCylinder('cylinder', { diameter: r1, height: l * 2, tessellation: 16 });
         cylinder.position.set(0, 0, 0);
         cylinder.rotationQuaternion = Quaternion.RotationAxis(new Vector3(0, 0, 1), 0.5 * Math.PI);
         cylinder.parent = staticShape;
         cylinder.material = sphere1.material = sphere2.material = getMaterial(color);
-        cylinder.physicsImpostor = new JoltPhysicsImpostor(cylinder, PhysicsImpostor.CylinderImpostor, physicSetting);
-        new JoltPhysicsImpostor(staticShape, PhysicsImpostor.NoImpostor, physicSetting);
+        cylinder.physicsImpostor = new PhysicsImpostor(cylinder, PhysicsImpostor.CylinderImpostor, physicSetting);
+        new PhysicsImpostor(staticShape, PhysicsImpostor.NoImpostor, physicSetting);
         staticShape.position.copyFrom(pos);
         staticShape.rotationQuaternion = rot.clone();
         meshesCreated++;

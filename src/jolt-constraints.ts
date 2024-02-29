@@ -246,8 +246,8 @@ export class JoltHingeJoint extends JoltJoint<HingeConstraintParams>  {
     this.jointData.nativeParams.constraint.limitsMin = minAngle;
     this.jointData.nativeParams.constraint.limitsMax = maxAngle;
     if (this.physicsJoint) {
-      const hinge = this.physicsJoint as Jolt.HingeConstraint;
-      hinge.SetLimits(minAngle, maxAngle);
+      const joint = this.physicsJoint as Jolt.HingeConstraint;
+      joint.SetLimits(minAngle, maxAngle);
     }
   }
 }
@@ -306,8 +306,8 @@ export class JoltSliderJoint extends JoltJoint<SliderConstraintParams>  {
     this.jointData.nativeParams.constraint.limitsMin = minAngle;
     this.jointData.nativeParams.constraint.limitsMax = maxAngle;
     if (this.physicsJoint) {
-      const slider = this.physicsJoint as Jolt.SliderConstraint;
-      slider.SetLimits(minAngle, maxAngle);
+      const joint = this.physicsJoint as Jolt.SliderConstraint;
+      joint.SetLimits(minAngle, maxAngle);
     }
   }
 }
@@ -337,12 +337,40 @@ export class JoltDistanceJoint extends JoltJoint<DistanceConstraintParams> {
     this.jointData.nativeParams.constraint.minDistance = minVal;
     this.jointData.nativeParams.constraint.maxDistance = maxVal;
     if (this.physicsJoint) {
-      const slider = this.physicsJoint as Jolt.DistanceConstraint;
-      slider.SetDistance(minVal, maxVal);
+      const joint = this.physicsJoint as Jolt.DistanceConstraint;
+      joint.SetDistance(minVal, maxVal);
     }
   }
 }
 
+export class JoltConeJoint extends JoltJoint<ConeConstraintParams>  {
+
+  constructor(point1: Vector3, twistAxis: Vector3, halfCone: number = 0,  space: 'Local' | 'World' = 'World', point2?: Vector3, twistAxis2?: Vector3) {
+    const p1 = point1;
+    const p2 = point2 ?? point1;
+    const t1 = twistAxis;
+    const t2 = twistAxis2 ?? t1;
+
+    const constraint: ConeConstraintParams = {
+      space,
+      point1: f3(p1),
+      point2: f3(p2),
+      twistAxis1: f3(t1),
+      twistAxis2: f3(t2),
+      halfConeAngle: halfCone,
+      type: "Cone"
+    };
+    super(PhysicsJoint.BallAndSocketJoint, {nativeParams: constraint})
+  }
+
+  setMax( maxAngle: number) {
+    this.jointData.nativeParams.constraint.halfConeAngle = maxAngle;
+    if (this.physicsJoint) {
+      const joint = this.physicsJoint as Jolt.ConeConstraint;
+      joint.SetHalfConeAngle(maxAngle);
+    }
+  }
+}
 
 export class JoltConstraintManager {
   static CreateJoltConstraint(mainBody: Jolt.Body, connectedBody: Jolt.Body, constraintParams: JoltConstraint): Jolt.Constraint | undefined {

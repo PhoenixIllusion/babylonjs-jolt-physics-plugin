@@ -1,6 +1,7 @@
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import Jolt from "./jolt-import";
 import { GetJoltQuat, GetJoltVec3, LAYER_MOVING, SetJoltVec3 } from "./jolt-util";
+import "./jolt-impostor";
 function configureWheel(wheel, setting) {
     SetJoltVec3(setting.position, wheel.mPosition);
     wheel.mWidth = setting.width;
@@ -375,7 +376,7 @@ export function createBasicMotorcycle(vehicle, wheel) {
 export class WheeledVehicleController {
     constructor(impostor, settings, input) {
         this.wheelTransforms = [];
-        const joltPlugin = impostor._pluginData.plugin;
+        const joltPlugin = impostor.joltPluginData.plugin;
         const physicsBody = impostor.physicsBody;
         const constraintSettings = createWheeledVehicleConstraint(settings);
         const constraint = new Jolt.VehicleConstraint(physicsBody, constraintSettings);
@@ -403,7 +404,7 @@ export class WheeledVehicleController {
 export class MotorcycleController {
     constructor(impostor, settings, input) {
         this.wheelTransforms = [];
-        const joltPlugin = impostor._pluginData.plugin;
+        const joltPlugin = impostor.joltPluginData.plugin;
         const physicsBody = impostor.physicsBody;
         const constraintSettings = createMotorcycleConstraint(settings);
         const constraint = new Jolt.VehicleConstraint(physicsBody, constraintSettings);

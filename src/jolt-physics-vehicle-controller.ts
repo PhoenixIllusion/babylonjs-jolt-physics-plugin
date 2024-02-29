@@ -1,8 +1,9 @@
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import Jolt from "./jolt-import";
 import { GetJoltQuat, GetJoltVec3, LAYER_MOVING, SetJoltVec3 } from "./jolt-util";
-import type { JoltPhysicsImpostor } from "./jolt-impostor";
 import type { JoltJSPlugin } from "./jolt-physics";
+import { PhysicsImpostor } from "@babylonjs/core/Physics/v1/physicsImpostor";
+import "./jolt-impostor";
 
 export namespace Vehicle {
 
@@ -514,8 +515,8 @@ export class WheeledVehicleController {
   public wheelTransforms: { position: Vector3, rotation: Quaternion }[] = []
 
   private _physicsStepListener: (delta: number) => void;
-  constructor(impostor: JoltPhysicsImpostor, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController>) {
-    const joltPlugin: JoltJSPlugin = impostor._pluginData.plugin;
+  constructor(impostor: PhysicsImpostor, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController>) {
+    const joltPlugin: JoltJSPlugin = impostor.joltPluginData.plugin;
     const physicsBody: Jolt.Body = impostor.physicsBody;
     const constraintSettings = createWheeledVehicleConstraint(settings);
     const constraint = new Jolt.VehicleConstraint(physicsBody, constraintSettings);
@@ -546,8 +547,8 @@ export class WheeledVehicleController {
 export class MotorcycleController {
   public wheelTransforms: { position: Vector3, rotation: Quaternion }[] = []
   private _physicsStepListener: (delta: number) => void;
-  constructor(impostor: JoltPhysicsImpostor, settings: Vehicle.MotorcycleVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController>) {
-    const joltPlugin: JoltJSPlugin = impostor._pluginData.plugin;
+  constructor(impostor: PhysicsImpostor, settings: Vehicle.MotorcycleVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController>) {
+    const joltPlugin: JoltJSPlugin = impostor.joltPluginData.plugin;
     const physicsBody: Jolt.Body = impostor.physicsBody;
     const constraintSettings = createMotorcycleConstraint(settings);
     const constraint = new Jolt.VehicleConstraint(physicsBody, constraintSettings);

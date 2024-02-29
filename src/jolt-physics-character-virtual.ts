@@ -1,7 +1,7 @@
 
 import Jolt from './jolt-import';
 import { GetJoltQuat, GetJoltVec3, LAYER_MOVING, SetJoltVec3 } from './jolt-util';
-import { JoltJSPlugin } from '.';
+import { JoltJSPlugin, JoltPluginData } from '.';
 import { IPhysicsEnabledObject, PhysicsImpostor, PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Scene } from '@babylonjs/core/scene';
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
@@ -18,8 +18,14 @@ class CharacterVirtualConfig {
   public sEnableStickToFloor = true;
 }
 
+interface JoltCharacterVirtualPluginData extends JoltPluginData {
+  controller: JoltCharacterVirtual;
+}
+
 
 export class JoltCharacterVirtualImpostor extends PhysicsImpostor {
+  _pluginData!: JoltCharacterVirtualPluginData;
+
   constructor(
     object: IPhysicsEnabledObject,
     type: number,

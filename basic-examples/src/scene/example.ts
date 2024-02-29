@@ -1,11 +1,9 @@
 import QuickHull from 'quickhull3d'
-import { JoltPhysicsImpostor } from '@phoenixillusion/babylonjs-jolt-plugin/impostor';
 import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
 import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder';
 import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder';
 import { CreateCapsule } from '@babylonjs/core/Meshes/Builders/capsuleBuilder';
 import { CreateGround } from '@babylonjs/core/Meshes/Builders/groundBuilder';
-import { PhysicsImpostor, PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import '@babylonjs/core/Physics/v1/physicsEngineComponent';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
@@ -13,6 +11,9 @@ import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Quaternion } from '@babylonjs/core/Maths/math.vector';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
+import { PhysicsImpostor, PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import '@phoenixillusion/babylonjs-jolt-plugin/impostor';
+import Jolt from '@phoenixillusion/babylonjs-jolt-plugin/import';
 
 export const MeshBuilder = {
   CreateSphere,
@@ -22,33 +23,30 @@ export const MeshBuilder = {
   CreateGround
 }
 
-interface PhysicsOptions {
-  mass: number, friction: number, restitution: number, frozen?: boolean
-}
-
 export type SceneCallback = (void | ((time: number, delta: number) => void))
 export type SceneFunction = () => SceneCallback;
 
 export const DegreesToRadians = (deg: number) => deg * (Math.PI / 180.0);
 
-const NullPhysics: PhysicsOptions = {
+const NullPhysics: PhysicsImpostorParameters = {
   mass: 0,
   friction: 0,
   restitution: 0
 }
+type PhysicsOptions = PhysicsImpostorParameters;
 
 export const createFloor = (physicsOptions: PhysicsOptions = NullPhysics, color: string = '#FFFFFF') => {
   const ground = MeshBuilder.CreateGround('ground', { width: 100, height: 100 });
   ground.position.y = -0.5;
   ground.material = getMaterial(color);
-  const physics = new JoltPhysicsImpostor(ground, PhysicsImpostor.BoxImpostor, physicsOptions);
+  const physics = new PhysicsImpostor(ground, PhysicsImpostor.BoxImpostor, physicsOptions);
   return { ground, physics };
 }
 
 
 const COLOR_HASH: { [key: string]: StandardMaterial } = {};
 export const clearMaterials = () => { Object.keys(COLOR_HASH).forEach(key => delete COLOR_HASH[key]) }
-export const getMaterial = (color: string) => {
+export const getMaterial = (color: string): StandardMaterial => {
   if (!COLOR_HASH[color]) {
     const material = COLOR_HASH[color] = new StandardMaterial('Color_' + color);
     material.alpha = 1;
@@ -62,14 +60,14 @@ export const createSphere = (position: Vector3, radius: number, physicsOptions: 
   const sphere = MeshBuilder.CreateSphere('sphere', { diameter: radius, segments: 32 });
   sphere.position.copyFrom(position);
   sphere.material = getMaterial(color);
-  const physics = new JoltPhysicsImpostor(sphere, PhysicsImpostor.SphereImpostor, physicsOptions);
+  const physics = new PhysicsImpostor(sphere, PhysicsImpostor.SphereImpostor, physicsOptions);
   return { sphere, physics };
 }
 export const createCylinder = (position: Vector3, radius: number, height: number, physicsOptions: PhysicsOptions = NullPhysics, color: string = '#FFFFFF') => {
   const cylinder = MeshBuilder.CreateCylinder('cylinder', { diameter: radius, height, tessellation: 16 });
   cylinder.position.copyFrom(position);
   cylinder.material = getMaterial(color);
-  const physics = new JoltPhysicsImpostor(cylinder, PhysicsImpostor.CylinderImpostor, physicsOptions);
+  const physics = new PhysicsImpostor(cylinder, PhysicsImpostor.CylinderImpostor, physicsOptions);
   return { cylinder, physics };
 }
 
@@ -78,7 +76,7 @@ export const createBox = (position: Vector3, rotation: Quaternion, halfExtent: V
   box.position.copyFrom(position);
   box.rotationQuaternion = rotation.clone();
   box.material = getMaterial(color);
-  const physics = new JoltPhysicsImpostor(box, PhysicsImpostor.BoxImpostor, physicsOptions);
+  const physics = new PhysicsImpostor(box, PhysicsImpostor.BoxImpostor, physicsOptions);
   return { box, physics };
 }
 
@@ -89,11 +87,11 @@ export const createCapsule = (position: Vector3, radiusTop: number, radiusBottom
     : MeshBuilder.CreateCapsule('capsule', { radius: radiusBottom, ...capsuleProps })
   box.position.copyFrom(position);
   box.material = getMaterial(color);
-  const physics = new JoltPhysicsImpostor(box, PhysicsImpostor.CapsuleImpostor, {
+  const physics = new PhysicsImpostor(box, PhysicsImpostor.CapsuleImpostor, {
     radiusTop: radiusTop !== radiusBottom ? radiusBottom : undefined,
     radiusBottom: radiusTop !== radiusBottom ? radiusBottom : undefined,
     ...physicsOptions
-  } as PhysicsImpostorParameters);
+  });
   return { box, physics };
 }
 
@@ -125,7 +123,7 @@ export const createConvexHull = (position: Vector3, points: Vector3[], physicsOp
   mesh.position.copyFrom(position);
   mesh.material = getMaterial(color);
   mesh.material.wireframe = true;
-  const physics = new JoltPhysicsImpostor(mesh, PhysicsImpostor.ConvexHullImpostor, physicsOptions);
+  const physics = new PhysicsImpostor(mesh, PhysicsImpostor.ConvexHullImpostor, physicsOptions);
   return { mesh, physics };
 }
 
@@ -174,6 +172,31 @@ export const createMeshFloor = (n: number, cell_size: number, amp: number, posit
   vertexData.applyToMesh(mesh);
   mesh.position.copyFrom(position);
   mesh.material = getMaterial(color);
-  const physics = new JoltPhysicsImpostor(mesh, PhysicsImpostor.MeshImpostor, physicsOptions);
+  const physics = new PhysicsImpostor(mesh, PhysicsImpostor.MeshImpostor, physicsOptions);
   return { mesh, physics };
+}
+
+export function createMeshForShape(impostor: PhysicsImpostor) {
+  const body: Jolt.Body = impostor.physicsBody;
+  const shape = body.GetShape();
+  // Get triangle data
+  let scale = new Jolt.Vec3(1, 1, 1);
+  let triContext = new Jolt.ShapeGetTriangles(shape, Jolt.AABox.prototype.sBiggest(), shape.GetCenterOfMass(), Jolt.Quat.prototype.sIdentity(), scale);
+  Jolt.destroy(scale);
+  // Get a view on the triangle data (does not make a copy)
+  let vertices = new Float32Array(Jolt.HEAPF32.buffer, triContext.GetVerticesData(), triContext.GetVerticesSize() / Float32Array.BYTES_PER_ELEMENT);
+  Jolt.destroy(triContext);
+
+  const indices: number[] = [];
+  for (let i = 0; i < vertices.length / 3; i++) {
+    indices.push(i);
+  }
+  // Create a three mesh
+  var vertexData = new VertexData();
+  vertexData.positions = vertices;
+  vertexData.indices = indices;
+
+  const mesh = new Mesh('debug-mesh');
+  vertexData.applyToMesh(mesh);
+  return mesh;
 }

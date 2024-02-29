@@ -1,6 +1,7 @@
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import Jolt from "./jolt-import";
-import type { JoltPhysicsImpostor } from "./jolt-impostor";
+import { PhysicsImpostor } from "@babylonjs/core/Physics/v1/physicsImpostor";
+import "./jolt-impostor";
 export declare namespace Vehicle {
     type VehicleType = 'wheeled' | 'motorcycle' | 'track';
     interface SpringSetting {
@@ -132,7 +133,7 @@ export declare class WheeledVehicleController {
         rotation: Quaternion;
     }[];
     private _physicsStepListener;
-    constructor(impostor: JoltPhysicsImpostor, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController>);
+    constructor(impostor: PhysicsImpostor, settings: Vehicle.WheeledVehicleSettings, input: WheeledVehicleInput<Jolt.WheeledVehicleController>);
 }
 export declare class MotorcycleController {
     wheelTransforms: {
@@ -140,7 +141,7 @@ export declare class MotorcycleController {
         rotation: Quaternion;
     }[];
     private _physicsStepListener;
-    constructor(impostor: JoltPhysicsImpostor, settings: Vehicle.MotorcycleVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController>);
+    constructor(impostor: PhysicsImpostor, settings: Vehicle.MotorcycleVehicleSettings, input: WheeledVehicleInput<Jolt.MotorcycleController>);
 }
 export declare class TreadedVehicleController {
 }

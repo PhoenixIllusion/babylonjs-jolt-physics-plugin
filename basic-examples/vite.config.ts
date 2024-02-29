@@ -4,13 +4,16 @@ export default defineConfig({
   build: {
     rollupOptions: {
       input: {
+        "index": "index.html",
         "2d_funnel": "2d_funnel.html",
+        "2d_funnel_instanced": "2d_funnel_instanced.html",
         "add_remove_bodies": "add_remove_bodies.html",
         "bounce_sphere": "bounce_sphere.html",
         "character_virtual": "character_virtual.html",
         "constraints": "constraints.html",
         "conveyor_belt": "conveyor_belt.html",
         "falling_shapes": "falling_shapes.html",
+        "heightfield": "heightfield.html",
         "friction": "friction.html",
         "motor": "motor.html",
         "ray_cast": "ray_cast.html",

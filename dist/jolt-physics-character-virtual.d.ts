@@ -1,5 +1,5 @@
 import Jolt from './jolt-import';
-import { JoltJSPlugin } from '.';
+import { JoltJSPlugin, JoltPluginData } from '.';
 import { IPhysicsEnabledObject, PhysicsImpostor, PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Scene } from '@babylonjs/core/scene';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
@@ -12,7 +12,11 @@ declare class CharacterVirtualConfig {
     sEnableWalkStairs: boolean;
     sEnableStickToFloor: boolean;
 }
+interface JoltCharacterVirtualPluginData extends JoltPluginData {
+    controller: JoltCharacterVirtual;
+}
 export declare class JoltCharacterVirtualImpostor extends PhysicsImpostor {
+    _pluginData: JoltCharacterVirtualPluginData;
     constructor(object: IPhysicsEnabledObject, type: number, _options: PhysicsImpostorParameters, _scene?: Scene);
     get controller(): JoltCharacterVirtual;
     set controller(controller: JoltCharacterVirtual);

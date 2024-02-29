@@ -1,5 +1,4 @@
 import { DegreesToRadians, createBox, createCylinder, createFloor } from './example';
-import { JoltPhysicsImpostor } from '@phoenixillusion/babylonjs-jolt-plugin/impostor';
 import { JoltContactSetting } from '@phoenixillusion/babylonjs-jolt-plugin/contact';
 import { Vector3, Matrix, Quaternion } from '@babylonjs/core/Maths/math.vector';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
@@ -22,7 +21,7 @@ export default (): (void | ((time: number, delta: number) => void)) => {
     mLinearBelts.push(belt);
   }
 
-  let linearBoxes: { physics: JoltPhysicsImpostor }[] = [];
+  let linearBoxes: { physics: PhysicsImpostor }[] = [];
   // Bodies with decreasing friction
   for (let i = 0; i <= 10; ++i) {
     const box = createBox(new Vector3(-cBeltLength + i * 10.0, 10.0, -cBeltLength),

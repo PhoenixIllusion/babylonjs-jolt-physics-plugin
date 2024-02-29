@@ -7,6 +7,7 @@
       "ES2022",
       "DOM"
     ],
+    "skipLibCheck": true,
     /* Bundler mode */
     "moduleResolution": "bundler",
     "resolveJsonModule": true,

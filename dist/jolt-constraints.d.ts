@@ -134,6 +134,10 @@ export declare class JoltDistanceJoint extends JoltJoint<DistanceConstraintParam
     constructor(point1: Vector3, space?: 'Local' | 'World', point2?: Vector3);
     setMinMax(minVal: number, maxVal: number): void;
 }
+export declare class JoltConeJoint extends JoltJoint<ConeConstraintParams> {
+    constructor(point1: Vector3, twistAxis: Vector3, halfCone?: number, space?: 'Local' | 'World', point2?: Vector3, twistAxis2?: Vector3);
+    setMax(maxAngle: number): void;
+}
 export declare class JoltConstraintManager {
     static CreateJoltConstraint(mainBody: Jolt.Body, connectedBody: Jolt.Body, constraintParams: JoltConstraint): Jolt.Constraint | undefined;
     static CreateClassicConstraint(mainBody: Jolt.Body, connectedBody: Jolt.Body, joint: PhysicsJoint): Jolt.Constraint | undefined;

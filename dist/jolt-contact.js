@@ -1,6 +1,6 @@
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import Jolt from './jolt-import';
-import { JoltPhysicsImpostor } from './jolt-impostor';
+import './jolt-impostor';
 import { GetJoltQuat, GetJoltVec3, SetJoltVec3 } from './jolt-util';
 export class JoltContactSetting {
     constructor() {
@@ -79,11 +79,9 @@ export class ContactCollector {
             const kind = 'on-contact-validate';
             let ret = [];
             withChecks(inBody1, inBody2, kind, (body1, body2) => {
-                if (body1 instanceof JoltPhysicsImpostor) {
-                    const resp = body1.onJoltCollide(kind, { body: body2 });
-                    if (resp !== undefined) {
-                        ret.push(resp);
-                    }
+                const resp = body1.onJoltCollide(kind, { body: body2 });
+                if (resp !== undefined) {
+                    ret.push(resp);
                 }
             });
             if (ret[0] !== undefined) {
@@ -101,26 +99,24 @@ export class ContactCollector {
             withChecks(inBody1, inBody2, kind, (body1, body2, rev) => {
                 wrapContactSettings(inCollision, rev, (ioSettings) => {
                     body1.onCollide({ body: body2.physicsBody, point: null, distance: 0, impulse: 0, normal: null });
-                    if (body1 instanceof JoltPhysicsImpostor) {
-                        body1.onJoltCollide(kind, { body: body2, ioSettings });
-                        if (ioSettings.relativeLinearSurfaceVelocity.length() > 0) {
-                            const cLocalSpaceVelocity = ioSettings.relativeLinearSurfaceVelocity;
-                            const body1_linear_surface_velocity = !rev ? cLocalSpaceVelocity.applyRotationQuaternion(rotation1) : new Vector3(0, 0, 0);
-                            const body2_linear_surface_velocity = rev ? cLocalSpaceVelocity.applyRotationQuaternion(rotation2) : new Vector3(0, 0, 0);
-                            ioSettings.relativeLinearSurfaceVelocity.copyFrom(body2_linear_surface_velocity.subtract(body1_linear_surface_velocity));
-                        }
-                        if (ioSettings.relativeAngularSurfaceVelocity.length() > 0) {
-                            const cLocalSpaceAngularVelocity = ioSettings.relativeAngularSurfaceVelocity;
-                            const body1_angular_surface_velocity = !rev ? cLocalSpaceAngularVelocity.applyRotationQuaternion(rotation1) : new Vector3(0, 0, 0);
-                            const body2_angular_surface_velocity = rev ? cLocalSpaceAngularVelocity.applyRotationQuaternion(rotation2) : new Vector3(0, 0, 0);
-                            // Note that the angular velocity is the angular velocity around body 1's center of mass, so we need to add the linear velocity of body 2's center of mass
-                            const COM1 = GetJoltVec3(inBody1.GetCenterOfMassPosition(), _com1);
-                            const COM2 = GetJoltVec3(inBody2.GetCenterOfMassPosition(), _com2);
-                            const body2_linear_surface_velocity = rev ?
-                                body2_angular_surface_velocity.cross(COM1.subtract(COM2)) : new Vector3(0, 0, 0);
-                            ioSettings.relativeLinearSurfaceVelocity.copyFrom(body2_linear_surface_velocity);
-                            ioSettings.relativeAngularSurfaceVelocity.copyFrom(body2_angular_surface_velocity.subtract(body1_angular_surface_velocity));
-                        }
+                    body1.onJoltCollide(kind, { body: body2, ioSettings });
+                    if (ioSettings.relativeLinearSurfaceVelocity.length() > 0) {
+                        const cLocalSpaceVelocity = ioSettings.relativeLinearSurfaceVelocity;
+                        const body1_linear_surface_velocity = !rev ? cLocalSpaceVelocity.applyRotationQuaternion(rotation1) : new Vector3(0, 0, 0);
+                        const body2_linear_surface_velocity = rev ? cLocalSpaceVelocity.applyRotationQuaternion(rotation2) : new Vector3(0, 0, 0);
+                        ioSettings.relativeLinearSurfaceVelocity.copyFrom(body2_linear_surface_velocity.subtract(body1_linear_surface_velocity));
+                    }
+                    if (ioSettings.relativeAngularSurfaceVelocity.length() > 0) {
+                        const cLocalSpaceAngularVelocity = ioSettings.relativeAngularSurfaceVelocity;
+                        const body1_angular_surface_velocity = !rev ? cLocalSpaceAngularVelocity.applyRotationQuaternion(rotation1) : new Vector3(0, 0, 0);
+                        const body2_angular_surface_velocity = rev ? cLocalSpaceAngularVelocity.applyRotationQuaternion(rotation2) : new Vector3(0, 0, 0);
+                        // Note that the angular velocity is the angular velocity around body 1's center of mass, so we need to add the linear velocity of body 2's center of mass
+                        const COM1 = GetJoltVec3(inBody1.GetCenterOfMassPosition(), _com1);
+                        const COM2 = GetJoltVec3(inBody2.GetCenterOfMassPosition(), _com2);
+                        const body2_linear_surface_velocity = rev ?
+                            body2_angular_surface_velocity.cross(COM1.subtract(COM2)) : new Vector3(0, 0, 0);
+                        ioSettings.relativeLinearSurfaceVelocity.copyFrom(body2_linear_surface_velocity);
+                        ioSettings.relativeAngularSurfaceVelocity.copyFrom(body2_angular_surface_velocity.subtract(body1_angular_surface_velocity));
                     }
                 });
             });
@@ -151,13 +147,11 @@ export class ContactCollector {
         if (impostor._onPhysicsCollideCallbacks.length > 0) {
             this._collisionEnabled[hash] = true;
         }
-        if (impostor instanceof JoltPhysicsImpostor) {
-            Object.keys(this._joltEventEnabled).forEach((key) => {
-                if (impostor._JoltPhysicsCallback[key].length > 0) {
-                    this._joltEventEnabled[key][hash] = true;
-                }
-            });
-        }
+        Object.keys(this._joltEventEnabled).forEach((key) => {
+            if (impostor.JoltPhysicsCallback[key].length > 0) {
+                this._joltEventEnabled[key][hash] = true;
+            }
+        });
     }
     clear() {
         this._imposterBodyHash = {};
