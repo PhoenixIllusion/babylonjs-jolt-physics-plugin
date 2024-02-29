@@ -1,7 +1,7 @@
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import Jolt from './jolt-import';
-import './jolt-impostor';
 import { GetJoltQuat, GetJoltVec3, SetJoltVec3 } from './jolt-util';
+import './jolt-impostor';
 export class JoltContactSetting {
     constructor() {
         this.combinedFriction = 0;

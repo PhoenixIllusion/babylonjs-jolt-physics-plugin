@@ -1,12 +1,12 @@
 {
   "name": "@phoenixillusion/babylonjs-jolt-plugin",
   "private": true,
-  "version": "1.0.10",
+  "version": "1.1.0",
   "type": "module",
   "scripts": {
     "build": "mkdir -p dist && cp src/jolt-import.js ./dist/. && tsc",
     "git-pages": "sh build-git-pages.sh",
-    "clean-examples": "rm -r basic-examples/dist basic-examples/node_modules trenchbroom-examples/dist trenchbroom-examples/node_modules"
+    "clean-examples": "rm -r basic-examples/dist basic-examples/node_modules trenchbroom-examples/dist trenchbroom-examples/node_modules gltf-extras/node_modules gltf-extras/dist"
   },
   "devDependencies": {
     "@babylonjs/core": "6.44.0",

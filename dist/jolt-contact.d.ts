@@ -1,7 +1,7 @@
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import Jolt from './jolt-import';
-import './jolt-impostor';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import './jolt-impostor';
 export declare class JoltContactSetting {
     combinedFriction: number;
     combinedRestitution: number;
