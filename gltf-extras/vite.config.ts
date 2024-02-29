@@ -5,7 +5,9 @@ export default defineConfig({
     rollupOptions: {
       input: {
         'index': 'index.html',
-        'intro': 'intro.html'
+        'intro': 'intro.html',
+        'compound_scene': 'compound_scene.html',
+        'constraints': 'constraints.html'
       },
       output: {
         dir: '../.git-pages/gltf-extras/'
