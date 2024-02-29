@@ -1,6 +1,5 @@
 
 import QuickHull from 'quickhull3d'
-import { JoltPhysicsImpostor } from '@phoenixillusion/babylonjs-jolt-plugin/impostor';
 import { StandardCharacterVirtualHandler } from '@phoenixillusion/babylonjs-jolt-plugin/character-virtual';
 import { CameraSetup } from '../util/camera';
 import { CameraCombinedInput } from '../util/controller';
@@ -18,6 +17,7 @@ import { CreateSphere } from '@babylonjs/core/Meshes/Builders/sphereBuilder';
 import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder';
 import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder';
 import { CreateCapsule } from '@babylonjs/core/Meshes/Builders/capsuleBuilder';
+import '@phoenixillusion/babylonjs-jolt-plugin/impostor';
 
 export interface PhysicsOptions {
   mass: number, friction: number, restitution: number
@@ -52,14 +52,14 @@ export const createSphere = (position: Vector3, radius: number, physicsOptions: 
   const sphere = MeshBuilder.CreateSphere('sphere', { diameter: radius, segments: 32 });
   sphere.position.copyFrom(position);
   sphere.material = getMaterial(color);
-  const physics = new JoltPhysicsImpostor(sphere, PhysicsImpostor.SphereImpostor, physicsOptions);
+  const physics = new PhysicsImpostor(sphere, PhysicsImpostor.SphereImpostor, physicsOptions);
   return { sphere, physics };
 }
 export const createCylinder = (position: Vector3, radius: number, height: number, physicsOptions: PhysicsOptions = NullPhysics, color: string = '#FFFFFF') => {
   const cylinder = MeshBuilder.CreateCylinder('cylinder', { diameter: radius, height, tessellation: 16 });
   cylinder.position.copyFrom(position);
   cylinder.material = getMaterial(color);
-  const physics = new JoltPhysicsImpostor(cylinder, PhysicsImpostor.CylinderImpostor, physicsOptions);
+  const physics = new PhysicsImpostor(cylinder, PhysicsImpostor.CylinderImpostor, physicsOptions);
   return { cylinder, physics };
 }
 
@@ -68,7 +68,7 @@ export const createBox = (position: Vector3, rotation: Quaternion, halfExtent: V
   box.position.copyFrom(position);
   box.rotationQuaternion = rotation;
   box.material = getMaterial(color);
-  const physics = new JoltPhysicsImpostor(box, PhysicsImpostor.BoxImpostor, physicsOptions);
+  const physics = new PhysicsImpostor(box, PhysicsImpostor.BoxImpostor, physicsOptions);
   return { box, physics };
 }
 
@@ -79,7 +79,7 @@ export const createCapsule = (position: Vector3, radiusTop: number, radiusBottom
     : MeshBuilder.CreateCapsule('capsule', { radius: radiusBottom, ...capsuleProps })
   box.position.copyFrom(position);
   box.material = getMaterial(color);
-  const physics = new JoltPhysicsImpostor(box, PhysicsImpostor.CapsuleImpostor, {
+  const physics = new PhysicsImpostor(box, PhysicsImpostor.CapsuleImpostor, {
     radiusTop: radiusTop !== radiusBottom ? radiusBottom : undefined,
     radiusBottom: radiusTop !== radiusBottom ? radiusBottom : undefined,
     ...physicsOptions
@@ -115,7 +115,7 @@ export const createConvexHull = (position: Vector3, points: Vector3[], physicsOp
   mesh.position.copyFrom(position);
   mesh.material = getMaterial(color);
   mesh.material.wireframe = true;
-  const physics = new JoltPhysicsImpostor(mesh, PhysicsImpostor.ConvexHullImpostor, physicsOptions);
+  const physics = new PhysicsImpostor(mesh, PhysicsImpostor.ConvexHullImpostor, physicsOptions);
   return { mesh, physics };
 }
 

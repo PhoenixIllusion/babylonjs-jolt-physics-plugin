@@ -163,7 +163,7 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
     radiusTop?: number;
     centerOffMass?: Vector3;
     mesh?: IPhysicsEnabledObject;
-    group?: CollisionData;
+    collision?: CollisionData;
     heightMap?: HeightMapData;
   }
 

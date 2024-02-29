@@ -5,6 +5,7 @@ import { SceneCallback, createBox, createFloor } from './example';
 import Jolt from '@phoenixillusion/babylonjs-jolt-plugin/import';
 import { JoltSliderJoint, JoltDistanceJoint, JoltFixedJoint, JoltHingeJoint, JoltPointJoint } from '@phoenixillusion/babylonjs-jolt-plugin';
 import { PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import '@phoenixillusion/babylonjs-jolt-plugin/impostor';
 
 export default (): SceneCallback => {
 
@@ -27,9 +28,11 @@ export default (): SceneCallback => {
       mass: (z == 0) ? 0 : 100,
       friction: 1,
       restitution: 0,
-      collisionFilter: filter,
-      collisionGroup: 1,
-      collisionSubGroup: z
+      collision: {
+        filter: filter,
+        group: 1,
+        subGroup: z
+      }
     };
     const box = createBox(pos, rot, size, physOptions, '#ff0000')
 
