@@ -1,5 +1,5 @@
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { SceneCallback, createBox, createFloor } from './example';
+import { SceneCallback, createBox, createFloor } from '../util/example';
 
 export default (): SceneCallback => {
   createFloor({ friction: 0.8, mass: 0, restitution: 0 });

@@ -1,240 +1,16 @@
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PhysicsJoint } from "@babylonjs/core/Physics/v1/physicsJoint";
 import Jolt from "./jolt-import";
-import { JoltConstraintPath } from "./jolt-constraint-path";
-const f3 = (v) => [v.x, v.y, v.z];
-class JoltJoint extends PhysicsJoint {
-}
-export class JoltFixedJoint extends JoltJoint {
-    constructor(point1, point2, space = 'World') {
-        const p1 = point1;
-        const p2 = point2 ?? point1;
-        const constraint = {
-            space,
-            point1: f3(p1),
-            point2: f3(p2),
-            axisx1: [1, 0, 0],
-            axisy1: [0, 1, 0],
-            axisx2: [1, 0, 0],
-            axisy2: [0, 1, 0],
-            type: "Fixed"
-        };
-        super(PhysicsJoint.LockJoint, {
-            nativeParams: {
-                constraint
-            }
-        });
+import { JoltConstraintPath, JoltConstraintPointPath } from "./jolt-constraint-path";
+function wrapF3Data(data) {
+    if (!(data instanceof Array)) {
+        data = [data];
     }
-}
-export class JoltPointJoint extends JoltJoint {
-    constructor(point1, point2, space = 'World') {
-        const p1 = point1;
-        const p2 = point2 ?? point1;
-        const constraint = {
-            space,
-            point1: f3(p1),
-            point2: f3(p2),
-            type: "Point"
-        };
-        super(PhysicsJoint.PointToPointJoint, {
-            nativeParams: {
-                constraint
-            }
-        });
+    const arrData = data;
+    if (arrData[0] instanceof Vector3) {
+        return arrData;
     }
-}
-export var MotorMode;
-(function (MotorMode) {
-    MotorMode[MotorMode["Off"] = 0] = "Off";
-    MotorMode[MotorMode["Position"] = 1] = "Position";
-    MotorMode[MotorMode["Velocity"] = 2] = "Velocity";
-})(MotorMode || (MotorMode = {}));
-function GetMode(mode) {
-    switch (mode) {
-        case MotorMode.Off: return Jolt.EMotorState_Off;
-        case MotorMode.Position: return Jolt.EMotorState_Position;
-        case MotorMode.Velocity: return Jolt.EMotorState_Velocity;
-    }
-}
-class MotorControl {
-    constructor(_setMode, _setTarget) {
-        this._setMode = _setMode;
-        this._setTarget = _setTarget;
-        this._mode = MotorMode.Off;
-        this._target = 0;
-    }
-    set mode(mode) {
-        this._mode = mode;
-        this._setMode(mode);
-    }
-    get mode() {
-        return this._mode;
-    }
-    set target(val) {
-        this._target = val;
-        this._setTarget(this._mode, val);
-    }
-    get target() {
-        return this._target;
-    }
-}
-export class JoltHingeJoint extends JoltJoint {
-    constructor(point1, hingeAxis, normalAxis, space = 'World', point2, hinge2Axis, normal2Axis) {
-        const p1 = point1;
-        const p2 = point2 ?? point1;
-        const h1 = hingeAxis;
-        const h2 = hinge2Axis ?? h1;
-        const n1 = normalAxis;
-        const n2 = normal2Axis ?? n1;
-        const constraint = {
-            space,
-            point1: f3(p1),
-            point2: f3(p2),
-            hingeAxis1: f3(h1),
-            hingeAxis2: f3(h2),
-            normalAxis1: f3(n1),
-            normalAxis2: f3(n2),
-            limitsMin: -Math.PI,
-            limitsMax: Math.PI,
-            maxFrictionTorque: 0,
-            type: "Hinge"
-        };
-        super(PhysicsJoint.HingeJoint, {
-            nativeParams: {
-                constraint
-            }
-        });
-        this.motor = new MotorControl((mode) => {
-            if (this.physicsJoint) {
-                const hinge = this.physicsJoint;
-                hinge.SetMotorState(GetMode(mode));
-            }
-        }, (mode, value) => {
-            if (this.physicsJoint) {
-                const hinge = this.physicsJoint;
-                if (mode == MotorMode.Position) {
-                    hinge.SetTargetAngle(value);
-                }
-                if (mode == MotorMode.Velocity) {
-                    hinge.SetTargetAngularVelocity(value);
-                }
-            }
-        });
-    }
-    setMinMax(minAngle, maxAngle) {
-        this.jointData.nativeParams.constraint.limitsMin = minAngle;
-        this.jointData.nativeParams.constraint.limitsMax = maxAngle;
-        if (this.physicsJoint) {
-            const joint = this.physicsJoint;
-            joint.SetLimits(minAngle, maxAngle);
-        }
-    }
-}
-export class JoltSliderJoint extends JoltJoint {
-    constructor(point1, slideAxis, space = 'World', point2, slide2Axis) {
-        const p1 = point1;
-        const p2 = point2 ?? point1;
-        const s1 = slideAxis;
-        const s2 = slide2Axis ?? s1;
-        const n1 = new Vector3();
-        s1.getNormalToRef(n1);
-        const n2 = new Vector3();
-        s2.getNormalToRef(n2);
-        const constraint = {
-            space,
-            point1: f3(p1),
-            point2: f3(p2),
-            sliderAxis1: f3(s1),
-            sliderAxis2: f3(s2),
-            normalAxis1: f3(n1),
-            normalAxis2: f3(n2),
-            limitsMin: Number.MIN_SAFE_INTEGER,
-            limitsMax: Number.MAX_SAFE_INTEGER,
-            type: "Slider",
-            maxFrictionForce: 0
-        };
-        super(PhysicsJoint.PrismaticJoint, {
-            nativeParams: {
-                constraint
-            }
-        });
-        this.motor = new MotorControl((mode) => {
-            if (this.physicsJoint) {
-                const slider = this.physicsJoint;
-                slider.SetMotorState(GetMode(mode));
-            }
-        }, (mode, value) => {
-            if (this.physicsJoint) {
-                const slider = this.physicsJoint;
-                if (mode == MotorMode.Position) {
-                    slider.SetTargetPosition(value);
-                }
-                if (mode == MotorMode.Velocity) {
-                    slider.SetTargetVelocity(value);
-                }
-            }
-        });
-    }
-    setMinMax(minAngle, maxAngle) {
-        this.jointData.nativeParams.constraint.limitsMin = minAngle;
-        this.jointData.nativeParams.constraint.limitsMax = maxAngle;
-        if (this.physicsJoint) {
-            const joint = this.physicsJoint;
-            joint.SetLimits(minAngle, maxAngle);
-        }
-    }
-}
-export class JoltDistanceJoint extends JoltJoint {
-    constructor(point1, space = 'World', point2) {
-        const p1 = point1;
-        const p2 = point2 ?? point1;
-        const constraint = {
-            space,
-            point1: f3(p1),
-            point2: f3(p2),
-            minDistance: -1,
-            maxDistance: -1,
-            type: "Distance"
-        };
-        super(PhysicsJoint.PointToPointJoint, {
-            nativeParams: {
-                constraint
-            }
-        });
-    }
-    setMinMax(minVal, maxVal) {
-        this.jointData.nativeParams.constraint.minDistance = minVal;
-        this.jointData.nativeParams.constraint.maxDistance = maxVal;
-        if (this.physicsJoint) {
-            const joint = this.physicsJoint;
-            joint.SetDistance(minVal, maxVal);
-        }
-    }
-}
-export class JoltConeJoint extends JoltJoint {
-    constructor(point1, twistAxis, halfCone = 0, space = 'World', point2, twistAxis2) {
-        const p1 = point1;
-        const p2 = point2 ?? point1;
-        const t1 = twistAxis;
-        const t2 = twistAxis2 ?? t1;
-        const constraint = {
-            space,
-            point1: f3(p1),
-            point2: f3(p2),
-            twistAxis1: f3(t1),
-            twistAxis2: f3(t2),
-            halfConeAngle: halfCone,
-            type: "Cone"
-        };
-        super(PhysicsJoint.BallAndSocketJoint, { nativeParams: constraint });
-    }
-    setMax(maxAngle) {
-        this.jointData.nativeParams.constraint.halfConeAngle = maxAngle;
-        if (this.physicsJoint) {
-            const joint = this.physicsJoint;
-            joint.SetHalfConeAngle(maxAngle);
-        }
-    }
+    return arrData.map(f3 => new Vector3(f3[0], f3[1], f3[2]));
 }
 export class JoltConstraintManager {
     static CreateJoltConstraint(mainBody, connectedBody, constraintParams) {
@@ -333,8 +109,15 @@ export class JoltConstraintManager {
                 {
                     const params = constraintParams;
                     let constraintSettings = twoBodySettings = new Jolt.PathConstraintSettings();
-                    const path = new JoltConstraintPath(params.path.map(f3 => new Vector3(f3[0], f3[1], f3[2])), new Vector3(...params.pathNormal));
-                    constraintSettings.mPath.SetIsLooping(path.looping);
+                    const { path, pathNormal, pathTangent } = params;
+                    let jPath;
+                    if (path instanceof Array) {
+                        params.pathObject = jPath = new JoltConstraintPointPath(wrapF3Data(path), pathNormal && wrapF3Data(pathNormal), pathTangent && wrapF3Data(pathTangent));
+                    }
+                    else {
+                        params.pathObject = jPath = new JoltConstraintPath(path);
+                    }
+                    constraintSettings.mPath.SetIsLooping(jPath.looping);
                     constraintSettings.mPathPosition.Set(...params.pathPosition);
                     constraintSettings.mPathRotation.Set(...params.pathRotation);
                     constraintSettings.mPathFraction = params.pathFraction;
@@ -361,7 +144,7 @@ export class JoltConstraintManager {
                     }
                     constraint = twoBodySettings.Create(mainBody, connectedBody);
                     const pathConstraint = constraint = Jolt.castObject(constraint, Jolt.PathConstraint);
-                    pathConstraint.SetPath(path.getPtr(), params.pathFraction);
+                    pathConstraint.SetPath(jPath.getPtr(), params.pathFraction);
                 }
                 break;
             case 'Pulley':

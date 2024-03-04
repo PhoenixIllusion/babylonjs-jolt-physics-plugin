@@ -1,5 +1,5 @@
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { MeshBuilder, SceneCallback, createBox, createCapsule, createConvexHull, createCylinder, createMeshFloor, createSphere, getMaterial, getRandomQuat } from './example';
+import { MeshBuilder, SceneCallback, createBox, createCapsule, createConvexHull, createCylinder, createMeshFloor, createSphere, getMaterial, getRandomQuat } from '../util/example';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 

@@ -1,9 +1,9 @@
 
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { SceneCallback, createBox, createFloor } from './example';
+import { SceneCallback, createBox, createFloor } from '../util/example';
 
 import Jolt from '@phoenixillusion/babylonjs-jolt-plugin/import';
-import { JoltSliderJoint, JoltDistanceJoint, JoltFixedJoint, JoltHingeJoint, JoltPointJoint } from '@phoenixillusion/babylonjs-jolt-plugin';
+import { JoltSliderJoint, JoltDistanceJoint, JoltFixedJoint, JoltHingeJoint, JoltPointJoint } from '@phoenixillusion/babylonjs-jolt-plugin/joints';
 import { PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import '@phoenixillusion/babylonjs-jolt-plugin/impostor';
 

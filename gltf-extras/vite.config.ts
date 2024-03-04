@@ -1,14 +1,11 @@
 import { defineConfig, splitVendorChunkPlugin } from 'vite'
+import fs from 'fs';
 
+const files = fs.readdirSync('.').filter(file => /.+\.html$/.test(file));
 export default defineConfig({
   build: {
     rollupOptions: {
-      input: {
-        'index': 'index.html',
-        'intro': 'intro.html',
-        'compound_scene': 'compound_scene.html',
-        'constraints': 'constraints.html'
-      },
+      input: files,
       output: {
         dir: '../.git-pages/gltf-extras/'
       }

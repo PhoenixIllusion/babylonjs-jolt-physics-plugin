@@ -1,11 +1,13 @@
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
-import { PhysicsJoint, PhysicsJointData } from "@babylonjs/core/Physics/v1/physicsJoint";
+import { PhysicsJoint } from "@babylonjs/core/Physics/v1/physicsJoint";
 import Jolt from "./jolt-import";
 import type { float } from "@babylonjs/core/types";
+import { JoltConstraintPath } from "./jolt-constraint-path";
+import { Path3D } from "@babylonjs/core/Maths/math.path";
 export type JoltConstraintType = 'Fixed' | 'Point' | 'Hinge' | 'Slider' | 'Distance' | 'Cone' | 'SwingTwist' | 'SixDOF' | 'Path' | 'RackAndPinion' | 'Gear' | 'Pulley';
 type ESpace = 'Local' | 'World';
-type float3 = [float, float, float];
-type float4 = [float, float, float, float];
+export type float3 = [float, float, float];
+export type float4 = [float, float, float, float];
 export interface JoltConstraint {
     type: JoltConstraintType;
 }
@@ -68,16 +70,18 @@ export interface ConeConstraintParams extends JoltConstraint {
     twistAxis2: float3;
     halfConeAngle: float;
 }
-type RotationConstraintType = 'Free' | 'ConstrainAroundTangent' | 'ConstrainAroundNormal' | 'ConstrainAroundBinormal' | 'ConstrainToPath' | 'FullyConstrained';
+export type RotationConstraintType = 'Free' | 'ConstrainAroundTangent' | 'ConstrainAroundNormal' | 'ConstrainAroundBinormal' | 'ConstrainToPath' | 'FullyConstrained';
 export interface PathConstraintParams extends JoltConstraint {
     type: 'Path';
-    path: float3[];
+    path: Path3D | float3[] | Vector3[];
+    pathNormal?: float3[] | Vector3 | Vector3[];
+    pathTangent?: float3[] | Vector3 | Vector3[];
     pathPosition: float3;
     pathRotation: float4;
-    pathNormal: float3;
     pathFraction: float;
     rotationConstraintType: RotationConstraintType;
     maxFrictionForce: float;
+    pathObject?: JoltConstraintPath;
 }
 export interface PulleyConstraintParams extends JoltConstraint {
     type: 'Pulley';
@@ -89,54 +93,6 @@ export interface PulleyConstraintParams extends JoltConstraint {
     ratio: float;
     minLength: float;
     maxLength: float;
-}
-interface JointJoltData<T> extends PhysicsJointData {
-    nativeParams: {
-        constraint: T;
-    };
-}
-declare class JoltJoint<T extends JoltConstraint> extends PhysicsJoint {
-    jointData: JointJoltData<T>;
-}
-export declare class JoltFixedJoint extends JoltJoint<FixedConstraintParams> {
-    constructor(point1: Vector3, point2?: Vector3, space?: 'Local' | 'World');
-}
-export declare class JoltPointJoint extends JoltJoint<PointConstraintParams> {
-    constructor(point1: Vector3, point2?: Vector3, space?: 'Local' | 'World');
-}
-export declare enum MotorMode {
-    Off = 0,
-    Position = 1,
-    Velocity = 2
-}
-declare class MotorControl {
-    private _setMode;
-    private _setTarget;
-    private _mode;
-    private _target;
-    constructor(_setMode: (mode: MotorMode) => void, _setTarget: (mode: MotorMode, val: number) => void);
-    set mode(mode: MotorMode);
-    get mode(): MotorMode;
-    set target(val: number);
-    get target(): number;
-}
-export declare class JoltHingeJoint extends JoltJoint<HingeConstraintParams> {
-    motor: MotorControl;
-    constructor(point1: Vector3, hingeAxis: Vector3, normalAxis: Vector3, space?: 'Local' | 'World', point2?: Vector3, hinge2Axis?: Vector3, normal2Axis?: Vector3);
-    setMinMax(minAngle: number, maxAngle: number): void;
-}
-export declare class JoltSliderJoint extends JoltJoint<SliderConstraintParams> {
-    motor: MotorControl;
-    constructor(point1: Vector3, slideAxis: Vector3, space?: 'Local' | 'World', point2?: Vector3, slide2Axis?: Vector3);
-    setMinMax(minAngle: number, maxAngle: number): void;
-}
-export declare class JoltDistanceJoint extends JoltJoint<DistanceConstraintParams> {
-    constructor(point1: Vector3, space?: 'Local' | 'World', point2?: Vector3);
-    setMinMax(minVal: number, maxVal: number): void;
-}
-export declare class JoltConeJoint extends JoltJoint<ConeConstraintParams> {
-    constructor(point1: Vector3, twistAxis: Vector3, halfCone?: number, space?: 'Local' | 'World', point2?: Vector3, twistAxis2?: Vector3);
-    setMax(maxAngle: number): void;
 }
 export declare class JoltConstraintManager {
     static CreateJoltConstraint(mainBody: Jolt.Body, connectedBody: Jolt.Body, constraintParams: JoltConstraint): Jolt.Constraint | undefined;

@@ -241,6 +241,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   }
 
   generatePhysicsBody(impostor: PhysicsImpostor): void {
+    impostor._pluginData = impostor._pluginData || {};
     impostor.joltPluginData.toDispose = [];
 
     //parent-child relationship
@@ -467,7 +468,8 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         }
 				const shapeSettings = new Jolt.HeightFieldShapeSettings();
 
-				shapeSettings.mScale.Set(impostorExtents.x / heightMap.size, 1, impostorExtents.z / heightMap.size);
+        const scale = impostorExtents.x / (heightMap.size-1)
+				shapeSettings.mScale.Set(scale, 1, scale);
         const squareSide = Math.sqrt(heightMap.data.length);
         if(squareSide != heightMap.size) {
           throw new Error('Error: HeightMap must be square. Ensure data-length is square-power');
@@ -483,12 +485,12 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         const { size } = heightMap;
         for(let y = 0; y < size; y++) {
           for(let x = 0; x < size; x++) {
-            heightSamples[size - x + y * size] = heightMap.data[x + y * size]
+            heightSamples[(size -1) - y + ((size-1) - x) * size] = heightMap.data[x + y * size]
           }
         }
-        this._tempVec3A.Set(impostorExtents.x / 2, 0, impostorExtents.z/2);
+        this._tempVec3A.Set(impostorExtents.x / 2, 0, -impostorExtents.z/2);
         this._tempVec3B.Set(0,1,0);
-        returnValue = new Jolt.RotatedTranslatedShapeSettings(this._tempVec3A, Jolt.Quat.prototype.sRotation(this._tempVec3B, Math.PI), shapeSettings);
+        returnValue = new Jolt.RotatedTranslatedShapeSettings(this._tempVec3A, Jolt.Quat.prototype.sRotation(this._tempVec3B, -Math.PI/2), shapeSettings);
       }
       break;
       case PhysicsImpostor.ConvexHullImpostor:

@@ -1,5 +1,5 @@
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { SceneCallback, createBox, createFloor, createSphere } from './example';
+import { SceneCallback, createBox, createFloor, createSphere } from '../util/example';
 import { JoltSliderJoint, JoltHingeJoint, MotorMode } from '@phoenixillusion/babylonjs-jolt-plugin';
 
 const createWindmill = () => {

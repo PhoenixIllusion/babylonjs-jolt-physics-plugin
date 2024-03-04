@@ -21,24 +21,47 @@ import Jolt from '@phoenixillusion/babylonjs-jolt-plugin/import';
 import { GetJoltVec3 } from '@phoenixillusion/babylonjs-jolt-plugin/util';
 import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
 import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
+import { GLTFLoader } from "@babylonjs/loaders/glTF/2.0/glTFLoader";
+import { GLTFFileLoader, IGLTFLoaderData } from "@babylonjs/loaders/glTF/glTFFileLoader";
+import { EngineStore } from "@babylonjs/core/Engines/engineStore";
+import { CreateGroundFromHeightMapVertexData } from "@babylonjs/core/Meshes/Builders/groundBuilder";
+import { Texture } from "@babylonjs/core/Materials/Textures/texture";
+import { IGLTF } from "@babylonjs/loaders/glTF/2.0/glTFLoaderInterfaces";
+import { TerrainMaterial } from "@babylonjs/materials/terrain/terrainMaterial";
+import { Scene } from "@babylonjs/core/scene";
 
 type JoltShapes = 'Sphere' | 'Box' | 'Capsule' | 'TaperedCapsule' | 'Cylinder' | 'ConvexHull' | 'Mesh' | 'HeightField';
 type JoltMotionType = 'Dynamic' | 'Static' | 'Kinematic';
 type Float3 = [float, float, float];
 type Float4 = [float, float, float, float];
+
+interface HeightFieldLayer {
+  diffuse: number;
+  tileOffset: [float, float];
+  tileSize: [float, float];
+}
+interface HeightFieldData {
+  splatIndex: [number]|[number,number];
+  depthBuffer: number;
+  minHeight: float;
+  maxHeight: float;
+  colorFilter: [float, float, float];
+  layers: HeightFieldLayer[];
+}
 interface JoltCollisionExtras {
-  collisionShape: JoltShapes,
-  motionType: JoltMotionType,
+  collisionShape: JoltShapes;
+  motionType: JoltMotionType;
 
-  friction: float,
-  mass: float,
-  restitution: float,
+  friction: float;
+  mass: float;
+  restitution: float;
 
-  worldPosition: Float3,
-  worldRotation: Float4,
-  worldScale: Float3,
+  worldPosition: Float3;
+  worldRotation: Float4;
+  worldScale: Float3;
 
-  localBounds: { center: Float3, extents: Float3 }
+  localBounds: { center: Float3, extents: Float3 };
+  heightfield?: HeightFieldData;
 }
 
 const COLOR_HASH: { [key: string]: StandardMaterial } = {};
@@ -177,11 +200,108 @@ class MinimalPhysicsNode extends TransformNode implements IPhysicsEnabledObject 
 
 }
 
+const canvas = document.createElement('canvas');
+
+
+async function createTexture(name: string, buffer: Promise<ArrayBufferView>, scene: Scene): Promise<Texture> {
+  const blob = new Blob([await buffer]);
+  /*const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = name;
+  a.innerText = name;
+  document.body.append(a);*/
+  const texture = await createImageBitmap(blob, {imageOrientation: 'flipY'});
+  return  new Texture(name, scene, true,
+  true, Texture.BILINEAR_SAMPLINGMODE,
+  null, null, texture, true);
+}
+
+async function createHeightField(collision: JoltCollisionExtras, heightfield: HeightFieldData, loadImage: (index: number)=>Promise<ArrayBufferView>): Promise<Mesh> {
+  const img = await createImageBitmap(new Blob([await loadImage(heightfield.depthBuffer)]));
+  const size = img.width;
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext('2d')!;
+  ctx.clearRect(0, 0, size, size);
+  ctx.drawImage(img, 0, 0);
+  const imgData = ctx.getImageData(0, 0, size, size);
+    const heightBuffer = new Float32Array(size * size);
+    const meshSize = collision.localBounds.extents[0] * 2;
+    const ground = CreateGroundFromHeightMapVertexData( {
+        width: meshSize,
+        height: meshSize,
+        subdivisions: size-1,
+        bufferHeight: size,
+        bufferWidth: size, 
+        buffer: new Uint8Array(imgData.data.buffer),
+        minHeight: heightfield.minHeight,
+        maxHeight: heightfield.maxHeight,
+        colorFilter: new Color3(0xFF00/0xFFFF,0x00FF/0xFFFF,0),
+        alphaFilter: 0,
+        heightBuffer: heightBuffer
+    });
+    const mesh = new Mesh('height-map');
+    ground.applyToMesh(mesh);
+
+    const terrainMaterial = new TerrainMaterial('terrain');
+    terrainMaterial.mixTexture = await createTexture('mix', loadImage(heightfield.splatIndex[0]), mesh.getScene())
+    for(let i=0;i<3;i++) {
+      if(heightfield.layers[i]) {
+        const l = heightfield.layers[i];
+        let layer: keyof TerrainMaterial = 'diffuseTexture1';
+        switch(i) {
+          case 1:
+            layer = 'diffuseTexture2';
+            break;
+          case 2:
+            layer = 'diffuseTexture3';
+            break;
+        }
+        const tex = terrainMaterial[layer] = await createTexture('layer'+i,loadImage(l.diffuse), mesh.getScene());
+        tex.uScale = meshSize / l.tileSize[0];
+        tex.vScale = meshSize / l.tileSize[1];
+      }
+    }
+    terrainMaterial.specularColor = new Color3(0.5, 0.5, 0.5);
+    terrainMaterial.specularPower = 64;
+    mesh.material = terrainMaterial;
+    mesh.physicsImpostor = new PhysicsImpostor(mesh, PhysicsImpostor.HeightmapImpostor, {
+        mass: 0,
+        heightMap: {
+            size: size,
+            data: heightBuffer,
+            alphaFilter: 0
+        }
+    });
+    return mesh;
+}
+
+const fileLoader = new GLTFFileLoader();
+const filterJoltNodes = (node: TransformNode) => node.metadata?.gltf?.extras?.jolt;
 export default class {
   static async forFile(file: string): Promise<void> {
-    const gltf = await SceneLoader.AppendAsync("levels/", file + ".glb");
+    const loader = new GLTFLoader(fileLoader);
+    const scene = EngineStore.LastCreatedScene!;
+    const data: IGLTFLoaderData = await new Promise((resolve, reject) => fileLoader.loadFile(scene, "levels/"+ file + ".glb", "", resolve, () => {}, true, reject));
+    await loader.loadAsync(scene, data, '');
+    const pendingPromises: Promise<any>[] = [];
+    scene.transformNodes.filter(filterJoltNodes).forEach(node => {
+      const collision = (node.metadata.gltf.extras as GltfJoltExtras)?.jolt?.collision;
+      if(collision && collision.collisionShape == "HeightField") {
+        const { heightfield } = collision;
+        if(heightfield) {
+          const json = data.json as IGLTF;
+          const getImage = (imageIndex: number) => {
+            const img = json.images![imageIndex];
+            const buf = json.bufferViews![img.bufferView!];
+            return data.bin!.readAsync(buf.byteOffset!, buf.byteLength)
+          };
+          pendingPromises.push(createHeightField(collision, heightfield, getImage));
+        }
+      }
+    });
+    await Promise.all(pendingPromises);
     const nodeLookup: Record<number, AbstractMesh> = {};
-    gltf.meshes.forEach(node => {
+    scene.meshes.forEach(node => {
       if (node.metadata && node.metadata.gltf && node.metadata.gltf.extras) {
         const extras = node.metadata.gltf.extras as GltfJoltExtras;
         if (extras.jolt && extras.jolt.collision) {
@@ -217,7 +337,7 @@ export default class {
         }
       }
     });
-    gltf.meshes.forEach(node => {
+    scene.meshes.forEach(node => {
       if (node.metadata && node.metadata.gltf && node.metadata.gltf.extras) {
         const extras = node.metadata.gltf.extras as GltfJoltExtras;
         if (extras.jolt && extras.jolt.constraints) {

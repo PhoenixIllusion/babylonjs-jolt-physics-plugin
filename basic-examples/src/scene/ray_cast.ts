@@ -1,5 +1,5 @@
 import { Color3 } from '@babylonjs/core/Maths/math.color';
-import { MeshBuilder, SceneCallback, createBox, createFloor, getMaterial } from './example';
+import { MeshBuilder, SceneCallback, createBox, createFloor, getMaterial } from '../util/example';
 import { RayHelper } from '@babylonjs/core/Debug/rayHelper';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { Ray } from '@babylonjs/core/Culling/ray';

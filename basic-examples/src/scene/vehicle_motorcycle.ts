@@ -1,4 +1,4 @@
-import { MeshBuilder, SceneCallback, createBox, createFloor } from './example';
+import { MeshBuilder, SceneCallback, createBox, createFloor } from '../util/example';
 import { Vehicle, DefaultMotorcycleInput, MotorcycleController, createBasicMotorcycle } from '@phoenixillusion/babylonjs-jolt-plugin/vehicle';
 import { SceneConfig } from '../app';
 import { FollowCamera } from '@babylonjs/core/Cameras/followCamera';

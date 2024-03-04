@@ -1,4 +1,4 @@
-import { MeshBuilder, SceneCallback, createBox, createFloor, getMaterial } from './example';
+import { MeshBuilder, SceneCallback, createBox, createFloor, getMaterial } from '../util/example';
 import { JoltCharacterVirtualImpostor, StandardCharacterVirtualHandler } from '@phoenixillusion/babylonjs-jolt-plugin/character-virtual';
 import { SceneConfig } from '../app';
 import { FollowCamera } from '@babylonjs/core/Cameras/followCamera';

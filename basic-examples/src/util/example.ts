@@ -4,6 +4,7 @@ import { CreateCylinder } from '@babylonjs/core/Meshes/Builders/cylinderBuilder'
 import { CreateBox } from '@babylonjs/core/Meshes/Builders/boxBuilder';
 import { CreateCapsule } from '@babylonjs/core/Meshes/Builders/capsuleBuilder';
 import { CreateGround } from '@babylonjs/core/Meshes/Builders/groundBuilder';
+import { CreateGroundFromHeightMapVertexData } from '@babylonjs/core/Meshes/Builders/groundBuilder';
 import '@babylonjs/core/Physics/v1/physicsEngineComponent';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
@@ -14,13 +15,19 @@ import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { PhysicsImpostor, PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import '@phoenixillusion/babylonjs-jolt-plugin/impostor';
 import Jolt from '@phoenixillusion/babylonjs-jolt-plugin/import';
+import { Material } from '@babylonjs/core/Materials/material';
+import { Texture } from '@babylonjs/core/Materials/Textures/texture';
+import { Engine } from '@babylonjs/core/Engines/engine';
+import { CreateLines } from '@babylonjs/core/Meshes/Builders/linesBuilder';
 
 export const MeshBuilder = {
   CreateSphere,
   CreateCylinder,
   CreateBox,
   CreateCapsule,
-  CreateGround
+  CreateGround,
+  CreateGroundFromHeightMapVertexData,
+  CreateLines
 }
 
 export type SceneCallback = (void | ((time: number, delta: number) => void))
@@ -176,17 +183,20 @@ export const createMeshFloor = (n: number, cell_size: number, amp: number, posit
   return { mesh, physics };
 }
 
-export function createMeshForShape(impostor: PhysicsImpostor) {
+export function createMeshForShape(impostor: PhysicsImpostor, color: Color3) {
   const body: Jolt.Body = impostor.physicsBody;
   const shape = body.GetShape();
   // Get triangle data
   let scale = new Jolt.Vec3(1, 1, 1);
   let triContext = new Jolt.ShapeGetTriangles(shape, Jolt.AABox.prototype.sBiggest(), shape.GetCenterOfMass(), Jolt.Quat.prototype.sIdentity(), scale);
   Jolt.destroy(scale);
+  let colors: number[] = [];
   // Get a view on the triangle data (does not make a copy)
   let vertices = new Float32Array(Jolt.HEAPF32.buffer, triContext.GetVerticesData(), triContext.GetVerticesSize() / Float32Array.BYTES_PER_ELEMENT);
-  Jolt.destroy(triContext);
-
+  Jolt.destroy(triContext); 
+  for(let i = 0 ; i < vertices.length / 3; i++) {
+    colors.push(color.r, color.g, color.b, 1);
+  }
   const indices: number[] = [];
   for (let i = 0; i < vertices.length / 3; i++) {
     indices.push(i);
@@ -195,8 +205,80 @@ export function createMeshForShape(impostor: PhysicsImpostor) {
   var vertexData = new VertexData();
   vertexData.positions = vertices;
   vertexData.indices = indices;
+  vertexData.colors = new Float32Array(colors);
 
-  const mesh = new Mesh('debug-mesh');
+  const mesh = new Mesh('debug-mesh', Engine.LastCreatedScene!);
   vertexData.applyToMesh(mesh);
+  mesh.overrideMaterialSideOrientation = Material.ClockWiseSideOrientation;
   return mesh;
+}
+
+export function loadImage(url: string, width?: number, height?: number): Promise<HTMLImageElement> {
+  const img = new Image();
+  if(width)
+      img.width = width;
+  if(height)
+  img.height = height;
+      img.src = url;
+  return new Promise(resolve => img.onload = () => resolve(img));
+}
+
+export function loadSVGImage(svgString: string, width: number, height: number) {
+  const svgSrc = 'data:image/svg+xml;base64,' + btoa(svgString);
+  return loadImage(svgSrc, width, height);
+}
+
+export function getImagePixels(img: HTMLImageElement): Uint8Array {
+  const canvas = document.createElement('canvas');
+  canvas.width = img.width;
+  canvas.height = img.height;
+  const ctx = canvas.getContext('2d')!;
+  ctx.drawImage(img, 0, 0);
+  const imgData = ctx.getImageData(0, 0, img.width, img.height);
+  return new Uint8Array(imgData.data.buffer);
+}
+
+export function createHeightField(buffer: Uint8Array, material: Material, IMAGE_SIZE: number, scale: number, minHeight: number, maxHeight: number) {
+  const heightBuffer = new Float32Array(IMAGE_SIZE * IMAGE_SIZE);
+  const ground = MeshBuilder.CreateGroundFromHeightMapVertexData( {
+      width: IMAGE_SIZE * scale,
+      height: IMAGE_SIZE * scale,
+      subdivisions: IMAGE_SIZE-1,
+      bufferHeight: IMAGE_SIZE,
+      bufferWidth: IMAGE_SIZE, 
+      buffer,
+      minHeight,
+      maxHeight,
+      colorFilter: new Color3(1, 0, 0),
+      alphaFilter: 0,
+      heightBuffer: heightBuffer
+  });
+  const mesh = new Mesh('height-map', Engine.LastCreatedScene!);
+  ground.applyToMesh(mesh);
+  mesh.material = material;
+  mesh.physicsImpostor = new PhysicsImpostor(mesh, PhysicsImpostor.HeightmapImpostor, {
+      mass: 0,
+      heightMap: {
+          size: IMAGE_SIZE,
+          data: heightBuffer,
+          alphaFilter: 0
+      }
+  });
+  return mesh;
+}
+
+export function createTexture(image: HTMLImageElement): Texture {
+  return new Texture(`texture`, Engine.LastCreatedScene, true,
+    true, Texture.BILINEAR_SAMPLINGMODE,
+    null, null, image, true);
+}
+
+const IMAGE_HASH: { [key: string]: StandardMaterial } = {};
+export function createImageMaterial(name: string, image: HTMLImageElement): Material {
+  if(IMAGE_HASH[name]) {
+    return IMAGE_HASH[name];
+  }
+  const mat = IMAGE_HASH[name] = new StandardMaterial('Image_' + name);
+  mat.diffuseTexture = createTexture(image);
+  return mat;
 }

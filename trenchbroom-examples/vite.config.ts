@@ -1,13 +1,11 @@
 import { defineConfig, splitVendorChunkPlugin } from 'vite'
+import fs from 'fs';
 
+const files = fs.readdirSync('.').filter(file => /.+\.html$/.test(file));
 export default defineConfig({
   build: {
     rollupOptions: {
-      input: {
-        'character_intro': 'character_intro.html',
-        'hello_world': 'hello_world.html',
-        'rigged_character': 'rigged_character.html'
-      },
+      input: files,
       output: {
         dir: '../.git-pages/trenchbroom-examples/'
       }

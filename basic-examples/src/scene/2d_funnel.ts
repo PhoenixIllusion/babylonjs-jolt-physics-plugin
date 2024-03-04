@@ -1,5 +1,5 @@
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { createBox, createFloor, createSphere } from './example';
+import { createBox, createFloor, createSphere } from '../util/example';
 import { Quaternion } from '@babylonjs/core/Maths/math.vector';
 
 export default (): (void | ((time: number, delta: number) => void)) => {

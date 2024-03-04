@@ -2,7 +2,7 @@ import './style.css';
 
 import { JoltJSPlugin } from '@phoenixillusion/babylonjs-jolt-plugin';
 
-import { SceneFunction } from './scene/example';
+import { SceneFunction } from './util/example';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { FlyCamera } from '@babylonjs/core/Cameras/flyCamera';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
@@ -15,9 +15,19 @@ export interface SceneConfig {
     getCamera(): Camera | undefined;
 }
 
+type SceneModule = {
+    default: SceneFunction,
+    config?: SceneConfig
+}
+
+
 export class App {
     private canvas: HTMLCanvasElement;
-    constructor(private createScene: SceneFunction, private config?: SceneConfig) {
+    private createScene: SceneFunction;
+    private config?: SceneConfig
+    constructor(module: SceneModule) {
+        this.createScene = module.default;
+        this.config = module.config; 
         // create the canvas html element and attach it to the webpage
         const canvas = this.canvas = document.createElement('canvas');
         canvas.id = 'gameCanvas';
