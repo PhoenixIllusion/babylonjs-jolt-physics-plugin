@@ -75,10 +75,10 @@ export interface PathConstraintParams extends JoltConstraint {
     type: 'Path';
     path: Path3D | float3[] | Vector3[];
     pathNormal?: float3[] | Vector3 | Vector3[];
-    pathTangent?: float3[] | Vector3 | Vector3[];
     pathPosition: float3;
     pathRotation: float4;
     pathFraction: float;
+    pathStartPosition?: float3;
     rotationConstraintType: RotationConstraintType;
     maxFrictionForce: float;
     pathObject?: JoltConstraintPath;

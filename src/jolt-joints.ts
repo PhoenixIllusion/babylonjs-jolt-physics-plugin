@@ -2,8 +2,8 @@ import { PhysicsJoint, PhysicsJointData } from "@babylonjs/core/Physics/v1/physi
 import { ConeConstraintParams, DistanceConstraintParams, FixedConstraintParams, HingeConstraintParams, JoltConstraint, PathConstraintParams, PointConstraintParams, RotationConstraintType, SliderConstraintParams, float3, float4 } from "./jolt-constraints";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import Jolt from "./jolt-import";
-import { float } from "@babylonjs/core/types";
 import { Path3D } from "@babylonjs/core/Maths/math.path";
+import { float } from "@babylonjs/core/types";
 
 const f3 = (v: Vector3): float3 => [v.x, v.y, v.z];
 const f4 = (v: Quaternion): float4 => [v.x, v.y, v.z, v.w];
@@ -316,17 +316,6 @@ export class JoltPathConstraint extends JoltJoint<PathConstraintParams, Jolt.Pat
     }
   }
 
-  setPathTangents(tangent: Vector3 | Vector3[]) {
-    if(tangent instanceof Array && tangent.length > 1 && tangent.length != this.getParams().path.length) {
-      throw new Error('Path Tangent must either be single item or equal to number of points in path')
-    }
-    const params = this.getParams();
-    params.pathTangent = tangent;
-    if(params.pathObject) {
-      params.pathObject.setPathTangents(tangent);
-    }
-  }
-
   setPathOffset(position: Vector3, rotation: Quaternion) {
     if(this.physicsJoint) {
       throw new Error('Unable to modify path offset after creation')
@@ -334,6 +323,14 @@ export class JoltPathConstraint extends JoltJoint<PathConstraintParams, Jolt.Pat
     const params = this.getParams();
     params.pathPosition = f3(position);
     params.pathRotation = f4(rotation);
+  }
+
+  setPathStartPosition(val: Vector3) {
+    if(this.physicsJoint) {
+      throw new Error('Unable to modify path fraction after creation')
+    }
+    const params = this.getParams();
+    params.pathStartPosition = f3(val);
   }
 
   setPathFraction(val: float) {

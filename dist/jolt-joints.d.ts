@@ -2,8 +2,8 @@ import { PhysicsJoint, PhysicsJointData } from "@babylonjs/core/Physics/v1/physi
 import { ConeConstraintParams, DistanceConstraintParams, FixedConstraintParams, HingeConstraintParams, JoltConstraint, PathConstraintParams, PointConstraintParams, RotationConstraintType, SliderConstraintParams } from "./jolt-constraints";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import Jolt from "./jolt-import";
-import { float } from "@babylonjs/core/types";
 import { Path3D } from "@babylonjs/core/Maths/math.path";
+import { float } from "@babylonjs/core/types";
 interface JointJoltData<T> extends PhysicsJointData {
     nativeParams: {
         constraint: T;
@@ -58,8 +58,8 @@ export declare class JoltPathConstraint extends JoltJoint<PathConstraintParams, 
     motor: MotorControl;
     constructor(points: Vector3[] | Path3D, type?: RotationConstraintType);
     setPathNormals(normal: Vector3 | Vector3[]): void;
-    setPathTangents(tangent: Vector3 | Vector3[]): void;
     setPathOffset(position: Vector3, rotation: Quaternion): void;
+    setPathStartPosition(val: Vector3): void;
     setPathFraction(val: float): void;
 }
 export {};

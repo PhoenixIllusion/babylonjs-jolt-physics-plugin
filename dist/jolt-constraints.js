@@ -109,18 +109,24 @@ export class JoltConstraintManager {
                 {
                     const params = constraintParams;
                     let constraintSettings = twoBodySettings = new Jolt.PathConstraintSettings();
-                    const { path, pathNormal, pathTangent } = params;
+                    const { path, pathNormal } = params;
                     let jPath;
                     if (path instanceof Array) {
-                        params.pathObject = jPath = new JoltConstraintPointPath(wrapF3Data(path), pathNormal && wrapF3Data(pathNormal), pathTangent && wrapF3Data(pathTangent));
+                        params.pathObject = jPath = new JoltConstraintPointPath(wrapF3Data(path), pathNormal && wrapF3Data(pathNormal));
                     }
                     else {
                         params.pathObject = jPath = new JoltConstraintPath(path);
                     }
+                    constraintSettings.mPath = jPath.getPtr();
                     constraintSettings.mPath.SetIsLooping(jPath.looping);
                     constraintSettings.mPathPosition.Set(...params.pathPosition);
                     constraintSettings.mPathRotation.Set(...params.pathRotation);
-                    constraintSettings.mPathFraction = params.pathFraction;
+                    if (params.pathStartPosition) {
+                        constraintSettings.mPathFraction = jPath.getClosestPositionTo(new Vector3(...params.pathStartPosition), 0, jPath.getPathMaxFraction()).closestPosition;
+                    }
+                    else {
+                        constraintSettings.mPathFraction = params.pathFraction;
+                    }
                     constraintSettings.mMaxFrictionForce = params.maxFrictionForce;
                     switch (params.rotationConstraintType) {
                         case 'Free':
@@ -143,8 +149,7 @@ export class JoltConstraintManager {
                             break;
                     }
                     constraint = twoBodySettings.Create(mainBody, connectedBody);
-                    const pathConstraint = constraint = Jolt.castObject(constraint, Jolt.PathConstraint);
-                    pathConstraint.SetPath(jPath.getPtr(), params.pathFraction);
+                    constraint = Jolt.castObject(constraint, Jolt.PathConstraint);
                 }
                 break;
             case 'Pulley':

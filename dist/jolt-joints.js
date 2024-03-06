@@ -273,16 +273,6 @@ export class JoltPathConstraint extends JoltJoint {
             params.pathObject.setPathNormals(normal);
         }
     }
-    setPathTangents(tangent) {
-        if (tangent instanceof Array && tangent.length > 1 && tangent.length != this.getParams().path.length) {
-            throw new Error('Path Tangent must either be single item or equal to number of points in path');
-        }
-        const params = this.getParams();
-        params.pathTangent = tangent;
-        if (params.pathObject) {
-            params.pathObject.setPathTangents(tangent);
-        }
-    }
     setPathOffset(position, rotation) {
         if (this.physicsJoint) {
             throw new Error('Unable to modify path offset after creation');
@@ -290,6 +280,13 @@ export class JoltPathConstraint extends JoltJoint {
         const params = this.getParams();
         params.pathPosition = f3(position);
         params.pathRotation = f4(rotation);
+    }
+    setPathStartPosition(val) {
+        if (this.physicsJoint) {
+            throw new Error('Unable to modify path fraction after creation');
+        }
+        const params = this.getParams();
+        params.pathStartPosition = f3(val);
     }
     setPathFraction(val) {
         if (this.physicsJoint) {
