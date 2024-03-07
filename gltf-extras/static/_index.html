@@ -5,15 +5,15 @@
   <meta charset="UTF-8">
   <meta name="viewport"
     content="viewport-fit=cover, width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>BabylonJS - GLTF Extras</title>
+  <title>BabylonJS - Basic Examples</title>
 </head>
 
 <body>
 
-  <h2>GLTF Extras Examples</h2>
-  <div><a href="intro.html">intro</a></div>
-  <div><a href="compound_scene.html">compound_scene</a></div>
-  <div><a href="constraints.html">constraints</a></div>
+  <h2>Basic Examples</h2>
+  <% for(var i=0; i < files.length; i++) { %>
+    <div><a href="<%= files[i] %>.html"><%= files[i] %></a></div>
+  <% } %>
 </body>
 
 </html>

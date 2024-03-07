@@ -10,11 +10,18 @@ import { AdvancedDynamicTexture } from '@babylonjs/gui/2D/advancedDynamicTexture
 export type SceneCallback = (void | ((time: number, delta: number) => void))
 export type SceneFunction = (scene: Scene) => Promise<SceneCallback>;
 
+type SceneModule = {
+    default: SceneFunction
+}
+
+
 export class App {
     private canvas: HTMLCanvasElement;
     public static ui: AdvancedDynamicTexture;
+    private createScene: SceneFunction;
 
-    constructor(private createScene: SceneFunction) {
+    constructor(module: SceneModule) {
+        this.createScene = module.default;
         // create the canvas html element and attach it to the webpage
         const canvas = this.canvas = document.createElement('canvas');
         canvas.id = 'gameCanvas';

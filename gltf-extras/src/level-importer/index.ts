@@ -1,26 +1,18 @@
-import { SceneLoader } from "@babylonjs/core/Loading/sceneLoader";
 import '@babylonjs/core/Loading/loadingScreen';
 import '@babylonjs/loaders/glTF/2.0/glTFLoader';
 import '@babylonjs/loaders/glTF/2.0/Extensions/ExtrasAsMetadata';
 import '@babylonjs/loaders/glTF/2.0/Extensions/KHR_mesh_quantization';
 import '@babylonjs/loaders/glTF/2.0/Extensions/KHR_lights_punctual';
 import '@babylonjs/loaders/glTF/2.0/Extensions/EXT_meshopt_compression';
-import type { IndicesArray, Nullable, float } from "@babylonjs/core/types";
-import { IPhysicsEnabledObject, PhysicsImpostor } from "@babylonjs/core/Physics/v1/physicsImpostor";
+import type { float } from "@babylonjs/core/types";
+import { PhysicsImpostor } from "@babylonjs/core/Physics/v1/physicsImpostor";
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
-import { MotorEnabledJoint, PhysicsJoint } from "@babylonjs/core/Physics/v1/physicsJoint";
+import { PhysicsJoint } from "@babylonjs/core/Physics/v1/physicsJoint";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
-import { BoundingInfo } from "@babylonjs/core/Culling/boundingInfo";
 import { Mesh } from "@babylonjs/core/Meshes/mesh";
-import { LinesMesh } from "@babylonjs/core/Meshes/linesMesh";
-import { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
 import { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
-import Jolt from '@phoenixillusion/babylonjs-jolt-plugin/import';
-import { GetJoltVec3 } from '@phoenixillusion/babylonjs-jolt-plugin/util';
-import { BoundingBox } from "@babylonjs/core/Culling/boundingBox";
-import { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
 import { GLTFLoader } from "@babylonjs/loaders/glTF/2.0/glTFLoader";
 import { GLTFFileLoader, IGLTFLoaderData } from "@babylonjs/loaders/glTF/glTFFileLoader";
 import { EngineStore } from "@babylonjs/core/Engines/engineStore";
@@ -29,6 +21,11 @@ import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { IGLTF } from "@babylonjs/loaders/glTF/2.0/glTFLoaderInterfaces";
 import { TerrainMaterial } from "@babylonjs/materials/terrain/terrainMaterial";
 import { Scene } from "@babylonjs/core/scene";
+import { MinimalPhysicsNode } from "../../../dist/jolt-impostor";
+import { PathConstraintParams } from '../../../dist/jolt-constraints';
+import { showPath3D } from '../util/debug';
+import { Path3D } from '@babylonjs/core/Maths/math.path';
+import { createPath3DWithTan2CubicBenzier } from '../../../dist/jolt-constraint-path';
 
 type JoltShapes = 'Sphere' | 'Box' | 'Capsule' | 'TaperedCapsule' | 'Cylinder' | 'ConvexHull' | 'Mesh' | 'HeightField';
 type JoltMotionType = 'Dynamic' | 'Static' | 'Kinematic';
@@ -59,8 +56,8 @@ interface JoltCollisionExtras {
   worldPosition: Float3;
   worldRotation: Float4;
   worldScale: Float3;
+  extents: Float3;
 
-  localBounds: { center: Float3, extents: Float3 };
   heightfield?: HeightFieldData;
 }
 
@@ -97,109 +94,6 @@ function getImpostorShape(shape: JoltShapes): number {
   return -1;
 }
 
-function createMeshForShape(shape: Jolt.Shape) {
-  // Get triangle data
-  let scale = new Jolt.Vec3(1, 1, 1);
-  let triContext = new Jolt.ShapeGetTriangles(shape, Jolt.AABox.prototype.sBiggest(), shape.GetCenterOfMass(), Jolt.Quat.prototype.sIdentity(), scale);
-  Jolt.destroy(scale);
-  // Get a view on the triangle data (does not make a copy)
-  let vertices = new Float32Array(Jolt.HEAPF32.buffer, triContext.GetVerticesData(), triContext.GetVerticesSize() / Float32Array.BYTES_PER_ELEMENT);
-  Jolt.destroy(triContext);
-
-  const indices: number[] = [];
-  for (let i = 0; i < vertices.length / 3; i++) {
-    indices.push(i);
-  }
-  // Create a three mesh
-  var vertexData = new VertexData();
-  vertexData.positions = vertices;
-  vertexData.indices = indices;
-
-  const mesh = new Mesh('debug-mesh');
-  vertexData.applyToMesh(mesh);
-  return mesh;
-}
-
-const DEBUG = false;
-
-class MinimalPhysicsNode extends TransformNode implements IPhysicsEnabledObject {
-  private boundingInfo: BoundingInfo;
-  private debugBoxBabylon?: Mesh;
-  private debugBoxJolt?: Mesh;
-  public physicsImpostor?: PhysicsImpostor;
-
-  private lineRef?: LinesMesh;
-  private posBab: Vector3 = new Vector3();
-  private posJolt: Vector3 = new Vector3();
-  private positionLine = [this.posBab, this.posJolt];
-
-  private joltBBox: BoundingBox = new BoundingBox(new Vector3(), new Vector3());
-  private joltBoxMin: Vector3 = new Vector3();
-  private joltBoxMax: Vector3 = new Vector3();
-
-  constructor(name: string, extents: Float3, private mesh: AbstractMesh) {
-    super(name);
-
-    const [x, y, z] = extents;
-    this.boundingInfo = new BoundingInfo(new Vector3(-x, -y, -z), new Vector3(x, y, z));
-
-    if (DEBUG)
-      this.registerAfterWorldMatrixUpdate(() => {
-        if (this.physicsImpostor) {
-
-          const debugBoxBabylonMat = getMaterial('#ff0000');
-          debugBoxBabylonMat.wireframe = true;
-          const debugBoxJoltMat = getMaterial('#ff00ff');
-          debugBoxJoltMat.wireframe = true;
-
-          const jBody: Jolt.Body = this.physicsImpostor.physicsBody;
-          const jWorldBounds = jBody.GetWorldSpaceBounds();
-          GetJoltVec3(jWorldBounds.mMin, this.joltBoxMin);
-          GetJoltVec3(jWorldBounds.mMax, this.joltBoxMax);
-          this.joltBBox.reConstruct(this.joltBoxMin, this.joltBoxMax);
-
-          if (!this.debugBoxBabylon) {
-            /*const bWorldBounds = this.getBoundingInfo().boundingBox;
-            const bSize = bWorldBounds.extendSizeWorld;
-            this.debugBoxBabylon = MeshBuilder.CreateBox(`${name}: Debug Box`, { width: bSize.x*2, height: bSize.y*2, depth: bSize.z*2});
-            this.debugBoxBabylon.material = debugBoxBabylonMat;*/
-          }
-
-          if (!this.debugBoxJolt) {
-            this.lineRef = MeshBuilder.CreateLines("lines", { points: this.positionLine, updatable: true });
-            const jSize = this.joltBBox.extendSizeWorld;
-            this.debugBoxJolt = MeshBuilder.CreateBox(`${name}: Debug Box`, { width: jSize.x * 2, height: jSize.y * 2, depth: jSize.z * 2 });;
-            this.debugBoxJolt.material = debugBoxJoltMat;
-
-            const mesh = createMeshForShape(jBody.GetShape());
-            mesh.parent = this;
-            mesh.material = getMaterial('#00ff00')
-            mesh.material.wireframe = true;
-          }
-          this.posBab.copyFrom(this.absolutePosition);
-          this.debugBoxBabylon && this.debugBoxBabylon.position.copyFrom(this.absolutePosition);
-          this.posJolt.copyFrom(this.joltBBox.centerWorld);
-          this.debugBoxJolt && this.debugBoxJolt.position.copyFrom(this.joltBBox.centerWorld);
-
-          if (this.lineRef) {
-            MeshBuilder.CreateLines("lines", { points: this.positionLine, instance: this.lineRef });
-          }
-        }
-      })
-  }
-
-  getBoundingInfo(): BoundingInfo {
-    return this.boundingInfo;
-  }
-  getVerticesData(kind: string): Nullable<number[] | Float32Array> {
-    return this.mesh.getVerticesData(kind);
-  }
-  getIndices?(): Nullable<IndicesArray> {
-    return this.mesh.getIndices();
-  }
-
-}
-
 const canvas = document.createElement('canvas');
 
 
@@ -225,7 +119,7 @@ async function createHeightField(collision: JoltCollisionExtras, heightfield: He
   ctx.drawImage(img, 0, 0);
   const imgData = ctx.getImageData(0, 0, size, size);
     const heightBuffer = new Float32Array(size * size);
-    const meshSize = collision.localBounds.extents[0] * 2;
+    const meshSize = collision.extents[0] * 2;
     const ground = CreateGroundFromHeightMapVertexData( {
         width: meshSize,
         height: meshSize,
@@ -306,31 +200,27 @@ export default class {
         const extras = node.metadata.gltf.extras as GltfJoltExtras;
         if (extras.jolt && extras.jolt.collision) {
           nodeLookup[extras.jolt.id] = node;
-          const data = extras.jolt.collision;
+          const collisionData = extras.jolt.collision;
 
-          const [ex, ey, ez] = data.localBounds.extents;
-          const [sx, sy, sz] = data.worldScale;
+          const [ex, ey, ez] = collisionData.extents;
+          const [sx, sy, sz] = collisionData.worldScale;
           node.computeWorldMatrix(true);
-          const transformParent = new MinimalPhysicsNode(node.name + ": min", [ex * sx, ey * sy, ez * sz], node);
-          transformParent.position.set(...data.worldPosition);
+          const transformParent = new MinimalPhysicsNode(node.name + ": min", new Vector3(ex * sx, ey * sy, ez * sz), node);
+          transformParent.position.set(...collisionData.worldPosition);
           transformParent.rotationQuaternion = new Quaternion();
-          transformParent.rotationQuaternion.set(...data.worldRotation);
+          transformParent.rotationQuaternion.set(...collisionData.worldRotation);
 
-          if (data.motionType == 'Dynamic' || data.motionType == 'Kinematic') {
+          if (collisionData.motionType == 'Dynamic' || collisionData.motionType == 'Kinematic') {
             node.parent = transformParent;
-            node.scaling.set(...data.worldScale);
+            node.scaling.set(...collisionData.worldScale);
             node.position.set(0, 0, 0);
             node.rotationQuaternion = new Quaternion();
-            if (DEBUG) {
-              node.material = getMaterial('#999999');
-              node.visibility = 0.25
-            }
           }
-          transformParent.physicsImpostor = node.physicsImpostor = new PhysicsImpostor(transformParent, getImpostorShape(data.collisionShape),
+          node.physicsImpostor = new PhysicsImpostor(transformParent, getImpostorShape(collisionData.collisionShape),
             {
-              friction: data.friction,
-              restitution: data.restitution,
-              mass: data.mass,
+              friction: collisionData.friction,
+              restitution: collisionData.restitution,
+              mass: collisionData.mass,
               ignoreParent: true,
               disableBidirectionalTransformation: true
             })
@@ -352,10 +242,29 @@ export default class {
               return;
             }
             if (constraint.type === 'Path') {
-              const joint = new MotorEnabledJoint(0, { nativeParams: { constraint, 'motor-mode': 'velocity' } });
-              body1.physicsImpostor?.addJoint(node.physicsImpostor, joint);
-              joint.physicsJoint.SetPositionMotorState(1);
-              joint.physicsJoint.SetTargetVelocity(1.5);
+              const pathData = constraint as any as PathConstraintParams;
+
+              const pos: Vector3[] = [];
+              const inTan: Vector3[] = [];
+              const norm: Vector3[] = [];
+              if(!(pathData.path instanceof Path3D)) {
+                pathData.path.forEach(([p, iT, oT, n]) => {
+                  pos.push(new Vector3(... p))
+                  inTan.push(new Vector3(... iT),new Vector3(... oT))
+                  norm.push(new Vector3(... n))
+                });
+                if(pathData.closed) {
+                  pos.push(pos[0]);
+                  inTan.push(inTan[0],inTan[1]);
+                  norm.push(norm[0]);
+                }
+                const hermite = createPath3DWithTan2CubicBenzier(pos, inTan, norm);
+                showPath3D(hermite, 0.5, true);
+              }
+              //const joint = new MotorEnabledJoint(0, { nativeParams: { constraint, 'motor-mode': 'velocity' } });
+              //body1.physicsImpostor?.addJoint(node.physicsImpostor, joint);
+              //joint.physicsJoint.SetPositionMotorState(1);
+              //joint.physicsJoint.SetTargetVelocity(1.5);
             } else {
               const joint = new PhysicsJoint(0, { nativeParams: { constraint } });
               body1.physicsImpostor?.addJoint(node.physicsImpostor, joint);
