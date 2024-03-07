@@ -5,7 +5,7 @@ import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { BoundingInfo } from '@babylonjs/core/Culling/boundingInfo';
 export class MinimalPhysicsNode extends TransformNode {
     constructor(name, extents, mesh) {
-        super(name);
+        super(name, mesh.getScene());
         this.mesh = mesh;
         const { x, y, z } = extents;
         this.boundingInfo = new BoundingInfo(new Vector3(-x, -y, -z), new Vector3(x, y, z));

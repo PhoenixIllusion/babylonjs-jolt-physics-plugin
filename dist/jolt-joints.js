@@ -240,9 +240,9 @@ export class JoltPathConstraint extends JoltJoint {
         const constraint = {
             type: 'Path',
             path: points,
+            closed: true,
             pathPosition: [0, 0, 0],
             pathRotation: [0, 0, 0, 1],
-            pathNormal: [[0, 1, 0]],
             pathFraction: 0,
             rotationConstraintType: type,
             maxFrictionForce: 0
@@ -268,7 +268,6 @@ export class JoltPathConstraint extends JoltJoint {
             throw new Error('Path Normal must either be single item or equal to number of points in path');
         }
         const params = this.getParams();
-        params.pathNormal = normal;
         if (params.pathObject) {
             params.pathObject.setPathNormals(normal);
         }

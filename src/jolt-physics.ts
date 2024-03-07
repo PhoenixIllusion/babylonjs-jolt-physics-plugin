@@ -14,7 +14,7 @@ import '@babylonjs/core/Physics/physicsEngineComponent';
 import { IndicesArray, Nullable } from '@babylonjs/core/types';
 import { PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResult';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
-import { JoltConstraintManager } from './jolt-constraints';
+import * as JoltConstraintManager from './constraints';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import './jolt-impostor';
 export { setJoltModule } from './jolt-import'
@@ -540,9 +540,9 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
 
     let constraint: Jolt.Constraint | undefined;
     if (nativeParams && nativeParams.constraint) {
-      constraint = JoltConstraintManager.CreateJoltConstraint(mainBody, connectedBody, nativeParams.constraint);
+      constraint = JoltConstraintManager.createJoltConstraint(mainBody, connectedBody, nativeParams.constraint);
     } else {
-      constraint = JoltConstraintManager.CreateClassicConstraint(mainBody, connectedBody, joint)
+      constraint = JoltConstraintManager.createClassicConstraint(mainBody, connectedBody, joint)
     }
     if (constraint) {
       this.world.AddConstraint(constraint);

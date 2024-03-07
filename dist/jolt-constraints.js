@@ -1,17 +1,7 @@
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PhysicsJoint } from "@babylonjs/core/Physics/v1/physicsJoint";
 import Jolt from "./jolt-import";
-import { JoltConstraintPath, JoltConstraintPointPath } from "./jolt-constraint-path";
-function wrapF3Data(data) {
-    if (!(data instanceof Array)) {
-        data = [data];
-    }
-    const arrData = data;
-    if (arrData[0] instanceof Vector3) {
-        return arrData;
-    }
-    return arrData.map(f3 => new Vector3(f3[0], f3[1], f3[2]));
-}
+import { JoltConstraintPath, createPath3DWithTan2CubicBenzier } from "./jolt-constraint-path";
 export class JoltConstraintManager {
     static CreateJoltConstraint(mainBody, connectedBody, constraintParams) {
         const setPoints = (constraintSettings, params) => {
@@ -109,10 +99,19 @@ export class JoltConstraintManager {
                 {
                     const params = constraintParams;
                     let constraintSettings = twoBodySettings = new Jolt.PathConstraintSettings();
-                    const { path, pathNormal } = params;
+                    const { path } = params;
                     let jPath;
                     if (path instanceof Array) {
-                        params.pathObject = jPath = new JoltConstraintPointPath(wrapF3Data(path), pathNormal && wrapF3Data(pathNormal));
+                        const pos = [];
+                        const inTan = [];
+                        const norm = [];
+                        path.forEach(([p, iT, oT, n]) => {
+                            pos.push(new Vector3(...p));
+                            inTan.push(new Vector3(...iT), new Vector3(...oT));
+                            norm.push(new Vector3(...n));
+                        });
+                        const hermite = createPath3DWithTan2CubicBenzier(pos, inTan, norm);
+                        params.pathObject = jPath = new JoltConstraintPath(hermite);
                     }
                     else {
                         params.pathObject = jPath = new JoltConstraintPath(path);

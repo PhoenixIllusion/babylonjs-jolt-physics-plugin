@@ -1,4 +1,3 @@
-import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { PhysicsJoint } from "@babylonjs/core/Physics/v1/physicsJoint";
 import Jolt from "./jolt-import";
 import type { float } from "@babylonjs/core/types";
@@ -73,8 +72,8 @@ export interface ConeConstraintParams extends JoltConstraint {
 export type RotationConstraintType = 'Free' | 'ConstrainAroundTangent' | 'ConstrainAroundNormal' | 'ConstrainAroundBinormal' | 'ConstrainToPath' | 'FullyConstrained';
 export interface PathConstraintParams extends JoltConstraint {
     type: 'Path';
-    path: Path3D | float3[] | Vector3[];
-    pathNormal?: float3[] | Vector3 | Vector3[];
+    path: Path3D | ([float3, float3, float3, float3])[];
+    closed: boolean;
     pathPosition: float3;
     pathRotation: float4;
     pathFraction: float;

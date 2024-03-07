@@ -1,5 +1,7 @@
 export const LAYER_NON_MOVING = 0;
 export const LAYER_MOVING = 1;
+export const f3 = (v) => [v.x, v.y, v.z];
+export const f4 = (v) => [v.x, v.y, v.z, v.w];
 export const SetJoltVec3 = (vec3, jVec3) => {
     jVec3.Set(vec3.x, vec3.y, vec3.z);
     return jVec3;

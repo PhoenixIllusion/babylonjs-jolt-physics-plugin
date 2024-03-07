@@ -56,7 +56,7 @@ export declare class JoltConeJoint extends JoltJoint<ConeConstraintParams, Jolt.
 }
 export declare class JoltPathConstraint extends JoltJoint<PathConstraintParams, Jolt.PathConstraint> {
     motor: MotorControl;
-    constructor(points: Vector3[] | Path3D, type?: RotationConstraintType);
+    constructor(points: Path3D, type?: RotationConstraintType);
     setPathNormals(normal: Vector3 | Vector3[]): void;
     setPathOffset(position: Vector3, rotation: Quaternion): void;
     setPathStartPosition(val: Vector3): void;

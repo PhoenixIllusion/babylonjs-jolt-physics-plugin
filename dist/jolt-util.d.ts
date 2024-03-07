@@ -1,8 +1,13 @@
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import Jolt from './jolt-import';
+import { float } from '@babylonjs/core/types';
 export declare const LAYER_NON_MOVING = 0;
 export declare const LAYER_MOVING = 1;
 export type JVec3 = Jolt.Vec3 | Jolt.RVec3;
+export type float3 = [float, float, float];
+export type float4 = [float, float, float, float];
+export declare const f3: (v: Vector3) => float3;
+export declare const f4: (v: Quaternion) => float4;
 export declare const SetJoltVec3: (vec3: Vector3, jVec3: Jolt.Vec3) => Jolt.Vec3;
 export declare const SetJoltRVec3: (vec3: Vector3, jVec3: Jolt.RVec3) => Jolt.RVec3;
 export declare const GetJoltVec3: (jVec3: JVec3, vec3: Vector3) => Vector3;

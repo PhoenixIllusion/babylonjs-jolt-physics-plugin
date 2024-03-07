@@ -16,7 +16,7 @@ export class MinimalPhysicsNode extends TransformNode implements IPhysicsEnabled
   boundingInfo: BoundingInfo;
 
   constructor(name: string, extents: Vector3, private mesh: AbstractMesh) {
-    super(name);
+    super(name, mesh.getScene());
 
     const { x, y, z } = extents;
     this.boundingInfo = new BoundingInfo(new Vector3(-x, -y, -z), new Vector3(x, y, z));
