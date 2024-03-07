@@ -9,7 +9,6 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 
-
 let camera: FollowCamera;
 
 export const config: SceneConfig = {
@@ -19,7 +18,6 @@ export const config: SceneConfig = {
     return camera;
   }
 }
-
 
 export default (): SceneCallback => {
   const floor = createFloor();

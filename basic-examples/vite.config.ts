@@ -1,6 +1,6 @@
-import { HtmlTagDescriptor, UserConfig, defineConfig } from 'vite'
+import { defineConfig } from 'vite'
 import type { Page }from 'vite-plugin-virtual-mpa';
-import { createMpaPlugin, createPages } from 'vite-plugin-virtual-mpa'
+import { createMpaPlugin } from 'vite-plugin-virtual-mpa'
 import fs from 'fs';
 
 function genPages() {
@@ -23,8 +23,6 @@ function genPages() {
   return pages;
 }
 
-
-
 const mapPlugin = createMpaPlugin({
   pages: genPages(),
   watchOptions: {
@@ -35,16 +33,18 @@ const mapPlugin = createMpaPlugin({
   }
 });
 
+const dir = 'basic-examples';
+
 export default defineConfig({
   build: {
     rollupOptions: {
       output: {
-        dir: '../.git-pages/basic-examples/'
+        dir: '../.git-pages/'+dir+'/'
       },
       external: ['static']
     }
   },
-  base: '/babylonjs-jolt-physics-plugin/basic-examples',
+  base: '/babylonjs-jolt-physics-plugin/'+dir,
   plugins: [
     mapPlugin as any
   ],

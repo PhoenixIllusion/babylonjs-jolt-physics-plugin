@@ -57,10 +57,7 @@ const createSlider = () => {
 }
 
 export default (): SceneCallback => {
-
   createFloor();
-
   createWindmill();
-
   createSlider();
 }

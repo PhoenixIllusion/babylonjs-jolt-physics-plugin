@@ -8,6 +8,6 @@
   </head>
 <body> <script type="module">
         import { App } from '/src/app';
-        new App(await import('/src/scene/<%- scene %>'));
+        import('/src/scene/<%- scene %>').then(module => new App(module));
     </script></body>
 </html>

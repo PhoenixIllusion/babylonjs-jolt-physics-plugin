@@ -9,7 +9,6 @@ export default (): SceneCallback => {
   let timeNextSpawn = objectTimePeriod;
   const maxNumObjects = 100;
 
-  //createFloor();
   createMeshFloor(25, 2, 3, new Vector3(0, -2, 0));
 
   let meshesCreated = 0;
@@ -105,6 +104,7 @@ export default (): SceneCallback => {
       }
     }
   }
+
   return (time: number, _deltaTime: number) => {
     if (meshesCreated < maxNumObjects && time > timeNextSpawn) {
       generateObject();

@@ -1,7 +1,5 @@
-
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { SceneCallback, createBox, createFloor } from '../util/example';
-
 import Jolt from '@phoenixillusion/babylonjs-jolt-plugin/import';
 import { JoltSliderJoint, JoltDistanceJoint, JoltFixedJoint, JoltHingeJoint, JoltPointJoint } from '@phoenixillusion/babylonjs-jolt-plugin/joints';
 import { PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
@@ -17,7 +15,6 @@ export default (): SceneCallback => {
 
   for (let z = 0; z < 9; ++z)
     filter.DisableCollision(z, z + 1);
-
 
   const len = 9;
 

@@ -10,5 +10,4 @@ export default (): SceneCallback => {
     const box = createBox(position, Quaternion.Identity(), new Vector3(0.5, 0.5, 0.5), { mass: 10, friction: 0.1 * i, restitution: 0.2 }, '#990099');
     box.physics.applyImpulse(new Vector3(0, 0, 100), position);
   }
-
 }

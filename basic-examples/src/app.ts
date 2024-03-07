@@ -20,7 +20,6 @@ type SceneModule = {
     config?: SceneConfig
 }
 
-
 export class App {
     private canvas: HTMLCanvasElement;
     private createScene: SceneFunction;

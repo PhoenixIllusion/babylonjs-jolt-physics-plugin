@@ -5,8 +5,6 @@ import '@babylonjs/core/Meshes/thinInstanceMesh';
 import { FlyCamera } from '@babylonjs/core/Cameras/flyCamera';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 
-
-
 export default (): SceneCallback => {
     const scene = Engine.LastCreatedScene!;
     const camera = scene.cameras[0] as FlyCamera;
