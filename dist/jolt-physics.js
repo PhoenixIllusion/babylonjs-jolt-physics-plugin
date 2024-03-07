@@ -213,6 +213,7 @@ export class JoltJSPlugin {
             const friction = impostor.getParam('friction');
             const restitution = impostor.getParam('restitution');
             const collision = impostor.getParam('collision');
+            const sensor = impostor.getParam('sensor');
             impostor.object.computeWorldMatrix(true);
             SetJoltVec3(impostor.object.position, this._tempVec3A);
             SetJoltQuat(impostor.object.rotationQuaternion, this._tempQuaternion);
@@ -240,6 +241,9 @@ export class JoltJSPlugin {
             if (mass !== 0) {
                 settings.mOverrideMassProperties = Jolt.EOverrideMassProperties_CalculateInertia;
                 settings.mMassPropertiesOverride.mMass = mass;
+            }
+            if (sensor !== undefined) {
+                settings.mIsSensor = sensor;
             }
             const body = impostor.physicsBody = this._bodyInterface.CreateBody(settings);
             shape.Release();

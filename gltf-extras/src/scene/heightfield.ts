@@ -4,7 +4,8 @@ import { SceneFunction } from "../app";
 import LevelImporter from "../level-importer";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { FlyCamera } from "@babylonjs/core/Cameras/flyCamera";
-import { Nullable, TransformNode } from "@babylonjs/core";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
+import { Nullable } from "@babylonjs/core/types";
 
 const run: SceneFunction = async (scene: Scene) => {
   const camera = new FlyCamera('camera1', new Vector3(0, 15, 10), scene);

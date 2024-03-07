@@ -138,7 +138,7 @@ type ImpostorNumberParamReq = 'mass';
 type ImpostorNumberParam = 'friction'|'restitution'|'radiusBottom'|'radiusTop';
 type ImpostorVec3Param = 'extents'|'centerOffMass';
 type ImpostorMeshParam = 'mesh';
-type ImpostorBoolParam = 'frozen';
+type ImpostorBoolParam = 'frozen'|'sensor';
 type ImpostorCollisionFilterParam = 'collision';
 type ImpostorHeightMapParam = 'heightMap';
 
@@ -165,6 +165,7 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
     mesh?: IPhysicsEnabledObject;
     collision?: CollisionData;
     heightMap?: HeightMapData;
+    sensor?: boolean;
   }
 
   interface PhysicsImpostor {

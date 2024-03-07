@@ -3,7 +3,7 @@ import { PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResu
 import Jolt from './jolt-import';
 import { SetJoltVec3, GetJoltVec3, LAYER_MOVING, SetJoltRVec3 } from './jolt-util';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { JoltJSPlugin } from '.';
+import { JoltJSPlugin } from './jolt-physics';
 
 export class RayCastUtility {
 
