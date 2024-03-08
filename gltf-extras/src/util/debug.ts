@@ -6,6 +6,7 @@ import '@babylonjs/core/Meshes/thinInstanceMesh';
 
 import { CreateLines } from '@babylonjs/core/Meshes/Builders/linesBuilder';
 import { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
+import { TransformNode } from "@babylonjs/core";
 
 export const MeshBuilder = {
   CreateSphere,
@@ -13,6 +14,7 @@ export const MeshBuilder = {
 }
 
 export function showPath3D(path3d: Path3D, size?: number, connectNormals = false) {
+  const root = new TransformNode('debug-path');
   size = size || 0.5;
   const curve = path3d.getCurve();
   const tgts = path3d.getTangents();
@@ -27,6 +29,9 @@ export function showPath3D(path3d: Path3D, size?: number, connectNormals = false
   vcTgt.color = Color3.Red();
   vcNorm.color = Color3.Green();
   vcBinorm.color = Color3.Blue();
+  vcTgt.parent = root;
+  vcNorm.parent = root;
+  vcBinorm.parent = root;
 
   const vcTgt2 = MeshBuilder.CreateLines("tgt", { points: [Vector3.Zero(), Vector3.Right().scaleInPlace(size)] });
   const vcNorm2 = MeshBuilder.CreateLines("norm", { points: [Vector3.Zero(), Vector3.Up().scaleInPlace(size)] });
@@ -34,6 +39,9 @@ export function showPath3D(path3d: Path3D, size?: number, connectNormals = false
   vcTgt2.color = Color3.FromHexString('#FF9999');
   vcNorm2.color = Color3.FromHexString('#99FF99');
   vcBinorm2.color = Color3.FromHexString('#9999FF');
+  vcTgt2.parent = root;
+  vcNorm2.parent = root;
+  vcBinorm2.parent = root;
   
 
   const line = MeshBuilder.CreateLines("curve", { points: curve });
@@ -67,11 +75,12 @@ export function showPath3D(path3d: Path3D, size?: number, connectNormals = false
   if(connectNormals) {
     const normRibbon = MeshBuilder.CreateLines('normal-ribbon', { points: normals });
     normRibbon.color = Color3.FromHexString('#99FF99');
-    normRibbon.freezeWorldMatrix()
+    normRibbon.parent = root;
     const binormRibbon = MeshBuilder.CreateLines('binormal-ribbon', { points: binormals });
     binormRibbon.color = Color3.FromHexString('#9999FF');
     binormRibbon.edgesWidth = 2;
-    binormRibbon.freezeWorldMatrix();
+    binormRibbon.parent = root;
   }
-  return line;
+  line.parent = root;
+  return root;
 }

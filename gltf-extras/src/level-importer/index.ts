@@ -26,6 +26,7 @@ import { PathConstraintParams } from '../../../dist/jolt-constraints';
 import { showPath3D } from '../util/debug';
 import { Path3D } from '@babylonjs/core/Maths/math.path';
 import { createPath3DWithTan2CubicBenzier } from '../../../dist/jolt-constraint-path';
+import { JoltPathConstraint, MotorMode } from '../../../dist';
 
 type JoltShapes = 'Sphere' | 'Box' | 'Capsule' | 'TaperedCapsule' | 'Cylinder' | 'ConvexHull' | 'Mesh' | 'HeightField';
 type JoltMotionType = 'Dynamic' | 'Static' | 'Kinematic';
@@ -133,10 +134,11 @@ async function createHeightField(collision: JoltCollisionExtras, heightfield: He
         alphaFilter: 0,
         heightBuffer: heightBuffer
     });
-    const mesh = new Mesh('height-map');
+    const scene = EngineStore.LastCreatedScene!;
+    const mesh = new Mesh('height-map', scene);
     ground.applyToMesh(mesh);
 
-    const terrainMaterial = new TerrainMaterial('terrain');
+    const terrainMaterial = new TerrainMaterial('terrain', scene);
     terrainMaterial.mixTexture = await createTexture('mix', loadImage(heightfield.splatIndex[0]), mesh.getScene())
     for(let i=0;i<3;i++) {
       if(heightfield.layers[i]) {
@@ -259,16 +261,12 @@ export default class {
                   norm.push(norm[0]);
                 }
                 const hermite = createPath3DWithTan2CubicBenzier(pos, inTan, norm);
-                showPath3D(hermite, 0.5, true);
+                const path = showPath3D(hermite, 0.5, true);
+                path.position.copyFrom(body1.getAbsolutePosition());
               }
-              //const joint = new MotorEnabledJoint(0, { nativeParams: { constraint, 'motor-mode': 'velocity' } });
-              //body1.physicsImpostor?.addJoint(node.physicsImpostor, joint);
-              //joint.physicsJoint.SetPositionMotorState(1);
-              //joint.physicsJoint.SetTargetVelocity(1.5);
-            } else {
-              const joint = new PhysicsJoint(0, { nativeParams: { constraint } });
-              body1.physicsImpostor?.addJoint(node.physicsImpostor, joint);
             }
+            const joint = new PhysicsJoint(0, { nativeParams: { constraint } });
+            body1.physicsImpostor?.addJoint(node.physicsImpostor, joint);
           });
         }
       }
