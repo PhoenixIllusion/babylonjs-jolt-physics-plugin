@@ -5,10 +5,11 @@ import { SliderConstraintParams } from "../constraints/types";
 import { JoltJoint } from "./jolt";
 import Jolt from "../jolt-import";
 import { f3 } from "../jolt-util";
+import { SpringControl } from "./spring";
 
 export class JoltSliderJoint extends JoltJoint<SliderConstraintParams, Jolt.SliderConstraint>  {
-
   public motor: MotorControl;
+  public spring: SpringControl<SliderConstraintParams, Jolt.SliderConstraint>;
 
   constructor(point1: Vector3, slideAxis: Vector3, space: 'Local' | 'World' = 'World', point2?: Vector3, slide2Axis?: Vector3) {
     const p1 = point1;
@@ -38,6 +39,7 @@ export class JoltSliderJoint extends JoltJoint<SliderConstraintParams, Jolt.Slid
         constraint
       }
     })
+    this.spring = new SpringControl(this);
     this.motor = new MotorControl((mode) => {
       if (this.constraint) {
         this.constraint.SetMotorState(GetMode(mode));

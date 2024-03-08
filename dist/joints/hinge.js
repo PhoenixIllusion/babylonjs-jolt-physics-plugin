@@ -2,6 +2,7 @@ import { PhysicsJoint } from "@babylonjs/core/Physics/v1/physicsJoint";
 import { GetMode, MotorControl, MotorMode } from "./motor";
 import { JoltJoint } from "./jolt";
 import { f3 } from "../jolt-util";
+import { SpringControl } from "./spring";
 export class JoltHingeJoint extends JoltJoint {
     constructor(point1, hingeAxis, normalAxis, space = 'World', point2, hinge2Axis, normal2Axis) {
         const p1 = point1;
@@ -28,6 +29,7 @@ export class JoltHingeJoint extends JoltJoint {
                 constraint
             }
         });
+        this.spring = new SpringControl(this);
         this.motor = new MotorControl((mode) => {
             if (this.constraint) {
                 this.constraint.SetMotorState(GetMode(mode));

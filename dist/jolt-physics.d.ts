@@ -65,9 +65,6 @@ export declare class JoltJSPlugin implements IPhysicsEnginePlugin {
     * @param impostor imposter to remove the physics body from
     */
     removePhysicsBody(impostor: PhysicsImpostor): void;
-    private _getMeshVertexData;
-    private _createShape;
-    private _createShapeSettings;
     generateJoint(impostorJoint: PhysicsImpostorJoint): void;
     removeJoint(impostorJoint: PhysicsImpostorJoint): void;
     /**

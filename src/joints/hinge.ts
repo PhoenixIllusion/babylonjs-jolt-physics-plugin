@@ -5,10 +5,11 @@ import { HingeConstraintParams } from "../constraints/types";
 import { JoltJoint } from "./jolt";
 import Jolt from "../jolt-import";
 import { f3 } from "../jolt-util";
+import { SpringControl } from "./spring";
 
 export class JoltHingeJoint extends JoltJoint<HingeConstraintParams, Jolt.HingeConstraint>  {
-
   public motor: MotorControl;
+  public spring: SpringControl<HingeConstraintParams, Jolt.HingeConstraint>;
 
   constructor(point1: Vector3, hingeAxis: Vector3, normalAxis: Vector3, space: 'Local' | 'World' = 'World',
     point2?: Vector3, hinge2Axis?: Vector3, normal2Axis?: Vector3) {
@@ -36,7 +37,8 @@ export class JoltHingeJoint extends JoltJoint<HingeConstraintParams, Jolt.HingeC
       nativeParams: {
         constraint
       }
-    })
+    });
+    this.spring = new SpringControl(this);
     this.motor = new MotorControl((mode) => {
       if (this.constraint) {
         this.constraint.SetMotorState(GetMode(mode));

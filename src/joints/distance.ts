@@ -4,11 +4,15 @@ import { JoltJoint } from "./jolt";
 import Jolt from "../jolt-import";
 import { f3 } from "../jolt-util";
 import { DistanceConstraintParams } from "../constraints/types";
+import { SpringControl } from "./spring";
 
 export class JoltDistanceJoint extends JoltJoint<DistanceConstraintParams, Jolt.DistanceConstraint> {
+  public spring: SpringControl<DistanceConstraintParams, Jolt.DistanceConstraint>;
+
   constructor(point1: Vector3, space: 'Local' | 'World' = 'World', point2?: Vector3) {
     const p1 = point1;
     const p2 = point2 ?? point1;
+
 
     const constraint: DistanceConstraintParams = {
       space,
@@ -23,6 +27,7 @@ export class JoltDistanceJoint extends JoltJoint<DistanceConstraintParams, Jolt.
         constraint
       }
     })
+    this.spring = new SpringControl(this);
   }
 
   setMinMax(minVal: number, maxVal: number) {

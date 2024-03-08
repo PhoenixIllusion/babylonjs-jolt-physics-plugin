@@ -3,6 +3,7 @@ import { GetMode, MotorControl, MotorMode } from "./motor";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { JoltJoint } from "./jolt";
 import { f3 } from "../jolt-util";
+import { SpringControl } from "./spring";
 export class JoltSliderJoint extends JoltJoint {
     constructor(point1, slideAxis, space = 'World', point2, slide2Axis) {
         const p1 = point1;
@@ -31,6 +32,7 @@ export class JoltSliderJoint extends JoltJoint {
                 constraint
             }
         });
+        this.spring = new SpringControl(this);
         this.motor = new MotorControl((mode) => {
             if (this.constraint) {
                 this.constraint.SetMotorState(GetMode(mode));

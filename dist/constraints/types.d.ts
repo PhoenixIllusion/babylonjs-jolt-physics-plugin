@@ -7,6 +7,21 @@ type ESpace = 'Local' | 'World';
 export interface JoltConstraint {
     type: JoltConstraintType;
 }
+type ESpringMode = 'Frequency' | 'Stiffness';
+export interface SpringSettings {
+    mode: ESpringMode;
+    frequency?: float;
+    stiffness?: float;
+    damping?: float;
+}
+export interface MotorSettings {
+    state: 'Off' | 'Velocity' | 'Position';
+    targetValue?: float;
+    minForceLimit?: float;
+    maxForceLimit?: float;
+    minTorqueLimit?: float;
+    maxTorqueLimit?: float;
+}
 export interface FixedConstraintParams extends JoltConstraint {
     type: 'Fixed';
     space: ESpace;
@@ -35,6 +50,8 @@ export interface HingeConstraintParams extends JoltConstraint {
     limitsMin: float;
     limitsMax: float;
     maxFrictionTorque: float;
+    spring?: SpringSettings;
+    motor1?: MotorSettings;
 }
 export interface SliderConstraintParams extends JoltConstraint {
     type: 'Slider';
@@ -48,6 +65,8 @@ export interface SliderConstraintParams extends JoltConstraint {
     limitsMin: float;
     limitsMax: float;
     maxFrictionForce: float;
+    spring?: SpringSettings;
+    motor1?: MotorSettings;
 }
 export interface DistanceConstraintParams extends JoltConstraint {
     type: 'Distance';
@@ -56,6 +75,7 @@ export interface DistanceConstraintParams extends JoltConstraint {
     point2: float3;
     minDistance: float;
     maxDistance: float;
+    spring?: SpringSettings;
 }
 export interface ConeConstraintParams extends JoltConstraint {
     type: 'Cone';
@@ -65,6 +85,24 @@ export interface ConeConstraintParams extends JoltConstraint {
     point2: float3;
     twistAxis2: float3;
     halfConeAngle: float;
+}
+export interface SwingTwistConstraintParams extends JoltConstraint {
+    type: 'SwingTwist';
+    space: ESpace;
+    point1: float3;
+    twistAxis1: float3;
+    planeAxis1: float3;
+    point2: float3;
+    twistAxis2: float3;
+    planeAxis2: float3;
+    normalHalfConeAngle: float;
+    planeHalfConeAngle: float;
+    twistMinAngle: float;
+    twistMaxAngle: float;
+    swingType: 'Cone' | 'Pyramid';
+    maxFrictionTorque: float;
+    motor1?: MotorSettings;
+    motor2?: MotorSettings;
 }
 export type RotationConstraintType = 'Free' | 'ConstrainAroundTangent' | 'ConstrainAroundNormal' | 'ConstrainAroundBinormal' | 'ConstrainToPath' | 'FullyConstrained';
 export interface PathConstraintParams extends JoltConstraint {
@@ -78,6 +116,7 @@ export interface PathConstraintParams extends JoltConstraint {
     rotationConstraintType: RotationConstraintType;
     maxFrictionForce: float;
     pathObject?: JoltConstraintPath;
+    motor1?: MotorSettings;
 }
 export interface PulleyConstraintParams extends JoltConstraint {
     type: 'Pulley';
@@ -89,5 +128,19 @@ export interface PulleyConstraintParams extends JoltConstraint {
     ratio: float;
     minLength: float;
     maxLength: float;
+}
+export interface GearConstraintParams extends JoltConstraint {
+    type: 'Gear';
+    space: ESpace;
+    hingeAxis1: float3;
+    hingeAxis2: float3;
+    ratio: float;
+}
+export interface RackAndPinionConstraintParams extends JoltConstraint {
+    type: 'RackAndPinion';
+    space: ESpace;
+    hingeAxis1: float3;
+    sliderAxis2: float3;
+    ratio: float;
 }
 export {};

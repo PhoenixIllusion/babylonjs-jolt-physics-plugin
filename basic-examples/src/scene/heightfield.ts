@@ -21,8 +21,30 @@ function addBalls() {
         }
 }
 
+const SVG = `
+<svg id="sampleImg" xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 256 256">
+    <defs>
+        <filter id="turbulenceFilter">
+            <feTurbulence type="fractalNoise" baseFrequency=".02" numOctaves="3" seed="5" result="turbulence" />
+            <feColorMatrix in="turbulence" type="matrix" result="grayscale" values=".33 .33 .33 0 0
+                                            .33 .33 .33 0 0
+                                            .33 .33 .33 0 0
+                                            0 0 0 1 0" />
+            <feComposite operator="in" in="grayscale" in2="SourceGraphic" />
+            <feComponentTransfer color-interpolation-filters="sRGB">
+                <feFuncR type="gamma" exponent="1.5" amplitude="1.3" offset="0"></feFuncR>
+                <feFuncG type="gamma" exponent="1.5" amplitude="1.3" offset="0"></feFuncG>
+                <feFuncB type="gamma" exponent="1.5" amplitude="1.3" offset="0"></feFuncB>
+            </feComponentTransfer>
+        </filter>
+    </defs>
+    <rect x="0" y="0" width="256" height="256" filter="url(#turbulenceFilter)"></rect>
+    <text x="64" y="96" style="font-weight: bold; font-size: 52px; user-select: none; fill: #f0f">JOLT</text>
+    <text x="16" y="168" style="font-weight: bold; font-size: 52px; user-select: none; fill: #ff0">PHYSICS</text>
+</svg>`
+
 async function build() {
-    const svg = await loadSVGImage(document.querySelector('svg')!.outerHTML, 256, 256);
+    const svg = await loadSVGImage(SVG, 256, 256);
     const buffer = getImagePixels(svg);
     const material = createImageMaterial('depthTex', svg);
     const heightMap = createHeightField(buffer, material, 256, 0.25, 0, 30);

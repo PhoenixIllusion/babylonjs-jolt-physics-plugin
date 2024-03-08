@@ -1,6 +1,7 @@
 import { PhysicsJoint } from "@babylonjs/core/Physics/v1/physicsJoint";
 import { JoltJoint } from "./jolt";
 import { f3 } from "../jolt-util";
+import { SpringControl } from "./spring";
 export class JoltDistanceJoint extends JoltJoint {
     constructor(point1, space = 'World', point2) {
         const p1 = point1;
@@ -18,6 +19,7 @@ export class JoltDistanceJoint extends JoltJoint {
                 constraint
             }
         });
+        this.spring = new SpringControl(this);
     }
     setMinMax(minVal, maxVal) {
         this.getParams().minDistance = minVal;
