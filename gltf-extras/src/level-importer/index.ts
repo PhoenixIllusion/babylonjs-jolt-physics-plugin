@@ -100,18 +100,14 @@ const canvas = document.createElement('canvas');
 
 async function createTexture(name: string, buffer: Promise<ArrayBufferView>, scene: Scene): Promise<Texture> {
   const blob = new Blob([await buffer]);
-  /*const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = name;
-  a.innerText = name;
-  document.body.append(a);*/
   const texture = await createImageBitmap(blob, {imageOrientation: 'flipY'});
   return  new Texture(name, scene, true,
   true, Texture.BILINEAR_SAMPLINGMODE,
   null, null, texture, true);
 }
 
-async function createHeightField(collision: JoltCollisionExtras, heightfield: HeightFieldData, loadImage: (index: number)=>Promise<ArrayBufferView>): Promise<Mesh> {
+async function createHeightField(collision: JoltCollisionExtras, heightfield: HeightFieldData,
+          loadImage: (index: number)=>Promise<ArrayBufferView>, getTex: (name: string, index: number, scene: Scene)=>Promise<Texture>): Promise<Mesh> {
   const img = await createImageBitmap(new Blob([await loadImage(heightfield.depthBuffer)]));
   const size = img.width;
   canvas.width = canvas.height = size;
@@ -139,7 +135,7 @@ async function createHeightField(collision: JoltCollisionExtras, heightfield: He
     ground.applyToMesh(mesh);
 
     const terrainMaterial = new TerrainMaterial('terrain', scene);
-    terrainMaterial.mixTexture = await createTexture('mix', loadImage(heightfield.splatIndex[0]), mesh.getScene())
+    terrainMaterial.mixTexture = await getTex('mix', heightfield.splatIndex[0], mesh.getScene())
     for(let i=0;i<3;i++) {
       if(heightfield.layers[i]) {
         const l = heightfield.layers[i];
@@ -152,7 +148,7 @@ async function createHeightField(collision: JoltCollisionExtras, heightfield: He
             layer = 'diffuseTexture3';
             break;
         }
-        const tex = terrainMaterial[layer] = await createTexture('layer'+i,loadImage(l.diffuse), mesh.getScene());
+        const tex = terrainMaterial[layer] = await getTex('layer'+i,l.diffuse, mesh.getScene());
         tex.uScale = meshSize / l.tileSize[0];
         tex.vScale = meshSize / l.tileSize[1];
       }
@@ -160,6 +156,9 @@ async function createHeightField(collision: JoltCollisionExtras, heightfield: He
     terrainMaterial.specularColor = new Color3(0.5, 0.5, 0.5);
     terrainMaterial.specularPower = 64;
     mesh.material = terrainMaterial;
+    mesh.position.set(...collision.worldPosition);
+    mesh.rotationQuaternion = new Quaternion();
+    mesh.rotationQuaternion.set(...collision.worldRotation);
     mesh.physicsImpostor = new PhysicsImpostor(mesh, PhysicsImpostor.HeightmapImpostor, {
         mass: 0,
         heightMap: {
@@ -180,6 +179,7 @@ export default class {
     const data: IGLTFLoaderData = await new Promise((resolve, reject) => fileLoader.loadFile(scene, "levels/"+ file + ".glb", "", resolve, () => {}, true, reject));
     await loader.loadAsync(scene, data, '');
     const pendingPromises: Promise<any>[] = [];
+    const cache: { [id: number]: Promise<Texture>} = {}
     scene.transformNodes.filter(filterJoltNodes).forEach(node => {
       const collision = (node.metadata.gltf.extras as GltfJoltExtras)?.jolt?.collision;
       if(collision && collision.collisionShape == "HeightField") {
@@ -191,7 +191,13 @@ export default class {
             const buf = json.bufferViews![img.bufferView!];
             return data.bin!.readAsync(buf.byteOffset!, buf.byteLength)
           };
-          pendingPromises.push(createHeightField(collision, heightfield, getImage));
+          const getTex = (name: string, imageIndex: number, scene: Scene): Promise<Texture> => {
+            if(cache[imageIndex] != undefined) {
+              return cache[imageIndex];
+            }
+            return cache[imageIndex] = createTexture(name, getImage(imageIndex), scene)
+          }
+          pendingPromises.push(createHeightField(collision, heightfield, getImage, getTex));
         }
       }
     });

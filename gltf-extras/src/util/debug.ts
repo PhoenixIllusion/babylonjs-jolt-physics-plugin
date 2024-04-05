@@ -6,7 +6,12 @@ import '@babylonjs/core/Meshes/thinInstanceMesh';
 
 import { CreateLines } from '@babylonjs/core/Meshes/Builders/linesBuilder';
 import { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
-import { TransformNode } from "@babylonjs/core";
+import { CameraSetup } from "./camera";
+import { CameraCombinedInput } from "./controller";
+import { StandardCharacterVirtualHandler } from "../../../dist/jolt-physics-character-virtual";
+import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
+import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
+import { Engine } from "@babylonjs/core/Engines/engine";
 
 export const MeshBuilder = {
   CreateSphere,
@@ -14,7 +19,8 @@ export const MeshBuilder = {
 }
 
 export function showPath3D(path3d: Path3D, size?: number, connectNormals = false) {
-  const root = new TransformNode('debug-path');
+  const scene = Engine.LastCreatedScene!;
+  const root = new TransformNode('debug-path', scene);
   size = size || 0.5;
   const curve = path3d.getCurve();
   const tgts = path3d.getTangents();
@@ -83,4 +89,38 @@ export function showPath3D(path3d: Path3D, size?: number, connectNormals = false
   }
   line.parent = root;
   return root;
+}
+
+export const createStandardControls = (inputHandler: StandardCharacterVirtualHandler, mesh: TransformNode) => {
+  const input = {
+    direction: new Vector3(),
+    jump: false,
+    crouched: false
+  }
+
+  const camera = new CameraSetup(mesh.getScene());
+  const listener = new CameraCombinedInput<FreeCamera>((camera, joystick, keyboard) => {
+    input.direction.set(0, 0, 0);
+    if (keyboard.KEY_PRESSED) {
+      if (keyboard.LEFT) input.direction.x -= 1;
+      if (keyboard.RIGHT) input.direction.x += 1;
+      if (keyboard.FORWARD) input.direction.z += 1;
+      if (keyboard.BACKWARD) input.direction.z -= 1;
+    }
+    input.jump = keyboard.JUMP;
+    if (joystick.length() > 0) {
+      input.direction.x = joystick.x;
+      input.direction.z = -joystick.y;
+    }
+    const rotation = camera.getWorldMatrix().getRotationMatrix();
+    const cameraDirectioNV = Vector3.TransformCoordinates(input.direction, rotation);
+    cameraDirectioNV.y = 0;
+    cameraDirectioNV.normalize();
+    if (input.direction.length()) {
+      mesh.lookAt(mesh.position.add(cameraDirectioNV));
+    }
+    inputHandler.updateInput(cameraDirectioNV, input.jump);
+  }, camera);
+  camera.setController(listener);
+  return camera;
 }
