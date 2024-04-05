@@ -3,7 +3,7 @@ import Jolt from './jolt-import';
 import type { float } from '@babylonjs/core/types';
 import { Path3D } from '@babylonjs/core/Maths/math.path';
 import { TmpVectors } from '@babylonjs/core/Maths/math.vector';
-import { GetJoltVec3, SetJoltVec3 } from './jolt-util';
+import { GetJoltVec3, RawPointer, SetJoltVec3, wrapJolt } from './jolt-util';
 import { recomputeBinormal, setPath3DNormals } from './path/normals';
 
 export * from './path';
@@ -27,8 +27,8 @@ export class JoltConstraintPath {
     return this.ptr;
   }
 
-  getClosestPoint(vecPtr: Jolt.Vec3, fractionHint: float, delta = 2): number {
-    const jVec3 = Jolt.wrapPointer(vecPtr as any, Jolt.Vec3);
+  getClosestPoint(vecPtr: RawPointer<Jolt.Vec3>, fractionHint: float, delta = 2): number {
+    const jVec3 = Jolt.wrapPointer(vecPtr, Jolt.Vec3);
     GetJoltVec3(jVec3, TmpVectors.Vector3[0]);
 
     let prevPathFrac = fractionHint-delta;
@@ -83,11 +83,11 @@ export class JoltConstraintPath {
     return this.length;
   }
 
-  getPointOnPath(inFraction: float, outPathPositionPtr: Jolt.Vec3, outPathTangentPtr: Jolt.Vec3, outPathNormalPtr: Jolt.Vec3, outPathBinormalPtr: Jolt.Vec3): void {
-    const outPathPosition = Jolt.wrapPointer(outPathPositionPtr as any, Jolt.Vec3);
-    const outPathTangent = Jolt.wrapPointer(outPathTangentPtr as any, Jolt.Vec3);
-    const outPathNormal = Jolt.wrapPointer(outPathNormalPtr as any, Jolt.Vec3);
-    const outPathBinormal = Jolt.wrapPointer(outPathBinormalPtr as any, Jolt.Vec3);
+  getPointOnPath(inFraction: float, outPathPositionPtr: RawPointer<Jolt.Vec3>, outPathTangentPtr: RawPointer<Jolt.Vec3>, outPathNormalPtr: RawPointer<Jolt.Vec3>, outPathBinormalPtr: RawPointer<Jolt.Vec3>): void {
+    const outPathPosition = wrapJolt(outPathPositionPtr, Jolt.Vec3);
+    const outPathTangent = wrapJolt(outPathTangentPtr, Jolt.Vec3);
+    const outPathNormal = wrapJolt(outPathNormalPtr, Jolt.Vec3);
+    const outPathBinormal = wrapJolt(outPathBinormalPtr, Jolt.Vec3);
 
     const frac = inFraction / this.length;
     const position = this.path.getPointAt(frac);

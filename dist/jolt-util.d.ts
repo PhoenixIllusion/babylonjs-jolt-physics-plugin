@@ -3,6 +3,8 @@ import Jolt from './jolt-import';
 import { float } from '@babylonjs/core/types';
 export declare const LAYER_NON_MOVING = 0;
 export declare const LAYER_MOVING = 1;
+export type RawPointer<_T> = number;
+export declare function wrapJolt<T>(pointer: RawPointer<T>, clazz: new (...a: any[]) => T): T;
 export type JVec3 = Jolt.Vec3 | Jolt.RVec3;
 export type float3 = [float, float, float];
 export type float4 = [float, float, float, float];

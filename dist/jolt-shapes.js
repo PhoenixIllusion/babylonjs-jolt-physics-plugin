@@ -4,7 +4,6 @@ import Jolt from "./jolt-import";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { Epsilon } from "@babylonjs/core/Maths/math.constants";
 import { SetJoltQuat, SetJoltVec3 } from "./jolt-util";
-import { Mesh } from "@babylonjs/core/Meshes/mesh";
 function getMeshVertexData(impostor) {
     const object = impostor.getParam('mesh') || impostor.object;
     const rawVerts = object.getVerticesData ? object.getVerticesData(VertexBuffer.PositionKind) : [];
@@ -112,7 +111,7 @@ function createShapeSettings(impostor, tempVec3A, tempVec3B, tempQuaternion) {
             {
                 const staticSetting = returnValue = new Jolt.StaticCompoundShapeSettings();
                 const meshes = impostor.object.getChildMeshes && impostor.object.getChildMeshes()
-                    .map((mesh) => { return (mesh instanceof Mesh) ? mesh.physicsImpostor : null; }).filter((impostor) => impostor != null);
+                    .map((mesh) => { return mesh.physicsImpostor; }).filter((impostor) => impostor != null);
                 meshes && meshes.forEach(impostor => {
                     const shape = createShapeSettings(impostor, tempVec3A, tempVec3B, tempQuaternion);
                     impostor.object.computeWorldMatrix(true);

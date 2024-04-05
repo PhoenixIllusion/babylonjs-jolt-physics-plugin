@@ -5,6 +5,12 @@ import { float } from '@babylonjs/core/types';
 export const LAYER_NON_MOVING = 0;
 export const LAYER_MOVING = 1;
 
+export type RawPointer<_T> = number;
+
+export function wrapJolt<T>(pointer: RawPointer<T>, clazz: new (... a: any[]) => T): T {
+  return Jolt.wrapPointer(pointer, clazz);
+}
+
 export type JVec3 = Jolt.Vec3 | Jolt.RVec3;
 
 export type float3 = [float, float, float];

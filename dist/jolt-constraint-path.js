@@ -1,7 +1,7 @@
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import Jolt from './jolt-import';
 import { TmpVectors } from '@babylonjs/core/Maths/math.vector';
-import { GetJoltVec3, SetJoltVec3 } from './jolt-util';
+import { GetJoltVec3, SetJoltVec3, wrapJolt } from './jolt-util';
 import { recomputeBinormal, setPath3DNormals } from './path/normals';
 export * from './path';
 export class JoltConstraintPath {
@@ -69,10 +69,10 @@ export class JoltConstraintPath {
         return this.length;
     }
     getPointOnPath(inFraction, outPathPositionPtr, outPathTangentPtr, outPathNormalPtr, outPathBinormalPtr) {
-        const outPathPosition = Jolt.wrapPointer(outPathPositionPtr, Jolt.Vec3);
-        const outPathTangent = Jolt.wrapPointer(outPathTangentPtr, Jolt.Vec3);
-        const outPathNormal = Jolt.wrapPointer(outPathNormalPtr, Jolt.Vec3);
-        const outPathBinormal = Jolt.wrapPointer(outPathBinormalPtr, Jolt.Vec3);
+        const outPathPosition = wrapJolt(outPathPositionPtr, Jolt.Vec3);
+        const outPathTangent = wrapJolt(outPathTangentPtr, Jolt.Vec3);
+        const outPathNormal = wrapJolt(outPathNormalPtr, Jolt.Vec3);
+        const outPathBinormal = wrapJolt(outPathBinormalPtr, Jolt.Vec3);
         const frac = inFraction / this.length;
         const position = this.path.getPointAt(frac);
         const tangent = this.path.getTangentAt(frac, true);

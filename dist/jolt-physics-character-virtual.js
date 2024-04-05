@@ -1,5 +1,5 @@
 import Jolt from './jolt-import';
-import { GetJoltQuat, GetJoltVec3, LAYER_MOVING, SetJoltVec3 } from './jolt-util';
+import { GetJoltQuat, GetJoltVec3, LAYER_MOVING, SetJoltVec3, wrapJolt } from './jolt-util';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Logger } from '@babylonjs/core/Misc/logger';
@@ -233,10 +233,10 @@ export class JoltCharacterVirtual {
         let _aVelocity = new Vector3();
         if (!this.contactListener) {
             this.contactListener = new Jolt.CharacterContactListenerJS();
-            this.contactListener.OnAdjustBodyVelocity = (_inCharacter, inBody2, lVelocity, aVelocity) => {
-                inBody2 = Jolt.wrapPointer(inBody2, Jolt.Body);
-                lVelocity = Jolt.wrapPointer(lVelocity, Jolt.Vec3);
-                aVelocity = Jolt.wrapPointer(aVelocity, Jolt.Vec3);
+            this.contactListener.OnAdjustBodyVelocity = (_inCharacter, inBody2Ptr, lVelocityPtr, aVelocityPtr) => {
+                const inBody2 = wrapJolt(inBody2Ptr, Jolt.Body);
+                const lVelocity = wrapJolt(lVelocityPtr, Jolt.Vec3);
+                const aVelocity = wrapJolt(aVelocityPtr, Jolt.Vec3);
                 const impostor = this.plugin.GetImpostorForBodyId(inBody2.GetID().GetIndexAndSequenceNumber());
                 GetJoltVec3(lVelocity, _lVelocity);
                 GetJoltVec3(aVelocity, _aVelocity);
@@ -244,13 +244,13 @@ export class JoltCharacterVirtual {
                 SetJoltVec3(_aVelocity, aVelocity);
                 SetJoltVec3(_lVelocity, lVelocity);
             };
-            this.contactListener.OnContactAdded = (_inCharacter, inBodyID2, _inSubShapeID2, _inContactPosition, _inContactNormal, _ioSettings) => {
-                inBodyID2 = Jolt.wrapPointer(inBodyID2, Jolt.BodyID);
+            this.contactListener.OnContactAdded = (_inCharacter, inBodyID2Ptr, _inSubShapeID2, _inContactPosition, _inContactNormal, _ioSettings) => {
+                const inBodyID2 = wrapJolt(inBodyID2Ptr, Jolt.BodyID);
                 const impostor = this.plugin.GetImpostorForBodyId(inBodyID2.GetIndexAndSequenceNumber());
                 this.onJoltCollide('on-contact-add', { body: impostor });
             };
-            this.contactListener.OnContactValidate = (_inCharacter, inBodyID2, _inSubShapeID2) => {
-                inBodyID2 = Jolt.wrapPointer(inBodyID2, Jolt.BodyID);
+            this.contactListener.OnContactValidate = (_inCharacter, inBodyID2Ptr, _inSubShapeID2) => {
+                const inBodyID2 = wrapJolt(inBodyID2Ptr, Jolt.BodyID);
                 const impostor = this.plugin.GetImpostorForBodyId(inBodyID2.GetIndexAndSequenceNumber());
                 const ret = this.onJoltCollide('on-contact-validate', { body: impostor });
                 if (ret !== undefined) {

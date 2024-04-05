@@ -103,7 +103,6 @@ export class ContactCollector {
     }
 
     const wrapContactSettings = (ioSettings: Jolt.ContactSettings, rev: boolean, withSettings: (settings: JoltContactSetting) => void) => {
-      ioSettings = Jolt.wrapPointer(ioSettings as any as number, Jolt.ContactSettings);
       this._contactSettings.marshall(ioSettings, rev);
       withSettings(this._contactSettings);
       this._contactSettings.unmarshall(ioSettings, rev);
@@ -163,23 +162,25 @@ export class ContactCollector {
     }
 
     // @ts-ignore: Unused
-    listener.OnContactValidate = (inBody1, inBody2, inBaseOffset, inCollisionResult) => {
-      inBody1 = Jolt.wrapPointer(inBody1 as any as number, Jolt.Body);
-      inBody2 = Jolt.wrapPointer(inBody2 as any as number, Jolt.Body);
+    listener.OnContactValidate = (inBody1ptr, inBody2ptr, inBaseOffset, inCollisionResult) => {
+      const inBody1 = Jolt.wrapPointer(inBody1ptr, Jolt.Body);
+      const inBody2 = Jolt.wrapPointer(inBody2ptr, Jolt.Body);
       return wrapContactValidate(inBody1, inBody2);
     }
     // @ts-ignore: Unused
     listener.OnContactRemoved = (shapeIdPair) => { /* do nothing */ }
     // @ts-ignore: Unused
-    listener.OnContactAdded = (inBody1, inBody2, inManifold, ioSettings) => {
-      inBody1 = Jolt.wrapPointer(inBody1 as any as number, Jolt.Body);
-      inBody2 = Jolt.wrapPointer(inBody2 as any as number, Jolt.Body);
+    listener.OnContactAdded = (inBody1ptr, inBody2ptr, inManifold, ioSettingsPtr) => {
+      const inBody1 = Jolt.wrapPointer(inBody1ptr, Jolt.Body);
+      const inBody2 = Jolt.wrapPointer(inBody2ptr, Jolt.Body);
+      const ioSettings = Jolt.wrapPointer(ioSettingsPtr, Jolt.ContactSettings);
       wrapContactEvent('on-contact-add', inBody1, inBody2, ioSettings);
     }
     // @ts-ignore: Unused
-    listener.OnContactPersisted = (inBody1, inBody2, inManifold, ioSettings) => {
-      inBody1 = Jolt.wrapPointer(inBody1 as any as number, Jolt.Body);
-      inBody2 = Jolt.wrapPointer(inBody2 as any as number, Jolt.Body);
+    listener.OnContactPersisted = (inBody1ptr, inBody2ptr, inManifold, ioSettingsPtr) => {
+      const inBody1 = Jolt.wrapPointer(inBody1ptr, Jolt.Body);
+      const inBody2 = Jolt.wrapPointer(inBody2ptr, Jolt.Body);
+      const ioSettings = Jolt.wrapPointer(ioSettingsPtr, Jolt.ContactSettings);
       wrapContactEvent('on-contact-persist', inBody1, inBody2, ioSettings);
     }
   }

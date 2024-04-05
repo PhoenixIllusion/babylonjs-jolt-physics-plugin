@@ -1,5 +1,9 @@
+import Jolt from './jolt-import';
 export const LAYER_NON_MOVING = 0;
 export const LAYER_MOVING = 1;
+export function wrapJolt(pointer, clazz) {
+    return Jolt.wrapPointer(pointer, clazz);
+}
 export const f3 = (v) => [v.x, v.y, v.z];
 export const f4 = (v) => [v.x, v.y, v.z, v.w];
 export const SetJoltVec3 = (vec3, jVec3) => {

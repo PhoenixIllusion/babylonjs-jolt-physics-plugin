@@ -1,6 +1,6 @@
 
 import Jolt from './jolt-import';
-import { GetJoltQuat, GetJoltVec3, LAYER_MOVING, SetJoltVec3 } from './jolt-util';
+import { GetJoltQuat, GetJoltVec3, LAYER_MOVING, RawPointer, SetJoltVec3, wrapJolt } from './jolt-util';
 import { JoltJSPlugin, JoltPluginData } from '.';
 import { IPhysicsEnabledObject, PhysicsImpostor, PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Scene } from '@babylonjs/core/scene';
@@ -326,10 +326,10 @@ export class JoltCharacterVirtual {
     let _aVelocity = new Vector3();
     if (!this.contactListener) {
       this.contactListener = new Jolt.CharacterContactListenerJS();
-      this.contactListener.OnAdjustBodyVelocity = (_inCharacter: Jolt.CharacterVirtual, inBody2: Jolt.Body, lVelocity: Jolt.Vec3, aVelocity: Jolt.Vec3): void => {
-        inBody2 = Jolt.wrapPointer(inBody2 as any as number, Jolt.Body);
-        lVelocity = Jolt.wrapPointer(lVelocity as any as number, Jolt.Vec3);
-        aVelocity = Jolt.wrapPointer(aVelocity as any as number, Jolt.Vec3);
+      this.contactListener.OnAdjustBodyVelocity = (_inCharacter: RawPointer<Jolt.CharacterVirtual>, inBody2Ptr: RawPointer<Jolt.Body>, lVelocityPtr: RawPointer<Jolt.Vec3>, aVelocityPtr: RawPointer<Jolt.Vec3>): void => {
+        const inBody2 = wrapJolt(inBody2Ptr, Jolt.Body);
+        const lVelocity = wrapJolt(lVelocityPtr, Jolt.Vec3);
+        const aVelocity = wrapJolt(aVelocityPtr, Jolt.Vec3);
         const impostor = this.plugin.GetImpostorForBodyId(inBody2.GetID().GetIndexAndSequenceNumber());
         GetJoltVec3(lVelocity, _lVelocity);
         GetJoltVec3(aVelocity, _aVelocity);
@@ -337,14 +337,14 @@ export class JoltCharacterVirtual {
         SetJoltVec3(_aVelocity, aVelocity);
         SetJoltVec3(_lVelocity, lVelocity);
       }
-      this.contactListener.OnContactAdded = (_inCharacter: Jolt.CharacterVirtual, inBodyID2: Jolt.BodyID, _inSubShapeID2: Jolt.SubShapeID,
-        _inContactPosition: Jolt.Vec3, _inContactNormal: Jolt.Vec3, _ioSettings: Jolt.CharacterContactSettings): void => {
-        inBodyID2 = Jolt.wrapPointer(inBodyID2 as any as number, Jolt.BodyID);
+      this.contactListener.OnContactAdded = (_inCharacter: RawPointer<Jolt.CharacterVirtual>, inBodyID2Ptr: RawPointer<Jolt.BodyID>, _inSubShapeID2: RawPointer<Jolt.SubShapeID>,
+        _inContactPosition: RawPointer<Jolt.Vec3>, _inContactNormal: RawPointer<Jolt.Vec3>, _ioSettings: RawPointer<Jolt.CharacterContactSettings>): void => {
+        const inBodyID2 = wrapJolt(inBodyID2Ptr as any as number, Jolt.BodyID);
         const impostor = this.plugin.GetImpostorForBodyId(inBodyID2.GetIndexAndSequenceNumber());
         this.onJoltCollide('on-contact-add', { body: impostor });
       }
-      this.contactListener.OnContactValidate = (_inCharacter: Jolt.CharacterVirtual, inBodyID2: Jolt.BodyID, _inSubShapeID2: Jolt.SubShapeID): boolean => {
-        inBodyID2 = Jolt.wrapPointer(inBodyID2 as any as number, Jolt.BodyID);
+      this.contactListener.OnContactValidate = (_inCharacter: RawPointer<Jolt.CharacterVirtual>, inBodyID2Ptr: RawPointer<Jolt.BodyID>, _inSubShapeID2: RawPointer<Jolt.SubShapeID>): boolean => {
+        const inBodyID2 = wrapJolt(inBodyID2Ptr as any as number, Jolt.BodyID);
         const impostor = this.plugin.GetImpostorForBodyId(inBodyID2.GetIndexAndSequenceNumber());
         const ret = this.onJoltCollide('on-contact-validate', { body: impostor });
         if (ret !== undefined) {
@@ -352,9 +352,9 @@ export class JoltCharacterVirtual {
         }
         return true;
       }
-      this.contactListener.OnContactSolve = (_inCharacter: Jolt.CharacterVirtual, _inBodyID2: Jolt.BodyID, _inSubShapeID2: Jolt.SubShapeID,
-        _inContactPosition: Jolt.Vec3, _inContactNormal: Jolt.Vec3, _inContactVelocity: Jolt.Vec3, _inContactMaterial: Jolt.PhysicsMaterial,
-        _inCharacterVelocity: Jolt.Vec3, _ioNewCharacterVelocity: Jolt.Vec3): void => {
+      this.contactListener.OnContactSolve = (_inCharacter: RawPointer<Jolt.CharacterVirtual>, _inBodyID2: RawPointer<Jolt.BodyID>, _inSubShapeID2: RawPointer<Jolt.SubShapeID>,
+        _inContactPosition: RawPointer<Jolt.Vec3>, _inContactNormal: RawPointer<Jolt.Vec3>, _inContactVelocity: RawPointer<Jolt.Vec3>, _inContactMaterial: RawPointer<Jolt.PhysicsMaterial>,
+        _inCharacterVelocity: RawPointer<Jolt.Vec3>, _ioNewCharacterVelocity: RawPointer<Jolt.Vec3>): void => {
       }
       this.mCharacter.SetListener(this.contactListener);
       this.mDisposables.push(this.contactListener);
