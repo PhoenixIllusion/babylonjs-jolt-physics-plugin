@@ -8,4 +8,5 @@ export { JoltPathConstraint } from './path';
 export { JoltPointJoint } from './point';
 export { JoltRackAndPinionConstraint } from './rack-and-pinion';
 export { JoltSliderJoint } from './slider';
+export { SpringMode } from './spring';
 export { JoltSwingTwistJoint } from './swing-twist';
