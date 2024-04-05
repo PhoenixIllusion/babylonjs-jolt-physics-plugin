@@ -1,12 +1,11 @@
-import { Engine } from '@babylonjs/core/Engines/engine';
 import { MeshBuilder, SceneCallback, createHeightField, createMeshForShape, createSphere, getMaterial } from '../util/example';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import '@babylonjs/core/Meshes/thinInstanceMesh';
 import { FlyCamera } from '@babylonjs/core/Cameras/flyCamera';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
+import { Scene } from '@babylonjs/core/scene';
 
-export default (): SceneCallback => {
-    const scene = Engine.LastCreatedScene!;
+export default (scene: Scene): SceneCallback => {
     const camera = scene.cameras[0] as FlyCamera;
     camera.position.set(-4, 15, 20);
     camera.target = new Vector3(0,0, 0)

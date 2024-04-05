@@ -5,6 +5,7 @@ import '@babylonjs/core/Meshes/thinInstanceMesh';
 import { ThinPhysicsNode } from '@phoenixillusion/babylonjs-jolt-plugin';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { FlyCamera } from '@babylonjs/core/Cameras/flyCamera';
+import { Scene } from '@babylonjs/core/scene';
 
 function addBalls() {
     const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 1, segments: 32 });
@@ -52,8 +53,7 @@ async function build() {
     addBalls();
 }
 
-export default (): SceneCallback => {
-    const scene = Engine.LastCreatedScene!;
+export default (scene: Scene): SceneCallback => {
     const camera = scene.cameras[0] as FlyCamera;
     camera.position.set(0, 30, -50);
     camera.target = new Vector3(0,0, 0)

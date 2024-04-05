@@ -1,9 +1,10 @@
-import { DegreesToRadians, createBox, createCylinder, createFloor } from '../util/example';
+import { DegreesToRadians, SceneCallback, createBox, createCylinder, createFloor } from '../util/example';
 import { JoltContactSetting } from '@phoenixillusion/babylonjs-jolt-plugin/contact';
 import { Vector3, Matrix, Quaternion } from '@babylonjs/core/Maths/math.vector';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import { Scene } from '@babylonjs/core/scene';
 
-export default (): (void | ((time: number, delta: number) => void)) => {
+export default (_scene: Scene): SceneCallback => {
 
   createFloor();
 

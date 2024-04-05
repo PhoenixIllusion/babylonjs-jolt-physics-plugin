@@ -6,16 +6,17 @@ import { Ray } from '@babylonjs/core/Culling/ray';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Scene } from '@babylonjs/core/scene';
 
-export default (): SceneCallback => {
+export default (scene: Scene): SceneCallback => {
   createFloor();
 
   const sphere = MeshBuilder.CreateSphere('sphere', { diameter: 2, segments: 32 });
   sphere.position.set(0, 4, 0);
 
-  const rayOrigin = new TransformNode('ray-origin')
+  const rayOrigin = new TransformNode('ray-origin', scene)
   rayOrigin.parent = sphere;
-  const rayDest = new TransformNode('ray-dest');
+  const rayDest = new TransformNode('ray-dest', scene);
   rayDest.position.x += 20;
   rayDest.parent = sphere
 

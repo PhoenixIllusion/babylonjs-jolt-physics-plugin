@@ -8,6 +8,7 @@ import { FlyCamera } from "@babylonjs/core/Cameras/flyCamera";
 import { EasingMethod, createPath3DWithCatmullRomPath, createPath3DWithCurvedCorners, createPath3DWithHermitePath } from "../../../dist/jolt-constraint-path";
 import { Matrix } from "@babylonjs/core/Maths/math";
 import '@babylonjs/core/Meshes/thinInstanceMesh';
+import { Scene } from '@babylonjs/core/scene';
 
 function showPath3D(path3d: Path3D, size?: number, connectNormals = false) {
   size = size || 0.5;
@@ -73,8 +74,7 @@ function showPath3D(path3d: Path3D, size?: number, connectNormals = false) {
   return line;
 }
 
-export default (): SceneCallback => {
-  const scene = Engine.LastCreatedScene!;
+export default (scene: Scene): SceneCallback => {
   const camera = scene.cameras[0] as FlyCamera;
   camera.speed *= 0.1;
   camera.position.set(-2, 4, 7);

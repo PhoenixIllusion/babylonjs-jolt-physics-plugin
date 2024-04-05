@@ -1,11 +1,12 @@
 import { Matrix, Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { MeshBuilder, createBox, createFloor, getMaterial } from '../util/example';
+import { MeshBuilder, SceneCallback, createBox, createFloor, getMaterial } from '../util/example';
 import { Quaternion } from '@babylonjs/core/Maths/math.vector';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import '@babylonjs/core/Meshes/thinInstanceMesh';
 import { ThinPhysicsNode } from '@phoenixillusion/babylonjs-jolt-plugin'
+import { Scene } from '@babylonjs/core/scene';
 
-export default (): (void | ((time: number, delta: number) => void)) => {
+export default (_scene: Scene): SceneCallback => {
 
     createFloor();
 

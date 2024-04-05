@@ -8,6 +8,7 @@ import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
+import { Scene } from '@babylonjs/core/scene';
 
 let camera: FollowCamera;
 
@@ -19,7 +20,7 @@ export const config: SceneConfig = {
   }
 }
 
-export default (): SceneCallback => {
+export default (_scene: Scene): SceneCallback => {
   const floor = createFloor();
   const tiledTexture = new Texture('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAAAAABX3VL4AAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5wsCAyocY2BWPgAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAOSURBVAjXY2D4z/CfAQAGAAH/P9ph1wAAAABJRU5ErkJggg==');
   tiledTexture.onLoadObservable.add(() => {

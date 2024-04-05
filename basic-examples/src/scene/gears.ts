@@ -1,17 +1,15 @@
 import { Quaternion, Vector3, Vector4 } from '@babylonjs/core/Maths/math.vector';
-import { MeshBuilder, SceneCallback, createBox, createCylinder, createFloor, createMeshForShape, getMaterial } from '../util/example';
+import { MeshBuilder, SceneCallback, createBox, createFloor, createMeshForShape } from '../util/example';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { JoltGearConstraint, JoltHingeJoint, JoltRackAndPinionConstraint, JoltSliderJoint, MotorMode } from '../../../dist';
 import '@phoenixillusion/babylonjs-jolt-plugin/impostor'
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Color3, Color4 } from '@babylonjs/core/Maths/math.color';
-import { HemisphericLight } from '@babylonjs/core';
+import { Scene } from '@babylonjs/core/scene';
+import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 
-
-
-
-export default (): SceneCallback => {
+export default (_scene: Scene): SceneCallback => {
 
   const tiledTexture = new Texture('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAAAAABX3VL4AAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5wsCAyocY2BWPgAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAOSURBVAjXY2D4z/CfAQAGAAH/P9ph1wAAAABJRU5ErkJggg==');
   tiledTexture.onLoadObservable.add(() => {

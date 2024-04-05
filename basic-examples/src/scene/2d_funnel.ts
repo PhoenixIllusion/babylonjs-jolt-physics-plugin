@@ -1,8 +1,9 @@
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { createBox, createFloor, createSphere } from '../util/example';
+import { SceneCallback, createBox, createFloor, createSphere } from '../util/example';
 import { Quaternion } from '@babylonjs/core/Maths/math.vector';
+import { Scene } from '@babylonjs/core/scene';
 
-export default (): (void | ((time: number, delta: number) => void)) => {
+export default (_scene: Scene): SceneCallback => {
 
     createFloor({ mass: 0, restitution: 0, friction: 0, frozen: true });
 

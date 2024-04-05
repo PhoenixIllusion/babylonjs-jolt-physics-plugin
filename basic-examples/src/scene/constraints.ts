@@ -4,8 +4,9 @@ import Jolt from '@phoenixillusion/babylonjs-jolt-plugin/import';
 import { JoltSliderJoint, JoltDistanceJoint, JoltFixedJoint, JoltHingeJoint, JoltPointJoint } from '@phoenixillusion/babylonjs-jolt-plugin/joints';
 import { PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import '@phoenixillusion/babylonjs-jolt-plugin/impostor';
+import { Scene } from '@babylonjs/core/scene';
 
-export default (): SceneCallback => {
+export default (_scene: Scene): SceneCallback => {
 
   const rot = Quaternion.Identity();
   const size = new Vector3(0.5, 0.5, 0.5);

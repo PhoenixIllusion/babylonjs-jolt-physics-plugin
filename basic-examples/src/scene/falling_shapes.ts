@@ -2,8 +2,9 @@ import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { MeshBuilder, SceneCallback, createBox, createCapsule, createConvexHull, createCylinder, createMeshFloor, createSphere, getMaterial, getRandomQuat } from '../util/example';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { Scene } from '@babylonjs/core/scene';
 
-export default (): SceneCallback => {
+export default (scene: Scene): SceneCallback => {
 
   const objectTimePeriod = 0.5;
   let timeNextSpawn = objectTimePeriod;
@@ -77,7 +78,7 @@ export default (): SceneCallback => {
         break;
       }
       case 7: {
-        const staticShape = new Mesh('static-shape');
+        const staticShape = new Mesh('static-shape', scene);
         let l = 1.0 + Math.random();
         let r2 = 0.5 + 0.5 * Math.random();
         let r1 = 0.5 * r2;

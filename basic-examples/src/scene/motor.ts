@@ -1,6 +1,7 @@
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { SceneCallback, createBox, createFloor, createSphere } from '../util/example';
 import { JoltSliderJoint, JoltHingeJoint, MotorMode } from '@phoenixillusion/babylonjs-jolt-plugin';
+import { Scene } from '@babylonjs/core/scene';
 
 const createWindmill = () => {
   const box1 = createBox(new Vector3(0, 10, 0), Quaternion.Identity(), new Vector3(0.25, 0.25, 0.25));
@@ -56,7 +57,7 @@ const createSlider = () => {
 
 }
 
-export default (): SceneCallback => {
+export default (_scene: Scene): SceneCallback => {
   createFloor();
   createWindmill();
   createSlider();

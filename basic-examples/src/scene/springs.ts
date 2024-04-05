@@ -4,8 +4,9 @@ import { JoltDistanceJoint, JoltHingeJoint } from '../../../dist';
 import { SpringMode } from '../../../dist/joints/spring';
 import { float } from '@babylonjs/core/types';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
+import { Scene } from '@babylonjs/core/scene';
 
-export default (): SceneCallback => {
+export default (_scene: Scene): SceneCallback => {
   createFloor({ friction: 0.8, mass: 0, restitution: 0 });
 
   type SpringConfig = [SpringMode, float, float, float, Color3];

@@ -19,6 +19,7 @@ import { Material } from '@babylonjs/core/Materials/material';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { CreateLines } from '@babylonjs/core/Meshes/Builders/linesBuilder';
+import { Scene } from '@babylonjs/core/scene';
 
 export const MeshBuilder = {
   CreateSphere,
@@ -31,7 +32,7 @@ export const MeshBuilder = {
 }
 
 export type SceneCallback = (void | ((time: number, delta: number) => void))
-export type SceneFunction = () => SceneCallback;
+export type SceneFunction = (scene: Scene) => SceneCallback;
 
 export const DegreesToRadians = (deg: number) => deg * (Math.PI / 180.0);
 
@@ -125,7 +126,7 @@ export const createConvexHull = (position: Vector3, points: Vector3[], physicsOp
   vertexData.indices = indices;
   vertexData.normals = normals;
 
-  const mesh = new Mesh('convex-hull');
+  const mesh = new Mesh('convex-hull', Engine.LastCreatedScene!);
   vertexData.applyToMesh(mesh);
   mesh.position.copyFrom(position);
   mesh.material = getMaterial(color);
@@ -140,7 +141,7 @@ export const getRandomQuat = () => {
 }
 
 export const createMeshFloor = (n: number, cell_size: number, amp: number, position: Vector3, physicsOptions: PhysicsOptions = NullPhysics, color = '#FFFFFF') => {
-  const mesh = new Mesh('mesh-floor');
+  const mesh = new Mesh('mesh-floor', Engine.LastCreatedScene!);
   const height = function (x: number, y: number) { return Math.sin(x / 2) * Math.cos(y / 3) * amp; };
   const positions: number[] = [];
   const indices: number[] = [];
