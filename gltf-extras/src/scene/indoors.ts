@@ -8,11 +8,10 @@ import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import { Nullable } from "@babylonjs/core/types";
 import { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 import { RiggedModel } from "../util/rigged-model";
-import { CharacterState, GroundState, JoltCharacterVirtualImpostor, StandardCharacterVirtualHandler } from "../../../dist/jolt-physics-character-virtual";
 import { PhysicsImpostor } from "@babylonjs/core/Physics/v1/physicsImpostor";
 import { createStandardControls } from "../util/debug";
 import { Ray } from "@babylonjs/core/Culling/ray";
-import { AbstractMesh } from "@babylonjs/core/Meshes/abstractMesh";
+import { JoltCharacterVirtualImpostor, CharacterState, StandardCharacterVirtualHandler, GroundState } from '@phoenixillusion/babylonjs-jolt-plugin/character-virtual'
 
 const run: SceneFunction = async (scene: Scene) => {
   const hemi = new HemisphericLight('hemi-light', new Vector3(0,1,0));

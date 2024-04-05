@@ -3,7 +3,6 @@ import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Matrix, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import '@babylonjs/core/Meshes/thinInstanceMesh';
 import { ThinPhysicsNode } from '@phoenixillusion/babylonjs-jolt-plugin';
-import { Engine } from '@babylonjs/core/Engines/engine';
 import { FlyCamera } from '@babylonjs/core/Cameras/flyCamera';
 import { Scene } from '@babylonjs/core/scene';
 

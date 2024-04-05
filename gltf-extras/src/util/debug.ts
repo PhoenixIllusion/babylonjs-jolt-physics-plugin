@@ -8,7 +8,7 @@ import { CreateLines } from '@babylonjs/core/Meshes/Builders/linesBuilder';
 import { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
 import { CameraSetup } from "./camera";
 import { CameraCombinedInput } from "./controller";
-import { StandardCharacterVirtualHandler } from "../../../dist/jolt-physics-character-virtual";
+import { StandardCharacterVirtualHandler } from '@phoenixillusion/babylonjs-jolt-plugin/character-virtual'
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import { Engine } from "@babylonjs/core/Engines/engine";

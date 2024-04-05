@@ -22,6 +22,6 @@
     "@babylonjs/loaders": "6.44.0",
     "@babylonjs/materials": "6.44.0",
     "@babylonjs/serializers": "6.44.0",
-    "@phoenixillusion/babylonjs-jolt-plugin": "PhoenixIllusion/babylonjs-jolt-physics-plugin#v1.1.0"
+    "@phoenixillusion/babylonjs-jolt-plugin": "github:PhoenixIllusion/babylonjs-jolt-physics-plugin#v1.1.3"
   }
 }

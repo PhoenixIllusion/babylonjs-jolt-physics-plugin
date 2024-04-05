@@ -2,7 +2,7 @@ import { Quaternion, Vector3, Vector4 } from '@babylonjs/core/Maths/math.vector'
 import { MeshBuilder, SceneCallback, createBox, createFloor, createMeshForShape } from '../util/example';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
-import { JoltGearConstraint, JoltHingeJoint, JoltRackAndPinionConstraint, JoltSliderJoint, MotorMode } from '../../../dist';
+import { JoltGearConstraint, JoltHingeJoint, JoltRackAndPinionConstraint, JoltSliderJoint, MotorMode } from '@phoenixillusion/babylonjs-jolt-plugin';
 import '@phoenixillusion/babylonjs-jolt-plugin/impostor'
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Color3, Color4 } from '@babylonjs/core/Maths/math.color';

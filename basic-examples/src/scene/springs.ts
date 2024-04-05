@@ -1,7 +1,7 @@
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { SceneCallback, createBox, createFloor } from '../util/example';
-import { JoltDistanceJoint, JoltHingeJoint } from '../../../dist';
-import { SpringMode } from '../../../dist/joints/spring';
+import { JoltDistanceJoint, SpringMode, JoltHingeJoint } from '@phoenixillusion/babylonjs-jolt-plugin/joints'
+
 import { float } from '@babylonjs/core/types';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { Scene } from '@babylonjs/core/scene';

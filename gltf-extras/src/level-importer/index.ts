@@ -21,12 +21,11 @@ import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { IGLTF } from "@babylonjs/loaders/glTF/2.0/glTFLoaderInterfaces";
 import { TerrainMaterial } from "@babylonjs/materials/terrain/terrainMaterial";
 import { Scene } from "@babylonjs/core/scene";
-import { MinimalPhysicsNode } from "../../../dist/jolt-impostor";
-import { PathConstraintParams } from '../../../dist/jolt-constraints';
 import { showPath3D } from '../util/debug';
 import { Path3D } from '@babylonjs/core/Maths/math.path';
-import { createPath3DWithTan2CubicBenzier } from '../../../dist/jolt-constraint-path';
-import { JoltPathConstraint, MotorMode } from '../../../dist';
+import { MinimalPhysicsNode } from '@phoenixillusion/babylonjs-jolt-plugin'
+import { PathConstraintParams } from '@phoenixillusion/babylonjs-jolt-plugin/constraints'
+import { createPath3DWithTan2CubicBenzier } from '@phoenixillusion/babylonjs-jolt-plugin/path'
 
 type JoltShapes = 'Sphere' | 'Box' | 'Capsule' | 'TaperedCapsule' | 'Cylinder' | 'ConvexHull' | 'Mesh' | 'HeightField';
 type JoltMotionType = 'Dynamic' | 'Static' | 'Kinematic';

@@ -1,11 +1,10 @@
 import { Quaternion, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { MeshBuilder, SceneCallback, createBox } from "../util/example";
-import { JoltPathConstraint, MotorMode } from "../../../dist";
+import { JoltPathConstraint, MotorMode } from "@phoenixillusion/babylonjs-jolt-plugin/joints";
 import { Color3 } from "@babylonjs/core/Maths/math.color";
 import { Path3D } from "@babylonjs/core/Maths/math.path";
-import { Engine } from "@babylonjs/core/Engines/engine";
 import { FlyCamera } from "@babylonjs/core/Cameras/flyCamera";
-import { EasingMethod, createPath3DWithCatmullRomPath, createPath3DWithCurvedCorners, createPath3DWithHermitePath } from "../../../dist/jolt-constraint-path";
+import { EasingMethod, createPath3DWithCatmullRomPath, createPath3DWithCurvedCorners, createPath3DWithHermitePath } from "@phoenixillusion/babylonjs-jolt-plugin/path";
 import { Matrix } from "@babylonjs/core/Maths/math";
 import '@babylonjs/core/Meshes/thinInstanceMesh';
 import { Scene } from '@babylonjs/core/scene';
