@@ -36,7 +36,7 @@ export class MinimalPhysicsNode extends TransformNode implements IPhysicsEnabled
 export class ThinPhysicsNode implements IPhysicsEnabledObject {
   boundingInfo: BoundingInfo;
 
-  public position = new class extends Vector3 {
+  public position: Vector3 = new class extends Vector3 {
     constructor(public thin: ThinPhysicsNode) { super(); }
     copyFrom(vec: Vector3): this {
       super.copyFrom(vec);
@@ -49,7 +49,7 @@ export class ThinPhysicsNode implements IPhysicsEnabledObject {
       return this;
     }
   }(this);
-  public rotationQuaternion = new class extends Quaternion {
+  public rotationQuaternion: Quaternion = new class extends Quaternion {
     constructor(public thin: ThinPhysicsNode) { super(); }
     copyFrom(quat: Quaternion): this {
       super.copyFrom(quat);
@@ -62,7 +62,7 @@ export class ThinPhysicsNode implements IPhysicsEnabledObject {
       return this;
     }
   }(this);
-  public scaling = new class extends Vector3 {
+  public scaling: Vector3 = new class extends Vector3 {
     constructor(public thin: ThinPhysicsNode) { super(); }
     set(x: number, y: number, z: number): this {
       super.set(x, y, z);
