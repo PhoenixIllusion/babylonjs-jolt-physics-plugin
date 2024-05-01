@@ -74,20 +74,20 @@ The primary axis of these joints is defined by the `JointData` `mainAxis` and `c
 ### Vehicles
 Vehicle related classes are located in the import `'@phoenixillusion/babylonjs-jolt-plugin/vehicle'`
 
-Vehicles are considered `Constraints` , but the Plugin  implements them using a `Controller` and `VehicleInput` (ex: ) responsible for setting the steering and acceleration each frame (gas, break, turn left, right, emergency-brake, etc) 
+Vehicles are considered `Constraints` , but the Plugin  implements them using a `Controller` and `VehicleInput` responsible for setting the steering and acceleration each frame (gas, break, turn left, right, emergency-brake, etc) 
 
 Vehicle Controllers require a `PhysicsImpostor` for the vehicle, a Vehicle Configuration, and a `VehicleInput`. 
 The following are supported:
 * WheeledVehicleController
 * MotorcycleController
-* ~~TreadedVehicleController (not implemented)~~
+* ~~TreadedVehicleController~~ (not implemented)
 
 Default `VehicleInputs` handle many simple cases, but can be overridden with a custom class implementing the required interface.
 * DefaultWheeledVehicleInput
 * DefaultMotorcycleInput
 
-"Basic" configurations are available in helper methods on the import using `createBasicCar` and `createBasicMotorcycle`, which can then be modified prior to supplying to the controller. Through more advanced modification of the 
+"Basic" configurations are available in helper methods on the import using `createBasicCar` and `createBasicMotorcycle`, which can then be modified prior to supplying to the controller. 
 * Basic Car - a 4 wheeled vehicle in front-wheel or 4-wheel-drive, with configurable dimensions on the wheels and their placement on the bounds of the PhysicsImpostor
 * Basic Motorcycle - a 2 wheeled vehicle 
 
-The general "wheeled vehicle" can be configured with any combination of wheels, but by default the controller will attempt to steer all wheels with the same steering, and the internal workings attempt to drive all wheels at the same forward/backward rate (the actual direction of 'forward' per-wheel can be redefined at runtime, but not via the Plugin at this time).
+The general "wheeled vehicle" can be configured with any combination of wheels, but by default the controller will attempt to steer all wheels with the same steering, and the internal workings attempt to drive all wheels at the same forward/backward rate. Through Jolt's internal methods, the actual direction of 'forward' per-wheel can be redefined at runtime, but not via the Plugin at this time.

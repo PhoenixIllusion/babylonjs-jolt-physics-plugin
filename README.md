@@ -64,7 +64,7 @@ In cases where you wish to use another wasm binary, or  where upgrading to a new
     import initJolt from '<custom jolt build or version>'
     import setJoltModule from  '@phoenixillusion/babylonjs-jolt-plugin/import';
 
-	setJoltModule(initJolt);
+    setJoltModule(initJolt);
     const engine = new Engine(this.canvas, true);
     const scene = new Scene(engine);
     scene.enablePhysics(new Vector3(0, -9.8, 0), await JoltJSPlugin.loadPlugin())
