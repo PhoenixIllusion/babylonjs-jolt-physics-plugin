@@ -13,7 +13,7 @@ const createWindmill = () => {
   ]
 
   wings.forEach(box => {
-    const joint = new JoltHingeJoint(new Vector3(0, 10, 0), new Vector3(0, 0, 1), new Vector3(0, 0, 1));
+    const joint = new JoltHingeJoint(new Vector3(0, 10, 0), new Vector3(0, 0, 1), new Vector3(1, 0, 0));
     box1.physics.addJoint(box.physics, joint);
     joint.motor.mode = MotorMode.Velocity;
     joint.motor.target = 3;
