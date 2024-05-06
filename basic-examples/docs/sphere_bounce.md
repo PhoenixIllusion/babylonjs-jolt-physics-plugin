@@ -1,4 +1,4 @@
-
+![Sphere Bounce](./img/sphere_bounce.jpg)
 ```typescript
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { SceneCallback, createFloor, createSphere } from '../util/example';

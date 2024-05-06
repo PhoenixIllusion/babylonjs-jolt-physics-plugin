@@ -1,4 +1,4 @@
-
+![Friction](./img/friction.jpg)
 ```typescript
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { SceneCallback, createBox, createFloor } from '../util/example';

@@ -1,3 +1,4 @@
+![2d Funnel](./img/2d_funnel.jpg)
 ```typescript
 import { Matrix, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { MeshBuilder, SceneCallback, createBox, createFloor, getMaterial } from '../util/example';

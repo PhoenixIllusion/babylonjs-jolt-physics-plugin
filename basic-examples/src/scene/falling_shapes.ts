@@ -6,7 +6,7 @@ import { Scene } from '@babylonjs/core/scene';
 
 export default (scene: Scene): SceneCallback => {
 
-  const objectTimePeriod = 0.5;
+  const objectTimePeriod = 500;
   let timeNextSpawn = objectTimePeriod;
   const maxNumObjects = 100;
 
@@ -57,16 +57,16 @@ export default (scene: Scene): SceneCallback => {
         createCapsule(pos, radius, radius, halfHeight * 2, physicSetting, colors[objectType - 1]);
         meshesCreated++;
         break;
-      }/*
-        case 5:{
-          // Tapered capsule
-          let topRadius = 0.1 + Math.random()/2;
-          let bottomRadius = 0.5 + Math.random()/2;
-          let halfHeight = 0.5 * (topRadius + bottomRadius + Math.random());
-          createCapsule(pos, topRadius, bottomRadius, halfHeight * 2, physicSetting, colors[objectType - 1]);
-          meshesCreated++;
-          break;
-        }*/
+      }
+      case 5:{
+        // Tapered capsule
+        let topRadius = 0.1 + Math.random()/2;
+        let bottomRadius = 0.5 + Math.random()/2;
+        let halfHeight = 0.5 * (topRadius + bottomRadius + Math.random());
+        createCapsule(pos, topRadius, bottomRadius, halfHeight * 2, physicSetting, colors[objectType - 1]);
+        meshesCreated++;
+        break;
+      }
       case 6: {
         // Convex hull
         const points = [];

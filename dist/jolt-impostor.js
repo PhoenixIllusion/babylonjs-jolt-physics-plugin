@@ -3,7 +3,34 @@ import { Matrix, Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Logger } from '@babylonjs/core/Misc/logger';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { BoundingInfo } from '@babylonjs/core/Culling/boundingInfo';
-export class MinimalPhysicsNode extends TransformNode {
+class TransformNodeWithImpostor extends TransformNode {
+    constructor() {
+        super(...arguments);
+        this._physicsImpostor = null;
+    }
+    get physicsImpostor() {
+        return this._physicsImpostor;
+    }
+    set physicsImpostor(value) {
+        if (this._physicsImpostor === value) {
+            return;
+        }
+        if (this._disposePhysicsObserver) {
+            this.onDisposeObservable.remove(this._disposePhysicsObserver);
+        }
+        this._physicsImpostor = value;
+        if (value) {
+            this._disposePhysicsObserver = this.onDisposeObservable.add(() => {
+                // Physics
+                if (this.physicsImpostor) {
+                    this.physicsImpostor.dispose( /*!doNotRecurse*/);
+                    this.physicsImpostor = null;
+                }
+            });
+        }
+    }
+}
+export class MinimalPhysicsNode extends TransformNodeWithImpostor {
     constructor(name, extents, mesh) {
         super(name, mesh.getScene());
         this.mesh = mesh;

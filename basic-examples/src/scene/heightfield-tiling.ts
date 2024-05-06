@@ -10,9 +10,9 @@ export default (scene: Scene): SceneCallback => {
     camera.position.set(-4, 15, 20);
     camera.target = new Vector3(0,0, 0)
     const buffer = new Uint8Array([
-            1,1, 1, 1,1,1,1,1,
+            0,1, 1, 1,1,1,1,0,
             1,1,16,16,1,1,1,1,
-            1,1,16,16,1,1,1,1,
+            1,1,16,16,1,0,1,1,
             1,1,1,16,1,1,1,1,
             1,1,1,16,1,1,1,1,
             1,1, 1, 1,1,1,1,1,

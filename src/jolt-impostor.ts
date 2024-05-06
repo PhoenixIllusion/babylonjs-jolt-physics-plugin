@@ -11,8 +11,35 @@ import { Space } from '@babylonjs/core/Maths/math.axis';
 import { JoltJSPlugin } from './jolt-physics';
 import Jolt from './jolt-import';
 
+class TransformNodeWithImpostor extends TransformNode {
+  _physicsImpostor: Nullable<PhysicsImpostor> = null;
+  get physicsImpostor() {
+    return this._physicsImpostor;
+  }
+  set physicsImpostor(value: Nullable<PhysicsImpostor>) {
+      if (this._physicsImpostor === value) {
+          return;
+      }
+      if (this._disposePhysicsObserver) {
+          this.onDisposeObservable.remove(this._disposePhysicsObserver);
+      }
 
-export class MinimalPhysicsNode extends TransformNode implements IPhysicsEnabledObject {
+      this._physicsImpostor = value;
+
+      if (value) {
+          this._disposePhysicsObserver = this.onDisposeObservable.add(() => {
+              // Physics
+              if (this.physicsImpostor) {
+                  this.physicsImpostor.dispose(/*!doNotRecurse*/);
+                  this.physicsImpostor = null;
+              }
+          });
+      }
+  }
+}
+
+
+export class MinimalPhysicsNode extends TransformNodeWithImpostor implements IPhysicsEnabledObject {
   boundingInfo: BoundingInfo;
 
   constructor(name: string, extents: Vector3, private mesh: AbstractMesh) {

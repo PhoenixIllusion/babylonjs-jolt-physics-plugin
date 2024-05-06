@@ -142,7 +142,6 @@ function createShapeSettings(impostor: PhysicsImpostor, tempVec3A: Jolt.Vec3, te
         throw new Error('Error: HeightMap missing heightMap parameter');
       }
       const shapeSettings = new Jolt.HeightFieldShapeSettings();
-
       const scale = impostorExtents.x / (heightMap.size-1)
       shapeSettings.mScale.Set(scale, 1, scale);
       const squareSide = Math.sqrt(heightMap.data.length);
@@ -157,10 +156,11 @@ function createShapeSettings(impostor: PhysicsImpostor, tempVec3A: Jolt.Vec3, te
       shapeSettings.mBlockSize = blockSize;
       shapeSettings.mHeightSamples.resize(heightMap.data.length);
       let heightSamples = new Float32Array(Jolt.HEAPF32.buffer, Jolt.getPointer(shapeSettings.mHeightSamples.data()), heightMap.data.length);
-      const { size } = heightMap;
+      const { size, alphaFilter } = heightMap;
       for(let y = 0; y < size; y++) {
         for(let x = 0; x < size; x++) {
-          heightSamples[(size -1) - y + ((size-1) - x) * size] = heightMap.data[x + y * size]
+          const height = heightMap.data[x + y * size];
+          heightSamples[(size -1) - y + ((size-1) - x) * size] = height === alphaFilter ? Jolt.HeightFieldShapeConstantValues.prototype.cNoCollisionValue : height; 
         }
       }
       tempVec3A.Set(impostorExtents.x / 2, 0, -impostorExtents.z/2);

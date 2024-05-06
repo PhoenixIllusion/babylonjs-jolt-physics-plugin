@@ -1,4 +1,4 @@
-import { IPhysicsEnabledObject } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import { IPhysicsEnabledObject, PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { OnContactCallback, OnContactValidateCallback, JoltContactSetting, OnContactValidateResponse, JoltPhysicsCollideCallbacks } from './jolt-contact';
 import { Matrix, Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
@@ -8,7 +8,12 @@ import { IndicesArray, Nullable } from '@babylonjs/core/types';
 import { Space } from '@babylonjs/core/Maths/math.axis';
 import { JoltJSPlugin } from './jolt-physics';
 import Jolt from './jolt-import';
-export declare class MinimalPhysicsNode extends TransformNode implements IPhysicsEnabledObject {
+declare class TransformNodeWithImpostor extends TransformNode {
+    _physicsImpostor: Nullable<PhysicsImpostor>;
+    get physicsImpostor(): Nullable<PhysicsImpostor>;
+    set physicsImpostor(value: Nullable<PhysicsImpostor>);
+}
+export declare class MinimalPhysicsNode extends TransformNodeWithImpostor implements IPhysicsEnabledObject {
     private mesh;
     boundingInfo: BoundingInfo;
     constructor(name: string, extents: Vector3, mesh: AbstractMesh);

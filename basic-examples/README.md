@@ -24,13 +24,13 @@ The child pages [static/_template.html](static/_template.html) will populate usi
 The [`app.ts`](./src/app.ts) file is shared among all demo scenes. This file is a minimal BabylonJS startup routine. It performs the following:
 1. Create a `<canvas>` and append it to the body of the page
 2. Initialize
-	a. Create a BabylonJS [`Engine`](https://doc.babylonjs.com/typedoc/classes/BABYLON.Engine)
-	b. Create a BabylonJS [`Scene`](https://doc.babylonjs.com/typedoc/classes/BABYLON.Scene) 
-	c. Load the JoltJS Physics Plugin
-	d. Check if the Scene TS has a custom camera, otherwise add a default [`Camera`](https://doc.babylonjs.com/typedoc/classes/BABYLON.Camera)
-	e. Add a [`Light`](https://doc.babylonjs.com/typedoc/classes/BABYLON.Light)
-	f. Call the Scene TS `createScene()` method
-	g. Start the [`engine.runRenderLoop()`](https://doc.babylonjs.com/typedoc/classes/BABYLON.Engine#runRenderLoop)
+	- a. Create a BabylonJS [`Engine`](https://doc.babylonjs.com/typedoc/classes/BABYLON.Engine)
+	- b. Create a BabylonJS [`Scene`](https://doc.babylonjs.com/typedoc/classes/BABYLON.Scene) 
+	- c. Load the JoltJS Physics Plugin
+	- d. Check if the Scene TS has a custom camera, otherwise add a default [`Camera`](https://doc.babylonjs.com/typedoc/classes/BABYLON.Camera)
+	- e. Add a [`Light`](https://doc.babylonjs.com/typedoc/classes/BABYLON.Light)
+	- f. Call the Scene TS `createScene()` method
+	- g. Start the [`engine.runRenderLoop()`](https://doc.babylonjs.com/typedoc/classes/BABYLON.Engine#runRenderLoop)
 
 ### Individual Demo Details
 
