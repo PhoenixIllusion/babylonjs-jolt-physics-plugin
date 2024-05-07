@@ -1,4 +1,5 @@
 ![Add / Remove Bodies](./img/add_remove_bodies.jpg)
+
 ```typescript
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { SceneCallback, createBox, createFloor } from '../util/example';
