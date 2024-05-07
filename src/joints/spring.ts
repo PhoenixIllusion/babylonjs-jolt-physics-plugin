@@ -14,7 +14,7 @@ export function GetSpringMode(mode: SpringMode): Jolt.ESpringMode {
   }
 }
 
-export class SpringControl<P extends JoltConstraint & { spring?: SpringSettings}, C extends Jolt.Constraint & { GetLimitsSpringSettings(): Jolt.SpringSettings }>  {
+export class SpringControl<P extends JoltConstraint & { spring?: SpringSettings}, C extends Jolt.TwoBodyConstraint & { GetLimitsSpringSettings(): Jolt.SpringSettings }>  {
   private _mode = SpringMode.Frequency;
 
   constructor(private _joint: JoltJoint<P,C>) { }

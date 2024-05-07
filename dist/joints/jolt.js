@@ -6,4 +6,11 @@ export class JoltJoint extends PhysicsJoint {
     getParams() {
         return this.jointData.nativeParams.constraint;
     }
+    activate() {
+        const constraint = this.constraint;
+        if (constraint) {
+            const plugin = this._physicsPlugin;
+            plugin.world.GetBodyInterface().ActivateConstraint(constraint);
+        }
+    }
 }

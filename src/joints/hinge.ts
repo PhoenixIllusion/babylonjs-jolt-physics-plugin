@@ -51,6 +51,7 @@ export class JoltHingeJoint extends JoltJoint<HingeConstraintParams, Jolt.HingeC
         if (mode == MotorMode.Velocity) {
           this.constraint.SetTargetAngularVelocity(value);
         }
+        this.activate();
       }
     })
   }

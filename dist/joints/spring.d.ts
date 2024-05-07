@@ -8,7 +8,7 @@ export declare enum SpringMode {
 export declare function GetSpringMode(mode: SpringMode): Jolt.ESpringMode;
 export declare class SpringControl<P extends JoltConstraint & {
     spring?: SpringSettings;
-}, C extends Jolt.Constraint & {
+}, C extends Jolt.TwoBodyConstraint & {
     GetLimitsSpringSettings(): Jolt.SpringSettings;
 }> {
     private _joint;

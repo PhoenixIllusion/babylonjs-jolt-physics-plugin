@@ -35,6 +35,7 @@ export class JoltPathConstraint extends JoltJoint<PathConstraintParams, Jolt.Pat
         if (mode == MotorMode.Velocity) {
           this.constraint.SetTargetVelocity(value);
         }
+        this.activate();
       }
     })
   }

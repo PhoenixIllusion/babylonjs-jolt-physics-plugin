@@ -52,6 +52,7 @@ export class JoltSliderJoint extends JoltJoint<SliderConstraintParams, Jolt.Slid
         if (mode == MotorMode.Velocity) {
           this.constraint.SetTargetVelocity(value);
         }
+        this.activate();
       }
     })
   }

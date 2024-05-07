@@ -6,9 +6,10 @@ interface JointJoltData<T> extends PhysicsJointData {
         constraint: T;
     };
 }
-export declare class JoltJoint<T extends JoltConstraint, J extends Jolt.Constraint> extends PhysicsJoint {
+export declare class JoltJoint<T extends JoltConstraint, J extends Jolt.TwoBodyConstraint> extends PhysicsJoint {
     jointData: JointJoltData<T>;
     get constraint(): J | undefined;
     getParams(): T;
+    activate(): void;
 }
 export {};

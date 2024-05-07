@@ -5,7 +5,7 @@ import Jolt from "../jolt-import";
 import { f3 } from "../jolt-util";
 import { FixedConstraintParams } from "../constraints/types";
 
-export class JoltFixedJoint extends JoltJoint<FixedConstraintParams, Jolt.Constraint> {
+export class JoltFixedJoint extends JoltJoint<FixedConstraintParams, Jolt.TwoBodyConstraint> {
   constructor(point1: Vector3, point2?: Vector3, space: 'Local' | 'World' = 'World') {
     const p1 = point1;
     const p2 = point2 ?? point1;
