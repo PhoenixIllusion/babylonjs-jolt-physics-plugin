@@ -10,6 +10,7 @@ import { IndicesArray, Nullable } from '@babylonjs/core/types';
 import { Space } from '@babylonjs/core/Maths/math.axis';
 import { JoltJSPlugin } from './jolt-physics';
 import Jolt from './jolt-import';
+import { PhysicsImpostorParameters } from '@babylonjs/core';
 
 class TransformNodeWithImpostor extends TransformNode {
   _physicsImpostor: Nullable<PhysicsImpostor> = null;
@@ -168,6 +169,7 @@ type ImpostorMeshParam = 'mesh';
 type ImpostorBoolParam = 'frozen'|'sensor';
 type ImpostorCollisionFilterParam = 'collision';
 type ImpostorHeightMapParam = 'heightMap';
+type ImpostorShapeParam = 'copyShape';
 
 interface CollisionData {
   group?: number;
@@ -193,6 +195,7 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
     collision?: CollisionData;
     heightMap?: HeightMapData;
     sensor?: boolean;
+    copyShape?: PhysicsImpostor;
   }
 
   interface PhysicsImpostor {
@@ -204,6 +207,7 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
     getParam(param: ImpostorVec3Param): Vector3 | undefined;
     getParam(param: ImpostorCollisionFilterParam): CollisionData | undefined;
     getParam(param: ImpostorHeightMapParam): HeightMapData | undefined;
+    getParam(param: ImpostorShapeParam): PhysicsImpostor | undefined;
 
     JoltPhysicsCallback: JoltPhysicsCollideCallbacks;
     registerOnJoltPhysicsCollide(kind: 'on-contact-add' | 'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactCallback): void;
@@ -211,6 +215,7 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
     unregisterOnJoltPhysicsCollide(kind: 'on-contact-add' | 'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactCallback): void;
     unregisterOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidateCallback): void;
 
+    setShape(type: number, param: PhysicsImpostorParameters): void;
     onJoltCollide(kind: 'on-contact-add' | 'on-contact-persist', event: {
         body: PhysicsImpostor;
         ioSettings: JoltContactSetting;
@@ -291,6 +296,10 @@ PhysicsImpostor.prototype.unregisterOnJoltPhysicsCollide = function(kind: JoltCo
   } else {
     Logger.Warn('Function to remove was not found');
   }
+}
+
+PhysicsImpostor.prototype.setShape = function(type: number, params: PhysicsImpostorParameters): void {
+  this.joltPluginData.plugin.setShape(this, type, params);
 }
 
 PhysicsImpostor.prototype.onJoltCollide = function(kind: JoltCollisionKey, event: { body: PhysicsImpostor, ioSettings: JoltContactSetting } | { body: PhysicsImpostor }) {

@@ -29,7 +29,7 @@ export default (_scene: Scene): SceneCallback => {
   configs.forEach((config, i) => {
     const [mode, freq, damping, stiff, color ] = config;
     {
-      const position = new Vector3(-10.0 + 2.0 * i + (i>4 ? 2 : 0), 5, 0);
+      const position = new Vector3(10.0 - 2.0 * i + (i>4 ? -2 : 0), 5, 0);
       const anchor = createBox(position, Quaternion.Identity(), new Vector3(0.5, 0.5, 0.5), { mass: 0 }, i>4 ? '#333333' : '#ffffff');
       const weight = createBox(position.add(new Vector3(0,-2,0)), Quaternion.Identity(), new Vector3(0.5, 0.5, 0.5), { mass: 10 }, color.toHexString());
       const rope = new JoltDistanceJoint(position.add(new Vector3(0,-0.5,0)));
@@ -46,7 +46,7 @@ export default (_scene: Scene): SceneCallback => {
     }
 
     {
-      const position = new Vector3(-10.0 + 2.0 * i + (i>4 ? 2 : 0), 10, 0);
+      const position = new Vector3(10.0 - 2.0 * i + (i>4 ? -2 : 0), 10, 0);
       const anchor = createBox(position, Quaternion.Identity(), new Vector3(0.5, 0.1, 0.5), { mass: 0 }, i>4 ? '#333333' : '#ffffff');
       const weight = createBox(position.add(new Vector3(1,0,0)), Quaternion.Identity(), new Vector3(0.3, 0.1, 0.3), { mass: 10 }, color.toHexString());
       const hinge = new JoltHingeJoint(position.add(new Vector3(0.5,0,0)), new Vector3(0,0,1), new Vector3(1,0,0));

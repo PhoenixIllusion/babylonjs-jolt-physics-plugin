@@ -9,13 +9,14 @@ import { Logger } from '@babylonjs/core/Misc/logger';
 
 
 class CharacterVirtualConfig {
-  public sMaxSlopeAngle = 45.0 * (Math.PI / 180.0);
-  public sMaxStrength = 100.0;
-  public sCharacterPadding = 0.02;
-  public sPenetrationRecoverySpeed = 1.0;
-  public sPredictiveContactDistance = 0.1;
-  public sEnableWalkStairs = true;
-  public sEnableStickToFloor = true;
+  public maxSlopeAngle = 45.0 * (Math.PI / 180.0);
+  public mass = 70;
+  public maxStrength = 100.0;
+  public characterPadding = 0.02;
+  public penetrationRecoverySpeed = 1.0;
+  public predictiveContactDistance = 0.1;
+  public enableWalkStairs = true;
+  public enableStickToFloor = true;
 }
 
 interface JoltCharacterVirtualPluginData extends JoltPluginData {
@@ -197,7 +198,7 @@ export class JoltCharacterVirtual {
   private mDisposables!: any[];
 
   private mUpdateSettings!: Jolt.ExtendedUpdateSettings;
-  private mUpdateFilterData!: UpdateFiltersData;
+  public updateFilterData: UpdateFiltersData;
 
   public inputHandler?: CharacterVirtualInputHandler;
 
@@ -220,13 +221,13 @@ export class JoltCharacterVirtual {
     this.mUpdateSettings = new Jolt.ExtendedUpdateSettings();
 
     const settings = new Jolt.CharacterVirtualSettings();
-    settings.mMass = 1000;
-    settings.mMaxSlopeAngle = this.config.sMaxSlopeAngle;
-    settings.mMaxStrength = this.config.sMaxStrength;
+    settings.mMass = this.config.mass;
+    settings.mMaxSlopeAngle = this.config.maxSlopeAngle;
+    settings.mMaxStrength = this.config.maxStrength;
     settings.mShape = this.shape;
-    settings.mCharacterPadding = this.config.sCharacterPadding;
-    settings.mPenetrationRecoverySpeed = this.config.sPenetrationRecoverySpeed;
-    settings.mPredictiveContactDistance = this.config.sPredictiveContactDistance;
+    settings.mCharacterPadding = this.config.characterPadding;
+    settings.mPenetrationRecoverySpeed = this.config.penetrationRecoverySpeed;
+    settings.mPredictiveContactDistance = this.config.predictiveContactDistance;
     const mSupportingVolume = new Jolt.Plane(Jolt.Vec3.prototype.sAxisY(), -1);
     settings.mSupportingVolume = mSupportingVolume;
     Jolt.destroy(mSupportingVolume);
@@ -238,7 +239,7 @@ export class JoltCharacterVirtual {
 
     const objectVsBroadPhaseLayerFilter = world.jolt.GetObjectVsBroadPhaseLayerFilter();
     const objectLayerPairFilter = world.jolt.GetObjectLayerPairFilter();
-    const filter = this.mUpdateFilterData = {
+    const filter = this.updateFilterData = {
       movingBPFilter: new Jolt.DefaultBroadPhaseLayerFilter(objectVsBroadPhaseLayerFilter, LAYER_MOVING),
       movingLayerFilter: new Jolt.DefaultObjectLayerFilter(objectLayerPairFilter, LAYER_MOVING),
       bodyFilter: new Jolt.BodyFilter(),
@@ -254,7 +255,7 @@ export class JoltCharacterVirtual {
 
   prePhysicsUpdate(mDeltaTime: number) {
     GetJoltVec3(this.mCharacter.GetUp(), this._characterUp);
-    if (!this.config.sEnableStickToFloor) {
+    if (!this.config.enableStickToFloor) {
       this.mUpdateSettings.mStickToFloorStepDown.Set(0, 0, 0)
     }
     else {
@@ -265,7 +266,7 @@ export class JoltCharacterVirtual {
       SetJoltVec3(vec, this.mUpdateSettings.mStickToFloorStepDown);
     }
 
-    if (!this.config.sEnableWalkStairs) {
+    if (!this.config.enableWalkStairs) {
       this.mUpdateSettings.mWalkStairsStepUp.Set(0, 0, 0);
     }
     else {
@@ -284,13 +285,17 @@ export class JoltCharacterVirtual {
       this.inputHandler.updateCharacter(this.mCharacter, this._jolt_temp1);
     }
 
-    const inGravity = SetJoltVec3(g, this._jolt_temp1);
+    this.mCharacter.SetMaxSlopeAngle(this.config.maxSlopeAngle);
+    this.mCharacter.SetMaxStrength(this.config.maxStrength);
+    this.mCharacter.SetMass(this.config.mass);
+    this.mCharacter.SetPenetrationRecoverySpeed(this.config.penetrationRecoverySpeed);
 
+    const inGravity = SetJoltVec3(g, this._jolt_temp1);
     const {
       movingBPFilter,
       movingLayerFilter,
       bodyFilter,
-      shapeFilter } = this.mUpdateFilterData;
+      shapeFilter } = this.updateFilterData;
     this.mCharacter.ExtendedUpdate(mDeltaTime,
       inGravity,
       this.mUpdateSettings,

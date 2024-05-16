@@ -56,6 +56,10 @@ function getMeshVertexData(impostor: PhysicsImpostor): MeshVertexData {
 }
 
 export function createJoltShape(impostor: PhysicsImpostor, tempVectorA: Jolt.Vec3, tempVectorB: Jolt.Vec3, tempQuat: Jolt.Quat): Jolt.Shape {
+  const copyShape = impostor.getParam('copyShape');
+  if(copyShape) {
+    return (copyShape.physicsBody as Jolt.Body).GetShape();
+  }
   const settings = createShapeSettings(impostor, tempVectorA, tempVectorB, tempQuat);
   const shapeResult: Jolt.ShapeResult = settings.Create();
   if (shapeResult.HasError()) {

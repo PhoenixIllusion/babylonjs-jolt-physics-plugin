@@ -1,64 +1,23 @@
-import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { SceneCallback, createBox, createFloor, createSphere } from '../util/example';
-import { JoltSliderJoint, JoltHingeJoint, MotorMode } from '@phoenixillusion/babylonjs-jolt-plugin';
-import { Scene } from '@babylonjs/core/scene';
+![Motor](./img/motor.jpg)
 
-const createWindmill = () => {
-  const box1 = createBox(new Vector3(0, 10, 0), Quaternion.Identity(), new Vector3(0.25, 0.25, 0.25));
-  const wings = [
-    createBox(new Vector3(5, 10, 0), Quaternion.Identity(), new Vector3(4, 0.5, 0.5), { mass: 10, friction: 0, restitution: 0 }),
-    createBox(new Vector3(-5, 10, 0), Quaternion.Identity(), new Vector3(4, 0.5, 0.5), { mass: 10, friction: 0, restitution: 0 }),
-    createBox(new Vector3(0, 15, 0), Quaternion.Identity(), new Vector3(0.5, 4, 0.5), { mass: 10, friction: 0, restitution: 0 }),
-    createBox(new Vector3(0, 5, 0), Quaternion.Identity(), new Vector3(0.5, 4, 0.5), { mass: 10, friction: 0, restitution: 0 })
-  ]
+[src/scene/motor.ts](../src/scene/motor.ts)  
 
-  wings.forEach(box => {
-    const joint = new JoltHingeJoint(new Vector3(0, 10, 0), new Vector3(0, 0, 1), new Vector3(1, 0, 0));
-    box1.physics.addJoint(box.physics, joint);
-    joint.motor.mode = MotorMode.Velocity;
-    joint.motor.target = 3;
-  });
+### Motor
 
+This demo shows the usage of the 'motor' attribute on the Jolt Joints. The plugin has simplified some of the behavior compared to the raw JoltJS SDK, and routed control to a `MotorControl` object.
 
-  const ball = createSphere(new Vector3(20, 0, 0), 2, { mass: 5, friction: 0, restitution: 0 }, '#118811');
-  ball.physics.applyImpulse(new Vector3(-25, 0, 0), new Vector3(20, 0, 0));
-}
+This object has the following properties:
 
-const createSlider = () => {
-  createBox(new Vector3(-15, -.25, 0), Quaternion.Identity(), new Vector3(8, 0.25, 2), undefined, '#993333');
-  const box = createBox(new Vector3(-15, 0.75, 0), Quaternion.Identity(), new Vector3(.75, 0.75, .75), { mass: 10, friction: 0, restitution: 0 }, '#003366');
-  const target = createBox(new Vector3(-23, 0.5, 0), Quaternion.Identity(), new Vector3(.5, 2, 2), undefined, '#666633');
+* mode = Position, Velocity, Off
+* target = the desired angular or velocity target
 
-
-  const point1 = new Vector3(-21, 0.5, 0);
-  const point2 = new Vector3(-16, 0.75, 0);
-  const slideAxis = new Vector3(1, 0, 0);
-  const joint = new JoltSliderJoint(point1, slideAxis, 'World', point2);
-  target.physics.addJoint(box.physics, joint);
-  joint.motor.mode = MotorMode.Position;
-
-  const setStart = () => joint.motor.target = 0;
-  const setEnd = () => joint.motor.target = 10;
-
-  let i = 0;
-  const interval = setInterval(() => {
-    if (box.box.isDisposed()) {
-      clearInterval(interval);
-      return;
-    }
-    if (i++ % 2 == 0) {
-      setEnd();
-    } else {
-      setStart();
-    }
-  }, 1000)
-
-  return { joint, box };
-
-}
-
-export default (_scene: Scene): SceneCallback => {
-  createFloor();
-  createWindmill();
-  createSlider();
-}
+Two structures are constructed in the demo:
+* A windmill, made of 4 boxes rotating around a single axis object, using a velocity setting on a hinge. This means that the hinge will attempt to maintain a specific angular velocity.
+	* Angular vs Linear velocity of motors depends on the Joint/Constraint, not any value given to `mode`
+	* The windmill will strike a free-rolling ball that starts on the left side of the scene and rolls right.
+* A slider on a platform. The sliding box is constraint with a block at the end of the platform. This constraint motor will set the 'position' of the slider constraint every two seconds.
+	* The constraint-point of the sliding box is world space
+		* This means the point being dragged is point2, as located relative to `box`'s physics shape
+	* target = 0 will move the box's constraint-point2 to point1 on the slider axis
+	* target = 10 will move the box to 10-units away from point1 on the axis, approximately on the left-side of the slider's platform. 
+	* You can modify this `target` as desired to see the impact. Setting it to negative numbers may attempt to pull the box beyond the rightmost end-block. Setting to values larger than 10 may pull the box farther leftward, under the windmill.

@@ -41,10 +41,10 @@ export default (scene: Scene): SceneCallback => {
   document.addEventListener("keyup", onDocumentKeyUp, false);
 
   const physicSetting: PhysicsImpostorParameters = { mass: 800, restitution: 0, friction: 0, centerOffMass: new Vector3(0, -.2, 0) };
-  const car = createBox(new Vector3(0, 2, 0), Quaternion.FromEulerAngles(0, Math.PI, 0), new Vector3(0.05, .2, 2), physicSetting, '#FF0000');
+  const car = createBox(new Vector3(0, 2, 0), Quaternion.FromEulerAngles(0, Math.PI, 0), new Vector3(0.05, .2, 1), physicSetting, '#FF0000');
   car.box.material!.wireframe = true;
 
-  const wheeledConfig: Vehicle.MotorcycleVehicleSettings = createBasicMotorcycle({ height: .4, length: 4 }, { radius: 0.3, width: 0.1 });
+  const wheeledConfig: Vehicle.MotorcycleVehicleSettings = createBasicMotorcycle({ height: .4, length: 2 }, { radius: 0.3, width: 0.1 });
   const vehicleInput = new DefaultMotorcycleInput(car.physics.physicsBody);
   const controller = new MotorcycleController(car.physics, wheeledConfig, vehicleInput);
 
