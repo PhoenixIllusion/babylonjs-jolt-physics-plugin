@@ -43,8 +43,8 @@ const NullPhysics: PhysicsImpostorParameters = {
 }
 type PhysicsOptions = PhysicsImpostorParameters;
 
-export const createFloor = (physicsOptions: PhysicsOptions = NullPhysics, color: string = '#FFFFFF') => {
-  const ground = MeshBuilder.CreateGround('ground', { width: 100, height: 100 });
+export const createFloor = (physicsOptions: PhysicsOptions = NullPhysics, color: string = '#FFFFFF', size = 100) => {
+  const ground = MeshBuilder.CreateGround('ground', { width: size, height: size });
   ground.position.y = -0.5;
   ground.material = getMaterial(color);
   const physics = new PhysicsImpostor(ground, PhysicsImpostor.BoxImpostor, physicsOptions);

@@ -53,7 +53,13 @@ export declare class Transmission {
     private _shiftUpRPM;
     private _shiftDownRPM;
     private _clutchStrength;
+    private _gearRatios;
     constructor(transmission: Jolt.VehicleTransmission);
+    changeGear(gear: number, friction?: number): void;
+    get gear(): number;
+    get gearRatio(): number;
+    get gearRatios(): number[];
+    get isSwitchingGear(): boolean;
     set mode(v: TransmissionMode);
     get mode(): TransmissionMode;
     get switchTime(): number;

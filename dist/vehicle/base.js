@@ -148,6 +148,7 @@ export function configureVehicleConstraint(joltPlugin, settings, constraint) {
 }
 export class BaseVehicleController {
     constructor(impostor, settings, constraintSettings, input) {
+        this.impostor = impostor;
         this.wheels = [];
         const joltPlugin = impostor.joltPluginData.plugin;
         const physicsBody = impostor.physicsBody;
@@ -173,4 +174,6 @@ export class BaseVehicleController {
         joltPlugin.registerPerPhysicsStepCallback(this._physicsStepListener);
         impostor._pluginData.toDispose.push(wheelRight, wheelUp, ...toDispose);
     }
+    getLinearVelocity() { return this.impostor.getLinearVelocity(); }
+    getAngularVelocity() { return this.impostor.getAngularVelocity(); }
 }

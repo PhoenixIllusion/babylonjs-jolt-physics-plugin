@@ -23,7 +23,7 @@ type SceneModule = {
 export class App {
     private canvas: HTMLCanvasElement;
     private createScene: SceneFunction;
-    private config?: SceneConfig
+    private config?: SceneConfig;
     constructor(module: SceneModule) {
         this.createScene = module.default;
         this.config = module.config;

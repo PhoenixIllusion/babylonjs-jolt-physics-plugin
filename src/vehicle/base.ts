@@ -6,6 +6,7 @@ import { Vehicle } from "./types";
 import { BaseVehicleInput } from "./input";
 import { PhysicsImpostor } from "@babylonjs/core/Physics/v1/physicsImpostor";
 import { Engine, Transmission, Wheel } from "./wrapped";
+import { Vector3 } from "@babylonjs/core";
 
 
 export function configureWheel(wheel: Jolt.WheelSettings, setting: Vehicle.WheelSetting): void {
@@ -159,7 +160,15 @@ export function configureVehicleConstraint<T extends Vehicle.WheelSetting>(joltP
   return toDispose;
 }
 
-export abstract class BaseVehicleController<T extends Vehicle.WheelSetting, K extends Jolt.VehicleController> {
+export interface IBaseVehicleController {
+  transmission: Transmission;
+  engine: Engine;
+  wheels: Wheel[];
+  getLinearVelocity(): Vector3;
+  getAngularVelocity(): Vector3;
+}
+
+export abstract class BaseVehicleController<T extends Vehicle.WheelSetting, K extends Jolt.VehicleController> implements IBaseVehicleController{
   private _physicsStepListener: (delta: number) => void;
 
   protected controller: K;
@@ -167,7 +176,7 @@ export abstract class BaseVehicleController<T extends Vehicle.WheelSetting, K ex
   public engine: Engine;
   public wheels: Wheel[] = [];
 
-  constructor(impostor: PhysicsImpostor, settings: Vehicle.VehicleSettings<T>, constraintSettings: Jolt.VehicleConstraintSettings, input: BaseVehicleInput<K>) {
+  constructor(protected impostor: PhysicsImpostor, settings: Vehicle.VehicleSettings<T>, constraintSettings: Jolt.VehicleConstraintSettings, input: BaseVehicleInput<K>) {
     const joltPlugin: JoltJSPlugin = impostor.joltPluginData.plugin;
     const physicsBody: Jolt.Body = impostor.physicsBody;
     const constraint = new Jolt.VehicleConstraint(physicsBody, constraintSettings);
@@ -198,4 +207,7 @@ export abstract class BaseVehicleController<T extends Vehicle.WheelSetting, K ex
   abstract getController(controller: Jolt.VehicleController): K;
   abstract getEngine(controller: K): Jolt.VehicleEngine;
   abstract getTransmission(controller: K): Jolt.VehicleTransmission;
+
+  getLinearVelocity() { return this.impostor.getLinearVelocity()! }
+  getAngularVelocity() { return this.impostor.getAngularVelocity()! }
 }

@@ -22,3 +22,9 @@ canvas {
   user-select: none;
   -webkit-tap-highlight-color: rgba(0, 0, 0, 0);
 }
+
+basic-tachometer {
+  position: fixed;
+  right: 10px;
+  top: 40%;
+}

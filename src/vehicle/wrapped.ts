@@ -88,6 +88,7 @@ export class Transmission {
   private _shiftUpRPM: number;
   private _shiftDownRPM: number;
   private _clutchStrength: number;
+  private _gearRatios: number[];
 
   constructor(private transmission: Jolt.VehicleTransmission) {
     this._mode = transmission.mMode === Jolt.ETransmissionMode_Auto ? 'auto' : 'manual';
@@ -97,7 +98,19 @@ export class Transmission {
     this._shiftUpRPM = transmission.mShiftUpRPM;
     this._shiftDownRPM = transmission.mShiftDownRPM;
     this._clutchStrength = transmission.mClutchStrength;
+    this._gearRatios = [];
+    for(let i=0;i<transmission.mGearRatios.size();i++) {
+      this._gearRatios[i] = transmission.mGearRatios.at(i);
+    }
   }
+
+  changeGear(gear: number, friction: number = 0) {
+    this.transmission.Set(gear, friction);
+  }
+  get gear() { return this.transmission.GetCurrentGear(); }
+  get gearRatio() { return this.transmission.GetCurrentRatio(); }
+  get gearRatios() { return this._gearRatios};
+  get isSwitchingGear() { return this.transmission.IsSwitchingGear(); }
 
   set mode(v: TransmissionMode) { this._mode = v; this.transmission.mMode = v == 'auto' ? Jolt.ETransmissionMode_Auto : Jolt.ETransmissionMode_Manual }
   get mode(): TransmissionMode { return this._mode; }

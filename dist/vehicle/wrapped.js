@@ -62,7 +62,19 @@ export class Transmission {
         this._shiftUpRPM = transmission.mShiftUpRPM;
         this._shiftDownRPM = transmission.mShiftDownRPM;
         this._clutchStrength = transmission.mClutchStrength;
+        this._gearRatios = [];
+        for (let i = 0; i < transmission.mGearRatios.size(); i++) {
+            this._gearRatios[i] = transmission.mGearRatios.at(i);
+        }
     }
+    changeGear(gear, friction = 0) {
+        this.transmission.Set(gear, friction);
+    }
+    get gear() { return this.transmission.GetCurrentGear(); }
+    get gearRatio() { return this.transmission.GetCurrentRatio(); }
+    get gearRatios() { return this._gearRatios; }
+    ;
+    get isSwitchingGear() { return this.transmission.IsSwitchingGear(); }
     set mode(v) { this._mode = v; this.transmission.mMode = v == 'auto' ? Jolt.ETransmissionMode_Auto : Jolt.ETransmissionMode_Manual; }
     get mode() { return this._mode; }
     get switchTime() { return this._switchTime; }
