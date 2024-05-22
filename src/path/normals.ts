@@ -3,7 +3,7 @@ import type { Curve3, Path3D } from "@babylonjs/core/Maths/math.path";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 
 export function setPath3DNormals(path: Path3D, normals: Vector3[]) {
-  path.getNormals().forEach((norm,i) => {
+  path.getNormals().forEach((norm, i) => {
     const newTan = normals[i];
     norm.copyFrom(newTan);
   });
@@ -21,18 +21,18 @@ export function recomputeBinormal(path: Path3D) {
   })
 }
 
-export function interpolateNormalsOverCurve(curve: Curve3, normals: [Vector3, Vector3], easing: IEasingFunction): {positions: Vector3[], normals: Vector3[]} {
+export function interpolateNormalsOverCurve(curve: Curve3, normals: [Vector3, Vector3], easing: IEasingFunction): { positions: Vector3[], normals: Vector3[] } {
   const length = curve.length();
   const newPositions = curve.getPoints();
   const newNormals: Vector3[] = [];
   let distance = 0;
-  for(let i=0; i < newPositions.length - 1; i++){
-    const n = Vector3.SlerpToRef(normals[0], normals[1], easing.ease(distance/length), new Vector3())
-    const t = newPositions[i+1].subtract(newPositions[i]).normalize();
+  for (let i = 0; i < newPositions.length - 1; i++) {
+    const n = Vector3.SlerpToRef(normals[0], normals[1], easing.ease(distance / length), new Vector3())
+    const t = newPositions[i + 1].subtract(newPositions[i]).normalize();
     const b = n.cross(t).normalize();
-    Vector3.CrossToRef(t,b,n).normalize();
+    Vector3.CrossToRef(t, b, n).normalize();
     newNormals.push(n);
-    distance += Vector3.Distance(newPositions[i], newPositions[i+1]);
+    distance += Vector3.Distance(newPositions[i], newPositions[i + 1]);
   }
   newNormals.push(normals[1]);
 

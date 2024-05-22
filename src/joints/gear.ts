@@ -6,9 +6,9 @@ import { f3 } from "../jolt-util";
 import { GearConstraintParams } from "../constraints/types";
 import { JoltHingeJoint } from ".";
 
-export class JoltGearConstraint extends JoltJoint<GearConstraintParams, Jolt.GearConstraint>  {
+export class JoltGearConstraint extends JoltJoint<GearConstraintParams, Jolt.GearConstraint> {
 
-  constructor(hingeAxis1: Vector3, hingeAxis2: Vector3, ratio: number = 1,  space: 'Local' | 'World' = 'World') {
+  constructor(hingeAxis1: Vector3, hingeAxis2: Vector3, ratio: number = 1, space: 'Local' | 'World' = 'World') {
 
     const constraint: GearConstraintParams = {
       space,
@@ -17,10 +17,10 @@ export class JoltGearConstraint extends JoltJoint<GearConstraintParams, Jolt.Gea
       ratio,
       type: "Gear"
     };
-    super(PhysicsJoint.BallAndSocketJoint, {nativeParams: { constraint }})
+    super(PhysicsJoint.BallAndSocketJoint, { nativeParams: { constraint } })
   }
 
-  setJointHint( gear1: JoltHingeJoint, gear2: JoltHingeJoint) {
+  setJointHint(gear1: JoltHingeJoint, gear2: JoltHingeJoint) {
     if (this.constraint && gear1.constraint && gear2.constraint) {
       this.constraint.SetConstraints(gear1.constraint, gear2.constraint);
     } else {

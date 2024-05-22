@@ -15,10 +15,10 @@ export function configureWheel(wheel: Jolt.WheelSettings, setting: Vehicle.Wheel
   if (setting.steeringAxis !== undefined) {
     SetJoltVec3(setting.steeringAxis, wheel.mSteeringAxis);
   }
-  if(setting.forward !== undefined) {
+  if (setting.forward !== undefined) {
     SetJoltVec3(setting.forward, wheel.mWheelForward);
   }
-  if(setting.up !== undefined) {
+  if (setting.up !== undefined) {
     SetJoltVec3(setting.up, wheel.mWheelUp);
   }
   if (setting.suspension !== undefined) {

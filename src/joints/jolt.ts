@@ -14,10 +14,10 @@ export class JoltJoint<T extends JoltConstraint, J extends Jolt.TwoBodyConstrain
   getParams(): T {
     return this.jointData.nativeParams.constraint;
   }
-  
+
   activate() {
     const constraint = this.constraint;
-    if(constraint) {
+    if (constraint) {
       const plugin: JoltJSPlugin = this._physicsPlugin as JoltJSPlugin;
       plugin.world.GetBodyInterface().ActivateConstraint(constraint);
     }

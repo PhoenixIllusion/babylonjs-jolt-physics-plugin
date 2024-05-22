@@ -1,6 +1,6 @@
 import { BackEase, BounceEase, CircleEase, CubicEase, EasingFunction, ElasticEase, ExponentialEase, IEasingFunction, QuadraticEase, QuarticEase, QuinticEase, SineEase } from '@babylonjs/core/Animations/easing';
 
-const LinearEase = class extends EasingFunction { ease(gradient: number) { return gradient; }};
+const LinearEase = class extends EasingFunction { ease(gradient: number) { return gradient; } };
 
 export enum EasingMethod {
   LINEAR,
@@ -16,9 +16,9 @@ export enum EasingMethod {
   BOUNCE
 }
 
-type EasingMethodHash = { [key in EasingMethod]: {new (): EasingFunction } }
+type EasingMethodHash = { [key in EasingMethod]: { new(): EasingFunction } }
 
-const EASE_METHODS:  EasingMethodHash = {
+const EASE_METHODS: EasingMethodHash = {
   [EasingMethod.SINE]: SineEase,
   [EasingMethod.LINEAR]: LinearEase,
   [EasingMethod.QUADRATIC]: QuadraticEase,
@@ -33,8 +33,8 @@ const EASE_METHODS:  EasingMethodHash = {
 }
 
 export function getEasing(easing: EasingMethod): IEasingFunction {
-  let easeClass: {new (): EasingFunction } | undefined = EASE_METHODS[easing];
-  if(!easeClass) {
+  let easeClass: { new(): EasingFunction } | undefined = EASE_METHODS[easing];
+  if (!easeClass) {
     easeClass = LinearEase;
   }
   const ease = new easeClass();

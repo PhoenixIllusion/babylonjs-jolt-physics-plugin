@@ -14,10 +14,10 @@ export function GetSpringMode(mode: SpringMode): Jolt.ESpringMode {
   }
 }
 
-export class SpringControl<P extends JoltConstraint & { spring?: SpringSettings}, C extends Jolt.TwoBodyConstraint & { GetLimitsSpringSettings(): Jolt.SpringSettings }>  {
+export class SpringControl<P extends JoltConstraint & { spring?: SpringSettings }, C extends Jolt.TwoBodyConstraint & { GetLimitsSpringSettings(): Jolt.SpringSettings }> {
   private _mode = SpringMode.Frequency;
 
-  constructor(private _joint: JoltJoint<P,C>) { }
+  constructor(private _joint: JoltJoint<P, C>) { }
 
   private get settings(): SpringSettings {
     const setting = this._joint.getParams().spring = this._joint.getParams().spring || { mode: 'Frequency' }
@@ -31,7 +31,7 @@ export class SpringControl<P extends JoltConstraint & { spring?: SpringSettings}
   set mode(mode: SpringMode) {
     this._mode = mode;
     this.settings.mode = mode == SpringMode.Frequency ? 'Frequency' : 'Stiffness';
-    if(this.constraint) {
+    if (this.constraint) {
       this.constraint.GetLimitsSpringSettings().mMode = GetSpringMode(mode);
     }
   }
@@ -41,31 +41,31 @@ export class SpringControl<P extends JoltConstraint & { spring?: SpringSettings}
 
   set frequency(val: number) {
     this.settings.frequency = val;
-    if(this.constraint) {
+    if (this.constraint) {
       this.constraint.GetLimitsSpringSettings().mFrequency = val;
     }
   }
-  get frequency() : number | undefined {
+  get frequency(): number | undefined {
     return this.settings.frequency;
   }
 
   set damping(val: number) {
     this.settings.damping = val;
-    if(this.constraint) {
+    if (this.constraint) {
       this.constraint.GetLimitsSpringSettings().mDamping = val;
     }
   }
-  get damping() : number | undefined {
+  get damping(): number | undefined {
     return this.settings.damping;
   }
 
   set stiffness(val: number) {
     this.settings.stiffness = val;
-    if(this.constraint) {
+    if (this.constraint) {
       this.constraint.GetLimitsSpringSettings().mStiffness = val;
     }
   }
-  get stiffness() : number | undefined {
+  get stiffness(): number | undefined {
     return this.settings.stiffness;
   }
 

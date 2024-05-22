@@ -22,33 +22,33 @@ export function createJoltConstraint(mainBody: Jolt.Body, connectedBody: Jolt.Bo
     constraintSettings.mNormalAxis2.Set(...params.normalAxis2);
   }
   function setMotor(motor: MotorSettings, settings: Jolt.MotorSettings): void {
-    if(motor.minForceLimit !== undefined) settings.mMinForceLimit = motor.minForceLimit;
-    if(motor.maxForceLimit !== undefined) settings.mMaxForceLimit = motor.maxForceLimit;
-    if(motor.minTorqueLimit !== undefined) settings.mMinTorqueLimit = motor.minTorqueLimit;
-    if(motor.maxTorqueLimit !== undefined) settings.mMaxTorqueLimit = motor.maxTorqueLimit;
+    if (motor.minForceLimit !== undefined) settings.mMinForceLimit = motor.minForceLimit;
+    if (motor.maxForceLimit !== undefined) settings.mMaxForceLimit = motor.maxForceLimit;
+    if (motor.minTorqueLimit !== undefined) settings.mMinTorqueLimit = motor.minTorqueLimit;
+    if (motor.maxTorqueLimit !== undefined) settings.mMaxTorqueLimit = motor.maxTorqueLimit;
   }
 
-  type EnableMotor = (state: Jolt.EMotorState)=> void;
-  type SetTargetValue =  (value: number)=>void;
-  type SetTargetVelocity = (value: number)=>void;
+  type EnableMotor = (state: Jolt.EMotorState) => void;
+  type SetTargetValue = (value: number) => void;
+  type SetTargetVelocity = (value: number) => void;
   function enableMotor<T extends Jolt.Constraint &
-  {[P in K1]: EnableMotor} & {[P in K2]: SetTargetValue} & {[P in K3]: SetTargetVelocity},
-  K1 extends KeysOfType<T,EnableMotor>, K2 extends KeysOfType<T,SetTargetValue>, K3 extends KeysOfType<T,SetTargetVelocity>
-  >(motor: MotorSettings|undefined, constraint: T, enable: K1, value: K2, velocity: K3): void {
-    if(motor !== undefined) {
-      switch(motor.state) {
+    { [P in K1]: EnableMotor } & { [P in K2]: SetTargetValue } & { [P in K3]: SetTargetVelocity },
+    K1 extends KeysOfType<T, EnableMotor>, K2 extends KeysOfType<T, SetTargetValue>, K3 extends KeysOfType<T, SetTargetVelocity>
+  >(motor: MotorSettings | undefined, constraint: T, enable: K1, value: K2, velocity: K3): void {
+    if (motor !== undefined) {
+      switch (motor.state) {
         case 'Off':
           constraint[enable](Jolt.EMotorState_Off);
           break;
         case 'Position':
           constraint[enable](Jolt.EMotorState_Position);
-          if(motor.targetValue) {
+          if (motor.targetValue) {
             constraint[value](motor.targetValue);
           }
           break;
         case 'Velocity':
           constraint[enable](Jolt.EMotorState_Velocity);
-          if(motor.targetValue) {
+          if (motor.targetValue) {
             constraint[velocity](motor.targetValue);
           }
           break;
@@ -66,7 +66,7 @@ export function createJoltConstraint(mainBody: Jolt.Body, connectedBody: Jolt.Bo
   }
   function setMotor2Settings<T extends Jolt.ConstraintSettings & { [P in K]: Jolt.MotorSettings }, K extends KeysOfType<T, Jolt.MotorSettings>>
     (param: { motor2?: MotorSettings }, constraintSettings: T, key: K) {
-    if (param.motor2 !== undefined&& param.motor2 !== null) {
+    if (param.motor2 !== undefined && param.motor2 !== null) {
       const motor = param.motor2;
       const settings = constraintSettings[key];
       setMotor(motor, settings);
@@ -213,9 +213,9 @@ export function createJoltConstraint(mainBody: Jolt.Body, connectedBody: Jolt.Bo
           inTan.push(new Vector3(...iT), new Vector3(...oT))
           norm.push(new Vector3(...n))
         })
-        if(params.closed) {
+        if (params.closed) {
           pos.push(pos[0]);
-          inTan.push(inTan[0],inTan[1]);
+          inTan.push(inTan[0], inTan[1]);
           norm.push(norm[0]);
         }
         const hermite = createPath3DWithTan2CubicBenzier(pos, inTan, norm);

@@ -7,7 +7,7 @@ import Jolt from "../jolt-import";
 import { f3 } from "../jolt-util";
 import { SpringControl } from "./spring";
 
-export class JoltHingeJoint extends JoltJoint<HingeConstraintParams, Jolt.HingeConstraint>  {
+export class JoltHingeJoint extends JoltJoint<HingeConstraintParams, Jolt.HingeConstraint> {
   public motor: MotorControl;
   public spring: SpringControl<HingeConstraintParams, Jolt.HingeConstraint>;
 

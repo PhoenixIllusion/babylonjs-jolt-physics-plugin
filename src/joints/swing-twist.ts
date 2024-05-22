@@ -6,7 +6,7 @@ import { JoltJoint } from "./jolt";
 import Jolt from "../jolt-import";
 import { SetJoltQuat, SetJoltVec3, f3 } from "../jolt-util";
 
-export class JoltSwingTwistJoint extends JoltJoint<SwingTwistConstraintParams, Jolt.SwingTwistConstraint>  {
+export class JoltSwingTwistJoint extends JoltJoint<SwingTwistConstraintParams, Jolt.SwingTwistConstraint> {
 
   public twistMotor: MotorControl;
   public swingMotor: MotorControl;
@@ -53,7 +53,7 @@ export class JoltSwingTwistJoint extends JoltJoint<SwingTwistConstraintParams, J
     }, (_mode, _value) => { })
   }
 
-  setTargetAngularVelocity( inVelocity: Vector3 ) {
+  setTargetAngularVelocity(inVelocity: Vector3) {
     if (this.constraint) {
       const velocity = this.constraint.GetTargetAngularVelocityCS();
       SetJoltVec3(inVelocity, velocity);
@@ -61,7 +61,7 @@ export class JoltSwingTwistJoint extends JoltJoint<SwingTwistConstraintParams, J
     }
   }
 
-  setTargetRotation( inOrientation: Quaternion ) {
+  setTargetRotation(inOrientation: Quaternion) {
     if (this.constraint) {
       const quat = this.constraint.GetTargetOrientationCS();
       SetJoltQuat(inOrientation, quat);

@@ -16,7 +16,7 @@ export class JoltConstraintPath {
     this.length = path.length();
     const points = path.getPoints();
     this.looping = points[0].equals(points[points.length - 1]);
-    
+
     this.ptr = new Jolt.PathConstraintPathJS();
     this.ptr.GetClosestPoint = this.getClosestPoint.bind(this);
     this.ptr.GetPathMaxFraction = this.getPathMaxFraction.bind(this);
@@ -31,20 +31,20 @@ export class JoltConstraintPath {
     const jVec3 = Jolt.wrapPointer(vecPtr, Jolt.Vec3);
     GetJoltVec3(jVec3, TmpVectors.Vector3[0]);
 
-    let prevPathFrac = fractionHint-delta;
-    let nextPathFrac = fractionHint+delta;
+    let prevPathFrac = fractionHint - delta;
+    let nextPathFrac = fractionHint + delta;
 
-    if(this.looping) {
-      if(nextPathFrac > this.length) {
-        nextPathFrac -=  this.length;
-        prevPathFrac -=  this.length;
+    if (this.looping) {
+      if (nextPathFrac > this.length) {
+        nextPathFrac -= this.length;
+        prevPathFrac -= this.length;
       }
     } else {
       nextPathFrac = Math.min(this.length, nextPathFrac);
       prevPathFrac = Math.max(0, prevPathFrac);
     }
 
-    if(prevPathFrac >= 0) {
+    if (prevPathFrac >= 0) {
       return this.getClosestPositionTo(TmpVectors.Vector3[0], prevPathFrac, nextPathFrac).closestPosition;
     } else {
       const pathA = this.getClosestPositionTo(TmpVectors.Vector3[0], 0, nextPathFrac);
@@ -60,24 +60,24 @@ export class JoltConstraintPath {
     const curve = this.path.getPoints();
     const distances = this.path.getDistances();
 
-    let startIndex = this.path.getPreviousPointIndexAt(min/this.length);
-    const endIndex = this.path.getPreviousPointIndexAt(max/this.length) + 1;
+    let startIndex = this.path.getPreviousPointIndexAt(min / this.length);
+    const endIndex = this.path.getPreviousPointIndexAt(max / this.length) + 1;
 
 
     for (let i = startIndex; i < endIndex && i < curve.length - 1; i++) {
-        const point = curve[i + 0];
-        const tangent = curve[i + 1].subtract(point).normalize();
-        const subLength = distances[i + 1] - distances[i + 0];
-        const subPosition = Math.min((Math.max(Vector3.Dot(tangent, target.subtract(point).normalize()), 0.0) * Vector3.Distance(point, target)) / subLength, 1.0);
-        const distance = Vector3.Distance(point.add(tangent.scale(subPosition * subLength)), target);
+      const point = curve[i + 0];
+      const tangent = curve[i + 1].subtract(point).normalize();
+      const subLength = distances[i + 1] - distances[i + 0];
+      const subPosition = Math.min((Math.max(Vector3.Dot(tangent, target.subtract(point).normalize()), 0.0) * Vector3.Distance(point, target)) / subLength, 1.0);
+      const distance = Vector3.Distance(point.add(tangent.scale(subPosition * subLength)), target);
 
-        if (distance < smallestDistance) {
-            smallestDistance = distance;
-            closestPosition = (distances[i + 0] + subLength * subPosition);
-        }
+      if (distance < smallestDistance) {
+        smallestDistance = distance;
+        closestPosition = (distances[i + 0] + subLength * subPosition);
+      }
     }
     return { closestPosition, smallestDistance };
-}
+  }
 
   getPathMaxFraction(): float {
     return this.length;
@@ -101,7 +101,7 @@ export class JoltConstraintPath {
   }
 
   setPathNormals(normals: Vector3 | Vector3[]) {
-    const normArray = (normals instanceof Array) ? normals: [normals];
+    const normArray = (normals instanceof Array) ? normals : [normals];
     setPath3DNormals(this.path, normArray);
     recomputeBinormal(this.path);
   }

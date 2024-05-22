@@ -112,7 +112,7 @@ export interface SwingTwistConstraintParams extends JoltConstraint {
   planeHalfConeAngle: float;
   twistMinAngle: float;
   twistMaxAngle: float;
-  swingType: 'Cone'|'Pyramid';
+  swingType: 'Cone' | 'Pyramid';
   maxFrictionTorque: float;
   motor1?: MotorSettings;
   motor2?: MotorSettings;
@@ -121,7 +121,7 @@ export interface SwingTwistConstraintParams extends JoltConstraint {
 export type RotationConstraintType = 'Free' | 'ConstrainAroundTangent' | 'ConstrainAroundNormal' | 'ConstrainAroundBinormal' | 'ConstrainToPath' | 'FullyConstrained';
 export interface PathConstraintParams extends JoltConstraint {
   type: 'Path';
-  path: Path3D | ([float3,float3,float3,float3])[];
+  path: Path3D | ([float3, float3, float3, float3])[];
   closed: boolean;
   pathPosition: float3;
   pathRotation: float4;

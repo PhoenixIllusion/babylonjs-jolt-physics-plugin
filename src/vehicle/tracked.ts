@@ -67,12 +67,12 @@ export function createBasicTracked(vehicle: { width: number, height: number, len
     [-0.0, -2.75]
   ];
   const wheels: Vehicle.WheelSettingTV[] = []
-  
+
   const suspensionMinLength = 0.3;
   const suspensionMaxLength = 0.5;
   const suspensionFrequency = 1.0;
 
-  const trackL: Vehicle.TrackSetting = {wheelIndex: [], drivenWheelIndex: 0}
+  const trackL: Vehicle.TrackSetting = { wheelIndex: [], drivenWheelIndex: 0 }
   wheelPos.map((pos, i) => {
     const setting: Vehicle.WheelSettingTV = {
       position: new Vector3(-vehicle.width / 2 - wheel.width / 2 - 0.1, pos[0], pos[1]),
@@ -87,7 +87,7 @@ export function createBasicTracked(vehicle: { width: number, height: number, len
     wheels.push(setting);
     trackL.wheelIndex.push(i);
   });
-  const trackR: Vehicle.TrackSetting = {wheelIndex: [], drivenWheelIndex: wheels.length}
+  const trackR: Vehicle.TrackSetting = { wheelIndex: [], drivenWheelIndex: wheels.length }
   wheelPos.map((pos, i) => {
     const setting: Vehicle.WheelSettingTV = {
       position: new Vector3(vehicle.width / 2 + wheel.width / 2 + 0.1, pos[0], pos[1]),
@@ -111,7 +111,7 @@ export function createBasicTracked(vehicle: { width: number, height: number, len
   return {
     maxPitchRollAngle: 60 * Math.PI / 180,
     wheels,
-    tracks: [ trackL, trackR],
+    tracks: [trackL, trackR],
     collisionTester: 'cylinder'
   }
 }

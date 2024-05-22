@@ -19,24 +19,24 @@ class TransformNodeWithImpostor extends TransformNode {
     return this._physicsImpostor;
   }
   set physicsImpostor(value: Nullable<PhysicsImpostor>) {
-      if (this._physicsImpostor === value) {
-          return;
-      }
-      if (this._disposePhysicsObserver) {
-          this.onDisposeObservable.remove(this._disposePhysicsObserver);
-      }
+    if (this._physicsImpostor === value) {
+      return;
+    }
+    if (this._disposePhysicsObserver) {
+      this.onDisposeObservable.remove(this._disposePhysicsObserver);
+    }
 
-      this._physicsImpostor = value;
+    this._physicsImpostor = value;
 
-      if (value) {
-          this._disposePhysicsObserver = this.onDisposeObservable.add(() => {
-              // Physics
-              if (this.physicsImpostor) {
-                  this.physicsImpostor.dispose(/*!doNotRecurse*/);
-                  this.physicsImpostor = null;
-              }
-          });
-      }
+    if (value) {
+      this._disposePhysicsObserver = this.onDisposeObservable.add(() => {
+        // Physics
+        if (this.physicsImpostor) {
+          this.physicsImpostor.dispose(/*!doNotRecurse*/);
+          this.physicsImpostor = null;
+        }
+      });
+    }
   }
 }
 
@@ -164,10 +164,10 @@ export class ThinPhysicsNode implements IPhysicsEnabledObject {
 }
 
 type ImpostorNumberParamReq = 'mass';
-type ImpostorNumberParam = 'friction'|'restitution'|'radiusBottom'|'radiusTop';
-type ImpostorVec3Param = 'extents'|'centerOffMass';
+type ImpostorNumberParam = 'friction' | 'restitution' | 'radiusBottom' | 'radiusTop';
+type ImpostorVec3Param = 'extents' | 'centerOffMass';
 type ImpostorMeshParam = 'mesh';
-type ImpostorBoolParam = 'frozen'|'sensor';
+type ImpostorBoolParam = 'frozen' | 'sensor';
 type ImpostorCollisionFilterParam = 'collision';
 type ImpostorHeightMapParam = 'heightMap';
 type ImpostorShapeParam = 'copyShape';
@@ -220,11 +220,11 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
 
     setShape(type: number, param: PhysicsImpostorParameters): void;
     onJoltCollide(kind: 'on-contact-add' | 'on-contact-persist', event: {
-        body: PhysicsImpostor;
-        ioSettings: JoltContactSetting;
+      body: PhysicsImpostor;
+      ioSettings: JoltContactSetting;
     }): void;
     onJoltCollide(kind: 'on-contact-validate', event: {
-        body: PhysicsImpostor;
+      body: PhysicsImpostor;
     }): OnContactValidateResponse | undefined;
   }
 }
@@ -244,7 +244,7 @@ Object.defineProperty(PhysicsImpostor.prototype, "joltPluginData", {
     return this._pluginData;
   },
   set: function (this: PhysicsImpostor, value: JoltPluginData) {
-      this._pluginData = value;
+    this._pluginData = value;
   },
   enumerable: true,
   configurable: true,
@@ -261,7 +261,7 @@ Object.defineProperty(PhysicsImpostor.prototype, "JoltPhysicsCallback", {
   configurable: true,
 });
 
-PhysicsImpostor.prototype.registerOnJoltPhysicsCollide = function(kind: JoltCollisionKey, collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>,
+PhysicsImpostor.prototype.registerOnJoltPhysicsCollide = function (kind: JoltCollisionKey, collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>,
   func: OnContactCallback | OnContactValidateCallback): void {
   const collidedAgainstList: Array<PhysicsImpostor> = collideAgainst instanceof Array ?
     <Array<PhysicsImpostor>>collideAgainst
@@ -274,7 +274,7 @@ PhysicsImpostor.prototype.registerOnJoltPhysicsCollide = function(kind: JoltColl
     list.push({ callback: func as OnContactCallback, otherImpostors: collidedAgainstList });
   }
 }
-PhysicsImpostor.prototype.unregisterOnJoltPhysicsCollide = function(kind: JoltCollisionKey, collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>,
+PhysicsImpostor.prototype.unregisterOnJoltPhysicsCollide = function (kind: JoltCollisionKey, collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>,
   func: OnContactCallback | OnContactValidateCallback): void {
   const collidedAgainstList: Array<PhysicsImpostor> = collideAgainst instanceof Array ?
     <Array<PhysicsImpostor>>collideAgainst
@@ -301,7 +301,7 @@ PhysicsImpostor.prototype.unregisterOnJoltPhysicsCollide = function(kind: JoltCo
   }
 }
 
-PhysicsImpostor.prototype.setShape = function(type: number, params: PhysicsImpostorParameters): void {
+PhysicsImpostor.prototype.setShape = function (type: number, params: PhysicsImpostorParameters): void {
   this.joltPluginData.plugin.setShape(this, type, params);
 }
 
@@ -314,7 +314,7 @@ PhysicsImpostor.prototype.getShapeVertexData = function (): VertexData {
   Jolt.destroy(scale);
   // Get a view on the triangle data (does not make a copy)
   let vertices = new Float32Array(Jolt.HEAPF32.buffer, triContext.GetVerticesData(), triContext.GetVerticesSize() / Float32Array.BYTES_PER_ELEMENT);
-  Jolt.destroy(triContext); 
+  Jolt.destroy(triContext);
   const indices: number[] = [];
   for (let i = 0; i < vertices.length / 3; i++) {
     indices.push(i);
@@ -327,7 +327,7 @@ PhysicsImpostor.prototype.getShapeVertexData = function (): VertexData {
   return vertexData;
 }
 
-PhysicsImpostor.prototype.onJoltCollide = function(kind: JoltCollisionKey, event: { body: PhysicsImpostor, ioSettings: JoltContactSetting } | { body: PhysicsImpostor }) {
+PhysicsImpostor.prototype.onJoltCollide = function (kind: JoltCollisionKey, event: { body: PhysicsImpostor, ioSettings: JoltContactSetting } | { body: PhysicsImpostor }) {
   if (!this.JoltPhysicsCallback[kind].length) {
     return undefined;
   }

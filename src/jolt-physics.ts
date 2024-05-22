@@ -269,7 +269,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       const isStatic = (mass === 0) ? Jolt.EMotionType_Static : Jolt.EMotionType_Dynamic;
       const layer = (mass === 0) ? LAYER_NON_MOVING : LAYER_MOVING;
       const settings = new Jolt.BodyCreationSettings(shape, this._tempVec3A, this._tempQuaternion, isStatic, layer);
-      if(collision) {
+      if (collision) {
         if (collision.group !== undefined) {
           settings.mCollisionGroup.SetGroupID(collision.group);
         }
@@ -291,7 +291,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         settings.mOverrideMassProperties = Jolt.EOverrideMassProperties_CalculateInertia;
         settings.mMassPropertiesOverride.mMass = mass;
       }
-      if(sensor !== undefined) {
+      if (sensor !== undefined) {
         settings.mIsSensor = sensor;
       }
       const body = impostor.physicsBody = this._bodyInterface.CreateBody(settings);

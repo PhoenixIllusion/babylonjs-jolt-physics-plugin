@@ -35,8 +35,8 @@ export namespace Vehicle {
   }
 
   export interface WheelSettingTV extends WheelSetting {
-	  longitudinalFriction?: number;
-	  lateralFriction?: number;
+    longitudinalFriction?: number;
+    lateralFriction?: number;
   }
 
   export interface WheelDifferentials {
@@ -54,7 +54,7 @@ export namespace Vehicle {
     inertia?: number;
     angularDamping?: number;
     maxBrakeTorque?: number;
-    differentialRatio?: number; 
+    differentialRatio?: number;
   }
 
   export interface AntiRollBar {

@@ -7,7 +7,7 @@ import Jolt from "../jolt-import";
 import { f3 } from "../jolt-util";
 import { SpringControl } from "./spring";
 
-export class JoltSliderJoint extends JoltJoint<SliderConstraintParams, Jolt.SliderConstraint>  {
+export class JoltSliderJoint extends JoltJoint<SliderConstraintParams, Jolt.SliderConstraint> {
   public motor: MotorControl;
   public spring: SpringControl<SliderConstraintParams, Jolt.SliderConstraint>;
 

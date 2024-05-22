@@ -6,9 +6,9 @@ import { f3 } from "../jolt-util";
 import { RackAndPinionConstraintParams } from "../constraints/types";
 import { JoltHingeJoint, JoltSliderJoint } from ".";
 
-export class JoltRackAndPinionConstraint extends JoltJoint<RackAndPinionConstraintParams, Jolt.RackAndPinionConstraint>  {
+export class JoltRackAndPinionConstraint extends JoltJoint<RackAndPinionConstraintParams, Jolt.RackAndPinionConstraint> {
 
-  constructor(hingeAxis: Vector3, sliderAxis: Vector3, ratio: number = 1,  space: 'Local' | 'World' = 'World') {
+  constructor(hingeAxis: Vector3, sliderAxis: Vector3, ratio: number = 1, space: 'Local' | 'World' = 'World') {
 
     const constraint: RackAndPinionConstraintParams = {
       space,
@@ -17,10 +17,10 @@ export class JoltRackAndPinionConstraint extends JoltJoint<RackAndPinionConstrai
       ratio,
       type: "RackAndPinion"
     };
-    super(PhysicsJoint.BallAndSocketJoint, {nativeParams: { constraint }})
+    super(PhysicsJoint.BallAndSocketJoint, { nativeParams: { constraint } })
   }
 
-  setJointHint( rack: JoltHingeJoint, pinion: JoltSliderJoint) {
+  setJointHint(rack: JoltHingeJoint, pinion: JoltSliderJoint) {
     if (this.constraint && rack.constraint && pinion.constraint) {
       this.constraint.SetConstraints(rack.constraint, pinion.constraint);
     } else {

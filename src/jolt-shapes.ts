@@ -57,7 +57,7 @@ function getMeshVertexData(impostor: PhysicsImpostor): MeshVertexData {
 
 export function createJoltShape(impostor: PhysicsImpostor, tempVectorA: Jolt.Vec3, tempVectorB: Jolt.Vec3, tempQuat: Jolt.Quat): Jolt.Shape {
   const copyShape = impostor.getParam('copyShape');
-  if(copyShape) {
+  if (copyShape) {
     return (copyShape.physicsBody as Jolt.Body).GetShape();
   }
   const settings = createShapeSettings(impostor, tempVectorA, tempVectorB, tempQuat);
@@ -131,29 +131,29 @@ function createShapeSettings(impostor: PhysicsImpostor, tempVec3A: Jolt.Vec3, te
       const staticSetting = returnValue = new Jolt.StaticCompoundShapeSettings();
       const meshes: PhysicsImpostor[] | undefined = impostor.object.getChildMeshes && impostor.object.getChildMeshes()
         .map((mesh: AbstractMesh) => { return mesh.physicsImpostor }).filter((impostor: Nullable<PhysicsImpostor>) => impostor != null) as PhysicsImpostor[];
-        meshes && meshes.forEach(impostor => {
-          const shape = createShapeSettings(impostor as PhysicsImpostor, tempVec3A, tempVec3B, tempQuaternion);
-          impostor.object.computeWorldMatrix(true);
-          SetJoltVec3(impostor.object.position, tempVec3A);
-          SetJoltQuat(impostor.object.rotationQuaternion!, tempQuaternion);
-          staticSetting.AddShape(tempVec3A, tempQuaternion, shape, 0);
-        })
-      }
+      meshes && meshes.forEach(impostor => {
+        const shape = createShapeSettings(impostor as PhysicsImpostor, tempVec3A, tempVec3B, tempQuaternion);
+        impostor.object.computeWorldMatrix(true);
+        SetJoltVec3(impostor.object.position, tempVec3A);
+        SetJoltQuat(impostor.object.rotationQuaternion!, tempQuaternion);
+        staticSetting.AddShape(tempVec3A, tempQuaternion, shape, 0);
+      })
+    }
       break;
     case PhysicsImpostor.HeightmapImpostor: {
       const heightMap = impostor.getParam('heightMap');
-      if(!heightMap) {
+      if (!heightMap) {
         throw new Error('Error: HeightMap missing heightMap parameter');
       }
       const shapeSettings = new Jolt.HeightFieldShapeSettings();
-      const scale = impostorExtents.x / (heightMap.size-1)
+      const scale = impostorExtents.x / (heightMap.size - 1)
       shapeSettings.mScale.Set(scale, 1, scale);
       const squareSide = Math.sqrt(heightMap.data.length);
-      if(squareSide != heightMap.size) {
+      if (squareSide != heightMap.size) {
         throw new Error('Error: HeightMap must be square. Ensure data-length is square-power');
       }
       const blockSize = heightMap.blockSize || 2;
-      if(blockSize < 2 || blockSize > 8) {
+      if (blockSize < 2 || blockSize > 8) {
         throw new Error('Error: HeightMap blockSize must be in the range [2,8]');
       }
       shapeSettings.mSampleCount = heightMap.size;
@@ -161,17 +161,17 @@ function createShapeSettings(impostor: PhysicsImpostor, tempVec3A: Jolt.Vec3, te
       shapeSettings.mHeightSamples.resize(heightMap.data.length);
       let heightSamples = new Float32Array(Jolt.HEAPF32.buffer, Jolt.getPointer(shapeSettings.mHeightSamples.data()), heightMap.data.length);
       const { size, alphaFilter } = heightMap;
-      for(let y = 0; y < size; y++) {
-        for(let x = 0; x < size; x++) {
+      for (let y = 0; y < size; y++) {
+        for (let x = 0; x < size; x++) {
           const height = heightMap.data[x + y * size];
-          heightSamples[(size -1) - y + ((size-1) - x) * size] = height === alphaFilter ? Jolt.HeightFieldShapeConstantValues.prototype.cNoCollisionValue : height; 
+          heightSamples[(size - 1) - y + ((size - 1) - x) * size] = height === alphaFilter ? Jolt.HeightFieldShapeConstantValues.prototype.cNoCollisionValue : height;
         }
       }
-      tempVec3A.Set(impostorExtents.x / 2, 0, -impostorExtents.z/2);
-      tempVec3B.Set(0,1,0);
-      returnValue = new Jolt.RotatedTranslatedShapeSettings(tempVec3A, Jolt.Quat.prototype.sRotation(tempVec3B, -Math.PI/2), shapeSettings);
+      tempVec3A.Set(impostorExtents.x / 2, 0, -impostorExtents.z / 2);
+      tempVec3B.Set(0, 1, 0);
+      returnValue = new Jolt.RotatedTranslatedShapeSettings(tempVec3A, Jolt.Quat.prototype.sRotation(tempVec3B, -Math.PI / 2), shapeSettings);
     }
-    break;
+      break;
     case PhysicsImpostor.ConvexHullImpostor:
       const vertexData = getMeshVertexData(impostor);
       const hasIndex = vertexData.indices.length > 0;

@@ -5,9 +5,9 @@ import Jolt from "../jolt-import";
 import { f3 } from "../jolt-util";
 import { ConeConstraintParams } from "../constraints/types";
 
-export class JoltConeJoint extends JoltJoint<ConeConstraintParams, Jolt.ConeConstraint>  {
+export class JoltConeJoint extends JoltJoint<ConeConstraintParams, Jolt.ConeConstraint> {
 
-  constructor(point1: Vector3, twistAxis: Vector3, halfCone: number = 0,  space: 'Local' | 'World' = 'World', point2?: Vector3, twistAxis2?: Vector3) {
+  constructor(point1: Vector3, twistAxis: Vector3, halfCone: number = 0, space: 'Local' | 'World' = 'World', point2?: Vector3, twistAxis2?: Vector3) {
     const p1 = point1;
     const p2 = point2 ?? point1;
     const t1 = twistAxis;
@@ -22,10 +22,10 @@ export class JoltConeJoint extends JoltJoint<ConeConstraintParams, Jolt.ConeCons
       halfConeAngle: halfCone,
       type: "Cone"
     };
-    super(PhysicsJoint.BallAndSocketJoint, {nativeParams: { constraint }})
+    super(PhysicsJoint.BallAndSocketJoint, { nativeParams: { constraint } })
   }
 
-  setMax( maxAngle: number) {
+  setMax(maxAngle: number) {
     this.getParams().halfConeAngle = maxAngle;
     if (this.constraint) {
       this.constraint.SetHalfConeAngle(maxAngle);
