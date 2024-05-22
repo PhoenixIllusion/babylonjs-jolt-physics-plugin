@@ -433,6 +433,7 @@ export class JoltJSPlugin {
         keys.forEach(key => {
             impostor.setParam(key, params[key]);
         });
+        impostor.resetUpdateFlags();
         const body = impostor.physicsBody;
         const shape = createJoltShape(impostor, this._tempVec3A, this._tempVec3B, this._tempQuaternion);
         if (impostor instanceof JoltCharacterVirtualImpostor) {

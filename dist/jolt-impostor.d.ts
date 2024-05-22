@@ -9,6 +9,7 @@ import { Space } from '@babylonjs/core/Maths/math.axis';
 import { JoltJSPlugin } from './jolt-physics';
 import Jolt from './jolt-import';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
+import { Scene } from '@babylonjs/core/scene';
 declare class TransformNodeWithImpostor extends TransformNode {
     _physicsImpostor: Nullable<PhysicsImpostor>;
     get physicsImpostor(): Nullable<PhysicsImpostor>;
@@ -37,7 +38,7 @@ export declare class ThinPhysicsNode implements IPhysicsEnabledObject {
         thinInstanceGetWorldMatrices(): Matrix[];
         thinInstanceSetMatrixAt(index: number, matrix: Matrix, refresh: boolean): void;
     });
-    getScene(): import("@babylonjs/core/scene").Scene;
+    getScene(): Scene;
     protected _recompose(): void;
     computeWorldMatrix(_force: boolean): Matrix;
     getAbsolutePosition(): Vector3;

@@ -1,5 +1,5 @@
 import { MeshBuilder, SceneCallback, createBox, createFloor } from '../util/example';
-import { Vehicle, DefaultMotorcycleInput, MotorcycleController, createBasicMotorcycle } from '@phoenixillusion/babylonjs-jolt-plugin/vehicle';
+import { DefaultTrackedInput, TrackededVehicleController, Vehicle, createBasicTracked } from '@phoenixillusion/babylonjs-jolt-plugin/vehicle';
 import { SceneConfig } from '../app';
 import { FollowCamera } from '@babylonjs/core/Cameras/followCamera';
 import { Camera } from '@babylonjs/core/Cameras/camera';
@@ -9,11 +9,12 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
 import { PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
+
 let camera: FollowCamera;
 
 export const config: SceneConfig = {
   getCamera: function (): Camera | undefined {
-    camera = new FollowCamera('follow-camera', new Vector3(0, 15, 15));
+    camera = new FollowCamera('follow-camera', new Vector3(0, 15, 30));
     camera.radius = 20;
     return camera;
   }
@@ -25,8 +26,8 @@ export default (scene: Scene): SceneCallback => {
   tiledTexture.onLoadObservable.add(() => {
     tiledTexture.wrapU = 1;
     tiledTexture.wrapV = 1;
-    tiledTexture.vScale = 3;
-    tiledTexture.uScale = 3;
+    tiledTexture.vScale = 1;
+    tiledTexture.uScale = 1;
     tiledTexture.updateSamplingMode(Texture.NEAREST_NEAREST);
   })
   const material = new StandardMaterial('tile');
@@ -40,17 +41,17 @@ export default (scene: Scene): SceneCallback => {
   document.addEventListener("keydown", onDocumentKeyDown, false);
   document.addEventListener("keyup", onDocumentKeyUp, false);
 
-  const physicSetting: PhysicsImpostorParameters = { mass: 800, restitution: 0, friction: 0, centerOffMass: new Vector3(0, -.2, 0) };
-  const car = createBox(new Vector3(0, 2, 0), Quaternion.FromEulerAngles(0, Math.PI, 0), new Vector3(0.05, .2, 1), physicSetting, '#FF0000');
+  const physicSetting: PhysicsImpostorParameters = { mass: 4000, restitution: 0, friction: 0 };
+  const car = createBox(new Vector3(0, 2, 0), Quaternion.FromEulerAngles(0, Math.PI, 0), new Vector3(0.9, .2, 2), physicSetting, '#FF0000');
   car.box.material!.wireframe = true;
 
-  const wheeledConfig: Vehicle.MotorcycleVehicleSettings = createBasicMotorcycle({ height: .4, length: 2 }, { radius: 0.3, width: 0.1 });
-  const vehicleInput = new DefaultMotorcycleInput(car.physics.physicsBody);
-  const controller = new MotorcycleController(car.physics, wheeledConfig, vehicleInput);
+  const wheeledConfig: Vehicle.TrackVehicleSettings = createBasicTracked({ height: .8, length: 4, width: 1.8 }, { radius: 0.20, width: 0.1 });
+  const vehicleInput = new DefaultTrackedInput(car.physics.physicsBody);
+  const controller = new TrackededVehicleController(car.physics, wheeledConfig, vehicleInput);
 
   const carWheels: Mesh[] = []
   wheeledConfig.wheels.forEach((o, i) => {
-    const mesh = MeshBuilder.CreateCylinder('cylinder', { diameter: o.radius * 2, height: o.width, tessellation: 16 });
+    const mesh = MeshBuilder.CreateCylinder('cylinder', { diameter: 2 * o.radius, height: o.width, tessellation: 16 });
     mesh.position = controller.wheels[i].worldPosition;
     mesh.rotationQuaternion = controller.wheels[i].worldRotation;
     mesh.material = material;

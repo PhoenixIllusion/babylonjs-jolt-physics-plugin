@@ -11,6 +11,7 @@ import { Space } from '@babylonjs/core/Maths/math.axis';
 import { JoltJSPlugin } from './jolt-physics';
 import Jolt from './jolt-import';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
+import { Scene } from '@babylonjs/core/scene';
 
 class TransformNodeWithImpostor extends TransformNode {
   _physicsImpostor: Nullable<PhysicsImpostor> = null;
@@ -118,7 +119,7 @@ export class ThinPhysicsNode implements IPhysicsEnabledObject {
     this.matrix.decompose(this.scaling, this.rotationQuaternion, this.position);
   }
 
-  getScene() {
+  getScene(): Scene {
     return this.mesh.getScene();
   }
 

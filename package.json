@@ -33,10 +33,10 @@
     "./path": "./dist/jolt-constraint-path.js",
     "./character-virtual": "./dist/jolt-physics-character-virtual.js",
     "./util": "./dist/jolt-util.js",
-    "./vehicle": "./dist/jolt-physics-vehicle-controller.js"
+    "./vehicle": "./dist/vehicle/index.js"
   },
   "files": [
     "README.md",
-    "./dist/*"
+    "./dist/**"
   ]
 }

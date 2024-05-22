@@ -52,8 +52,8 @@ export default (scene: Scene): SceneCallback => {
   const carWheels: Mesh[] = []
   wheeledConfig.wheels.forEach((o, i) => {
     const mesh = MeshBuilder.CreateCylinder('cylinder', { diameter: 2 * o.radius, height: o.width, tessellation: 16 });
-    mesh.position = controller.wheelTransforms[i].position;
-    mesh.rotationQuaternion = controller.wheelTransforms[i].rotation;
+    mesh.position = controller.wheels[i].worldPosition;
+    mesh.rotationQuaternion = controller.wheels[i].worldRotation;
     mesh.material = material;
     mesh.parent = car.box;
     carWheels.push(mesh);
