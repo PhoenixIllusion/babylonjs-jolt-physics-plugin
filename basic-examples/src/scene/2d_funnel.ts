@@ -12,7 +12,7 @@ export default (_scene: Scene): SceneCallback => {
 
     for (let x = 0; x < 20; ++x)
         for (let y = 0; y < 10; ++y) {
-            createSphere(new Vector3(-10 + x, 10 + y, -5), 1, 
-            { mass: 1, friction: 0, restitution: 0, disableBidirectionalTransformation: true },'#ff0000');
+            createSphere(new Vector3(-10 + x, 10 + y, -5), 1,
+                { mass: 1, friction: 0, restitution: 0, disableBidirectionalTransformation: true }, '#ff0000');
         }
 }

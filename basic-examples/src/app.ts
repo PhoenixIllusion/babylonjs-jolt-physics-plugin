@@ -26,7 +26,7 @@ export class App {
     private config?: SceneConfig
     constructor(module: SceneModule) {
         this.createScene = module.default;
-        this.config = module.config; 
+        this.config = module.config;
         // create the canvas html element and attach it to the webpage
         const canvas = this.canvas = document.createElement('canvas');
         canvas.id = 'gameCanvas';

@@ -45,10 +45,10 @@ export default (scene: Scene): SceneCallback => {
     node.position.copyFrom(pos);
     const physics = new PhysicsImpostor(node, PhysicsImpostor.BoxImpostor, physOptions, scene);
     const mesh: InstancedMesh[] = [];
-    mesh.push(boxMesh.createInstance('box-'+z));
-    mesh.push(sphereMesh.createInstance('sphere-'+z));
-    mesh.push(cylinderMesh.createInstance('cylinder-'+z));
-    mesh.forEach((iM,i) => {
+    mesh.push(boxMesh.createInstance('box-' + z));
+    mesh.push(sphereMesh.createInstance('sphere-' + z));
+    mesh.push(cylinderMesh.createInstance('cylinder-' + z));
+    mesh.forEach((iM, i) => {
       iM.isVisible = i == 0;
       iM.isPickable = true;
       iM.parent = node
@@ -69,7 +69,7 @@ export default (scene: Scene): SceneCallback => {
   }
 
   let position = new Vector3(0, 20, 0);
-  const boxes: { mesh: InstancedMesh[]; physics: PhysicsImpostor; debug: Mesh}[] = [];
+  const boxes: { mesh: InstancedMesh[]; physics: PhysicsImpostor; debug: Mesh }[] = [];
   {
     let prevBody = null;
 
@@ -90,13 +90,13 @@ export default (scene: Scene): SceneCallback => {
   }
 
   scene.onPointerDown = (_evt, _pickInfo, _type) => {
-    const boxClicked = boxes.find(({mesh}) => mesh.find(m => m == _pickInfo.pickedMesh));
-    if(boxClicked) {
+    const boxClicked = boxes.find(({ mesh }) => mesh.find(m => m == _pickInfo.pickedMesh));
+    if (boxClicked) {
       const mesh = boxClicked.mesh;
       const newIndex = (mesh.findIndex((x: InstancedMesh) => x.isVisible) + 1) % mesh.length;
-      mesh.forEach((x,i) => x.isVisible = i == newIndex);
+      mesh.forEach((x, i) => x.isVisible = i == newIndex);
       let type = PhysicsImpostor.BoxImpostor;
-      switch(newIndex) {
+      switch (newIndex) {
         case 0: // box;
           break;
         case 1: // sphere
@@ -106,7 +106,7 @@ export default (scene: Scene): SceneCallback => {
           type = PhysicsImpostor.CylinderImpostor;
           break;
       }
-      boxClicked.physics.setShape(type, {mass: 0});
+      boxClicked.physics.setShape(type, { mass: 0 });
       boxClicked.debug.dispose();
 
       const debug = createMeshForShape(boxClicked.physics, Color3.FromHexString('#00FF00'));

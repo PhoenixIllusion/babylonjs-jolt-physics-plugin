@@ -58,10 +58,10 @@ export default (scene: Scene): SceneCallback => {
         meshesCreated++;
         break;
       }
-      case 5:{
+      case 5: {
         // Tapered capsule
-        let topRadius = 0.1 + Math.random()/2;
-        let bottomRadius = 0.5 + Math.random()/2;
+        let topRadius = 0.1 + Math.random() / 2;
+        let bottomRadius = 0.5 + Math.random() / 2;
         let halfHeight = 0.5 * (topRadius + bottomRadius + Math.random());
         createCapsule(pos, topRadius, bottomRadius, halfHeight * 2, physicSetting, colors[objectType - 1]);
         meshesCreated++;

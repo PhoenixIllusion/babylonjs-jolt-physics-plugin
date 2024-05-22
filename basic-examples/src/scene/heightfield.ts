@@ -17,7 +17,7 @@ function addBalls() {
             const idx = sphere.thinInstanceAdd(matrix);
             sphere.material = getMaterial('#ff0000');
             new PhysicsImpostor(new ThinPhysicsNode(extents, idx, sphere), PhysicsImpostor.SphereImpostor,
-                        { mass: 1, friction: 0, restitution: 0, disableBidirectionalTransformation: true });
+                { mass: 1, friction: 0, restitution: 0, disableBidirectionalTransformation: true });
         }
 }
 
@@ -55,6 +55,6 @@ async function build() {
 export default (scene: Scene): SceneCallback => {
     const camera = scene.cameras[0] as FlyCamera;
     camera.position.set(0, 30, -50);
-    camera.target = new Vector3(0,0, 0)
+    camera.target = new Vector3(0, 0, 0)
     build();
 }

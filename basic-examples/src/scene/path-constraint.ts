@@ -31,7 +31,7 @@ function showPath3D(path3d: Path3D, size?: number, connectNormals = false) {
   vcTgt2.color = Color3.FromHexString('#FF9999');
   vcNorm2.color = Color3.FromHexString('#99FF99');
   vcBinorm2.color = Color3.FromHexString('#9999FF');
-  
+
 
   const line = MeshBuilder.CreateLines("curve", { points: curve });
   for (let i = 0; i < curve.length; i++) {
@@ -42,18 +42,18 @@ function showPath3D(path3d: Path3D, size?: number, connectNormals = false) {
     vcBinorm2.thinInstanceAdd(mat);
     normals.push(curve[i].add(norms[i].scale(size)));
     binormals.push(curve[i].add(binorms[i].scale(size)));
-    if(i == 0) {
-      const s = MeshBuilder.CreateSphere('start',{diameter: 0.05});
+    if (i == 0) {
+      const s = MeshBuilder.CreateSphere('start', { diameter: 0.05 });
       s.position.copyFrom(curve[i].add(norms[i]));
     }
   }
   const len = path3d.length();
-  for(let i=0; i< path3d.length(); i+= 0.05) {
-    const tan = path3d.getTangentAt(i/len, true)
-    const norm = path3d.getNormalAt(i/len, true);
-    const binorm = path3d.getBinormalAt(i/len, true);
+  for (let i = 0; i < path3d.length(); i += 0.05) {
+    const tan = path3d.getTangentAt(i / len, true)
+    const norm = path3d.getNormalAt(i / len, true);
+    const binorm = path3d.getBinormalAt(i / len, true);
     const mat = Matrix.FromXYZAxesToRef(tan, norm, Vector3.CrossToRef(tan, norm, binorm), new Matrix());
-    mat.setTranslation(path3d.getPointAt(i/len));
+    mat.setTranslation(path3d.getPointAt(i / len));
     vcTgt.thinInstanceAdd(mat);
     vcNorm.thinInstanceAdd(mat);
     vcBinorm.thinInstanceAdd(mat);
@@ -61,7 +61,7 @@ function showPath3D(path3d: Path3D, size?: number, connectNormals = false) {
   vcTgt.thinInstanceBufferUpdated('matrix');
   vcNorm.thinInstanceBufferUpdated('matrix');
   vcBinorm.thinInstanceBufferUpdated('matrix');
-  if(connectNormals) {
+  if (connectNormals) {
     const normRibbon = MeshBuilder.CreateLines('normal-ribbon', { points: normals });
     normRibbon.color = Color3.FromHexString('#99FF99');
     normRibbon.freezeWorldMatrix()
@@ -77,23 +77,23 @@ export default (scene: Scene): SceneCallback => {
   const camera = scene.cameras[0] as FlyCamera;
   camera.speed *= 0.1;
   camera.position.set(-2, 4, 7);
-  camera.target = new Vector3(1,0, 0)
+  camera.target = new Vector3(1, 0, 0)
 
-  const box1 = createBox(new Vector3(0,0,0), Quaternion.Identity(), new Vector3(.1,.1,.1), {mass : 0});
+  const box1 = createBox(new Vector3(0, 0, 0), Quaternion.Identity(), new Vector3(.1, .1, .1), { mass: 0 });
 
-  const points = [new Vector3(-2,0,3), new Vector3(2,0,3), new Vector3(2,0,-3), new Vector3(-2,0,-3), new Vector3(-2,0,3)];
-  const normals = [new Vector3(0,1,0), new Vector3(1,0,0), new Vector3(0,-1,0), new Vector3(-1,0,0)];
+  const points = [new Vector3(-2, 0, 3), new Vector3(2, 0, 3), new Vector3(2, 0, -3), new Vector3(-2, 0, -3), new Vector3(-2, 0, 3)];
+  const normals = [new Vector3(0, 1, 0), new Vector3(1, 0, 0), new Vector3(0, -1, 0), new Vector3(-1, 0, 0)];
   const path3d = createPath3DWithCurvedCorners(points, normals, .25, 12, EasingMethod.SINE);
 
   showPath3D(path3d, 0.5, true);
 
 
-  const hermitePoints = [new Vector3(0,4,0), new Vector3(2,4,-3), new Vector3(4, 4, -5), new Vector3(6, 4, -1)];
-  const hermiteTangents = [new Vector3(1,0,0), new Vector3(0,10,0), new Vector3(5,0,0), new Vector3(0,-10,0)];
-  const hermiteNormals = [new Vector3(0,-1,0), new Vector3(1,0,0), new Vector3(0,0,-1), new Vector3(0,0,-1)];
+  const hermitePoints = [new Vector3(0, 4, 0), new Vector3(2, 4, -3), new Vector3(4, 4, -5), new Vector3(6, 4, -1)];
+  const hermiteTangents = [new Vector3(1, 0, 0), new Vector3(0, 10, 0), new Vector3(5, 0, 0), new Vector3(0, -10, 0)];
+  const hermiteNormals = [new Vector3(0, -1, 0), new Vector3(1, 0, 0), new Vector3(0, 0, -1), new Vector3(0, 0, -1)];
 
   hermitePoints.forEach(pt => {
-    const s = MeshBuilder.CreateSphere('pt', { diameter: 0.125});
+    const s = MeshBuilder.CreateSphere('pt', { diameter: 0.125 });
     s.position.copyFrom(pt);
   })
   const hermitePath = createPath3DWithHermitePath(hermitePoints, hermiteTangents, hermiteNormals, 32, EasingMethod.EXPONENTIAL);
@@ -101,10 +101,10 @@ export default (scene: Scene): SceneCallback => {
   showPath3D(hermitePath, 0.5, true);
 
 
-  const catmullRomPoints = [new Vector3(2,2.5,0), new Vector3(4,2,-3), new Vector3(6, 2, -5), new Vector3(8, 2, -1)];
-  const catmullRomNormals = [new Vector3(1,0,0), new Vector3(0,-1,0), new Vector3(0, 0, -1), new Vector3(0, -1, 0)];
+  const catmullRomPoints = [new Vector3(2, 2.5, 0), new Vector3(4, 2, -3), new Vector3(6, 2, -5), new Vector3(8, 2, -1)];
+  const catmullRomNormals = [new Vector3(1, 0, 0), new Vector3(0, -1, 0), new Vector3(0, 0, -1), new Vector3(0, -1, 0)];
   catmullRomPoints.forEach(pt => {
-    const s = MeshBuilder.CreateSphere('pt', { diameter: 0.125});
+    const s = MeshBuilder.CreateSphere('pt', { diameter: 0.125 });
     s.position.copyFrom(pt);
   })
   const catmullRomPath = createPath3DWithCatmullRomPath(catmullRomPoints, catmullRomNormals, 80, true, EasingMethod.QUINTIC);
@@ -113,11 +113,11 @@ export default (scene: Scene): SceneCallback => {
 
   const path = path3d;
   const startPoint = 0;
-  const box2 = createBox(path.getPointAt(startPoint/path.length()), Quaternion.RotationAxis(Vector3.Up(),Math.PI/2), new Vector3(.1,0.05,.5), {mass : 1});
-  const indicator = MeshBuilder.CreateBox('indicator', {width: 0.2, height: 0.4, depth: 0.1})
+  const box2 = createBox(path.getPointAt(startPoint / path.length()), Quaternion.RotationAxis(Vector3.Up(), Math.PI / 2), new Vector3(.1, 0.05, .5), { mass: 1 });
+  const indicator = MeshBuilder.CreateBox('indicator', { width: 0.2, height: 0.4, depth: 0.1 })
   indicator.parent = box2.box;
   indicator.position.z = 0.5;
-  
+
   const pathConstraint = new JoltPathConstraint(path, 'ConstrainToPath');
   pathConstraint.setPathFraction(startPoint);
   box1.physics.addJoint(box2.physics, pathConstraint);

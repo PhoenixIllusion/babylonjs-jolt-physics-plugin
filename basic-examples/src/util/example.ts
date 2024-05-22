@@ -187,8 +187,8 @@ export const createMeshFloor = (n: number, cell_size: number, amp: number, posit
 export function createMeshForShape(impostor: PhysicsImpostor, color: Color3) {
   // Create a three mesh
   var vertexData = impostor.getShapeVertexData();
-  let colors: number[] = []; 
-  for(let i = 0 ; i < vertexData.positions!.length / 3; i++) {
+  let colors: number[] = [];
+  for (let i = 0; i < vertexData.positions!.length / 3; i++) {
     colors.push(color.r, color.g, color.b, 1);
   }
   vertexData.colors = new Float32Array(colors);
@@ -201,11 +201,11 @@ export function createMeshForShape(impostor: PhysicsImpostor, color: Color3) {
 
 export function loadImage(url: string, width?: number, height?: number): Promise<HTMLImageElement> {
   const img = new Image();
-  if(width)
-      img.width = width;
-  if(height)
-  img.height = height;
-      img.src = url;
+  if (width)
+    img.width = width;
+  if (height)
+    img.height = height;
+  img.src = url;
   return new Promise(resolve => img.onload = () => resolve(img));
 }
 
@@ -226,29 +226,29 @@ export function getImagePixels(img: HTMLImageElement): Uint8Array {
 
 export function createHeightField(buffer: Uint8Array, material: Material, IMAGE_SIZE: number, scale: number, minHeight: number, maxHeight: number) {
   const heightBuffer = new Float32Array(IMAGE_SIZE * IMAGE_SIZE);
-  const ground = MeshBuilder.CreateGroundFromHeightMapVertexData( {
-      width: IMAGE_SIZE * scale,
-      height: IMAGE_SIZE * scale,
-      subdivisions: IMAGE_SIZE-1,
-      bufferHeight: IMAGE_SIZE,
-      bufferWidth: IMAGE_SIZE, 
-      buffer,
-      minHeight,
-      maxHeight,
-      colorFilter: new Color3(1, 0, 0),
-      alphaFilter: 0,
-      heightBuffer: heightBuffer
+  const ground = MeshBuilder.CreateGroundFromHeightMapVertexData({
+    width: IMAGE_SIZE * scale,
+    height: IMAGE_SIZE * scale,
+    subdivisions: IMAGE_SIZE - 1,
+    bufferHeight: IMAGE_SIZE,
+    bufferWidth: IMAGE_SIZE,
+    buffer,
+    minHeight,
+    maxHeight,
+    colorFilter: new Color3(1, 0, 0),
+    alphaFilter: 0,
+    heightBuffer: heightBuffer
   });
   const mesh = new Mesh('height-map', Engine.LastCreatedScene!);
   ground.applyToMesh(mesh);
   mesh.material = material;
   mesh.physicsImpostor = new PhysicsImpostor(mesh, PhysicsImpostor.HeightmapImpostor, {
-      mass: 0,
-      heightMap: {
-          size: IMAGE_SIZE,
-          data: heightBuffer,
-          alphaFilter: 0
-      }
+    mass: 0,
+    heightMap: {
+      size: IMAGE_SIZE,
+      data: heightBuffer,
+      alphaFilter: 0
+    }
   });
   return mesh;
 }
@@ -261,7 +261,7 @@ export function createTexture(image: HTMLImageElement): Texture {
 
 const IMAGE_HASH: { [key: string]: StandardMaterial } = {};
 export function createImageMaterial(name: string, image: HTMLImageElement): Material {
-  if(IMAGE_HASH[name]) {
+  if (IMAGE_HASH[name]) {
     return IMAGE_HASH[name];
   }
   const mat = IMAGE_HASH[name] = new StandardMaterial('Image_' + name);
