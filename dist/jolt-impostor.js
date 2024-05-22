@@ -3,6 +3,8 @@ import { Matrix, Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Logger } from '@babylonjs/core/Misc/logger';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { BoundingInfo } from '@babylonjs/core/Culling/boundingInfo';
+import Jolt from './jolt-import';
+import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 class TransformNodeWithImpostor extends TransformNode {
     constructor() {
         super(...arguments);
@@ -199,6 +201,29 @@ PhysicsImpostor.prototype.unregisterOnJoltPhysicsCollide = function (kind, colli
     else {
         Logger.Warn('Function to remove was not found');
     }
+};
+PhysicsImpostor.prototype.setShape = function (type, params) {
+    this.joltPluginData.plugin.setShape(this, type, params);
+};
+PhysicsImpostor.prototype.getShapeVertexData = function () {
+    const body = this.physicsBody;
+    const shape = body.GetShape();
+    // Get triangle data
+    let scale = new Jolt.Vec3(1, 1, 1);
+    let triContext = new Jolt.ShapeGetTriangles(shape, Jolt.AABox.prototype.sBiggest(), shape.GetCenterOfMass(), Jolt.Quat.prototype.sIdentity(), scale);
+    Jolt.destroy(scale);
+    // Get a view on the triangle data (does not make a copy)
+    let vertices = new Float32Array(Jolt.HEAPF32.buffer, triContext.GetVerticesData(), triContext.GetVerticesSize() / Float32Array.BYTES_PER_ELEMENT);
+    Jolt.destroy(triContext);
+    const indices = [];
+    for (let i = 0; i < vertices.length / 3; i++) {
+        indices.push(i);
+    }
+    // Create a three mesh
+    var vertexData = new VertexData();
+    vertexData.positions = vertices;
+    vertexData.indices = indices;
+    return vertexData;
 };
 PhysicsImpostor.prototype.onJoltCollide = function (kind, event) {
     if (!this.JoltPhysicsCallback[kind].length) {

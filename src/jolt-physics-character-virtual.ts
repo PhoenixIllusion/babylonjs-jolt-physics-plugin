@@ -198,7 +198,7 @@ export class JoltCharacterVirtual {
   private mDisposables!: any[];
 
   private mUpdateSettings!: Jolt.ExtendedUpdateSettings;
-  public updateFilterData: UpdateFiltersData;
+  public updateFilterData!: UpdateFiltersData;
 
   public inputHandler?: CharacterVirtualInputHandler;
 

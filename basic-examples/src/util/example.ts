@@ -185,27 +185,12 @@ export const createMeshFloor = (n: number, cell_size: number, amp: number, posit
 }
 
 export function createMeshForShape(impostor: PhysicsImpostor, color: Color3) {
-  const body: Jolt.Body = impostor.physicsBody;
-  const shape = body.GetShape();
-  // Get triangle data
-  let scale = new Jolt.Vec3(1, 1, 1);
-  let triContext = new Jolt.ShapeGetTriangles(shape, Jolt.AABox.prototype.sBiggest(), shape.GetCenterOfMass(), Jolt.Quat.prototype.sIdentity(), scale);
-  Jolt.destroy(scale);
-  let colors: number[] = [];
-  // Get a view on the triangle data (does not make a copy)
-  let vertices = new Float32Array(Jolt.HEAPF32.buffer, triContext.GetVerticesData(), triContext.GetVerticesSize() / Float32Array.BYTES_PER_ELEMENT);
-  Jolt.destroy(triContext); 
-  for(let i = 0 ; i < vertices.length / 3; i++) {
+  // Create a three mesh
+  var vertexData = impostor.getShapeVertexData();
+  let colors: number[] = []; 
+  for(let i = 0 ; i < vertexData.positions!.length / 3; i++) {
     colors.push(color.r, color.g, color.b, 1);
   }
-  const indices: number[] = [];
-  for (let i = 0; i < vertices.length / 3; i++) {
-    indices.push(i);
-  }
-  // Create a three mesh
-  var vertexData = new VertexData();
-  vertexData.positions = vertices;
-  vertexData.indices = indices;
   vertexData.colors = new Float32Array(colors);
 
   const mesh = new Mesh('debug-mesh', Engine.LastCreatedScene!);

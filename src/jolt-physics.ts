@@ -500,6 +500,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     keys.forEach(key => {
       impostor.setParam(key, params[key])
     });
+    impostor.resetUpdateFlags();
     const body: Jolt.Body = impostor.physicsBody;
     const shape = createJoltShape(impostor, this._tempVec3A, this._tempVec3B, this._tempQuaternion);
 

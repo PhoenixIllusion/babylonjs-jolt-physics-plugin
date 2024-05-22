@@ -1,5 +1,5 @@
 
-import { IPhysicsEnabledObject, PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import { IPhysicsEnabledObject, PhysicsImpostor, PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { OnContactCallback, OnContactValidateCallback, JoltCollisionKey, JoltContactSetting, OnContactValidateResponse, JoltCollisionCallback, JoltPhysicsCollideCallbacks } from './jolt-contact';
 import { Matrix, Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Logger } from '@babylonjs/core/Misc/logger';
@@ -10,7 +10,7 @@ import { IndicesArray, Nullable } from '@babylonjs/core/types';
 import { Space } from '@babylonjs/core/Maths/math.axis';
 import { JoltJSPlugin } from './jolt-physics';
 import Jolt from './jolt-import';
-import { PhysicsImpostorParameters } from '@babylonjs/core';
+import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 
 class TransformNodeWithImpostor extends TransformNode {
   _physicsImpostor: Nullable<PhysicsImpostor> = null;
@@ -209,6 +209,8 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
     getParam(param: ImpostorHeightMapParam): HeightMapData | undefined;
     getParam(param: ImpostorShapeParam): PhysicsImpostor | undefined;
 
+    getShapeVertexData(): VertexData;
+
     JoltPhysicsCallback: JoltPhysicsCollideCallbacks;
     registerOnJoltPhysicsCollide(kind: 'on-contact-add' | 'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactCallback): void;
     registerOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidateCallback): void;
@@ -300,6 +302,28 @@ PhysicsImpostor.prototype.unregisterOnJoltPhysicsCollide = function(kind: JoltCo
 
 PhysicsImpostor.prototype.setShape = function(type: number, params: PhysicsImpostorParameters): void {
   this.joltPluginData.plugin.setShape(this, type, params);
+}
+
+PhysicsImpostor.prototype.getShapeVertexData = function (): VertexData {
+  const body: Jolt.Body = this.physicsBody;
+  const shape = body.GetShape();
+  // Get triangle data
+  let scale = new Jolt.Vec3(1, 1, 1);
+  let triContext = new Jolt.ShapeGetTriangles(shape, Jolt.AABox.prototype.sBiggest(), shape.GetCenterOfMass(), Jolt.Quat.prototype.sIdentity(), scale);
+  Jolt.destroy(scale);
+  // Get a view on the triangle data (does not make a copy)
+  let vertices = new Float32Array(Jolt.HEAPF32.buffer, triContext.GetVerticesData(), triContext.GetVerticesSize() / Float32Array.BYTES_PER_ELEMENT);
+  Jolt.destroy(triContext); 
+  const indices: number[] = [];
+  for (let i = 0; i < vertices.length / 3; i++) {
+    indices.push(i);
+  }
+  // Create a three mesh
+  var vertexData = new VertexData();
+  vertexData.positions = vertices;
+  vertexData.indices = indices;
+
+  return vertexData;
 }
 
 PhysicsImpostor.prototype.onJoltCollide = function(kind: JoltCollisionKey, event: { body: PhysicsImpostor, ioSettings: JoltContactSetting } | { body: PhysicsImpostor }) {

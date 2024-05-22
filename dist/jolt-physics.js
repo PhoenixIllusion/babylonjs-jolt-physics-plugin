@@ -427,6 +427,23 @@ export class JoltJSPlugin {
     appendHook?(impostor: PhysicsImpostor, otherImpostor: PhysicsImpostor, length: number, influence: number, noCollisionBetweenLinkedBodies: boolean): void {
       throw new Error('Method not implemented.');
     }*/
+    setShape(impostor, type, params) {
+        impostor.type = type;
+        const keys = ['extents', 'centerOffMass', 'radiusBottom', 'radiusTop', 'mesh', 'copyShape'];
+        keys.forEach(key => {
+            impostor.setParam(key, params[key]);
+        });
+        const body = impostor.physicsBody;
+        const shape = createJoltShape(impostor, this._tempVec3A, this._tempVec3B, this._tempQuaternion);
+        if (impostor instanceof JoltCharacterVirtualImpostor) {
+            const charImp = impostor;
+            const char = charImp._pluginData.controller;
+            char.getCharacter().SetShape(shape, 1.5 * this.world.GetPhysicsSettings().mPenetrationSlop, char.updateFilterData.movingBPFilter, char.updateFilterData.movingLayerFilter, char.updateFilterData.bodyFilter, char.updateFilterData.shapeFilter, this.jolt.GetTempAllocator());
+        }
+        else {
+            this._bodyInterface.SetShape(body.GetID(), shape, true, Jolt.EActivation_Activate);
+        }
+    }
     sleepBody(impostor) {
         const physicsBody = impostor.physicsBody;
         this._bodyInterface.DeactivateBody(physicsBody.GetID());

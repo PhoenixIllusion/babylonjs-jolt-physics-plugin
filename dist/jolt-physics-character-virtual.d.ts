@@ -4,13 +4,14 @@ import { IPhysicsEnabledObject, PhysicsImpostor, PhysicsImpostorParameters } fro
 import { Scene } from '@babylonjs/core/scene';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 declare class CharacterVirtualConfig {
-    sMaxSlopeAngle: number;
-    sMaxStrength: number;
-    sCharacterPadding: number;
-    sPenetrationRecoverySpeed: number;
-    sPredictiveContactDistance: number;
-    sEnableWalkStairs: boolean;
-    sEnableStickToFloor: boolean;
+    maxSlopeAngle: number;
+    mass: number;
+    maxStrength: number;
+    characterPadding: number;
+    penetrationRecoverySpeed: number;
+    predictiveContactDistance: number;
+    enableWalkStairs: boolean;
+    enableStickToFloor: boolean;
 }
 interface JoltCharacterVirtualPluginData extends JoltPluginData {
     controller: JoltCharacterVirtual;
@@ -24,6 +25,12 @@ export declare class JoltCharacterVirtualImpostor extends PhysicsImpostor {
 interface WorldData {
     jolt: Jolt.JoltInterface;
     physicsSystem: Jolt.PhysicsSystem;
+}
+interface UpdateFiltersData {
+    movingBPFilter: Jolt.DefaultBroadPhaseLayerFilter;
+    movingLayerFilter: Jolt.DefaultObjectLayerFilter;
+    bodyFilter: Jolt.BodyFilter;
+    shapeFilter: Jolt.ShapeFilter;
 }
 export interface CharacterVirtualInputHandler {
     processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number, tmp: Jolt.Vec3): void;
@@ -70,7 +77,7 @@ export declare class JoltCharacterVirtual {
     private mCharacter;
     private mDisposables;
     private mUpdateSettings;
-    private mUpdateFilterData;
+    updateFilterData: UpdateFiltersData;
     inputHandler?: CharacterVirtualInputHandler;
     config: CharacterVirtualConfig;
     contactListener?: Jolt.CharacterContactListenerJS;

@@ -39,6 +39,10 @@ function getMeshVertexData(impostor) {
     };
 }
 export function createJoltShape(impostor, tempVectorA, tempVectorB, tempQuat) {
+    const copyShape = impostor.getParam('copyShape');
+    if (copyShape) {
+        return copyShape.physicsBody.GetShape();
+    }
     const settings = createShapeSettings(impostor, tempVectorA, tempVectorB, tempQuat);
     const shapeResult = settings.Create();
     if (shapeResult.HasError()) {

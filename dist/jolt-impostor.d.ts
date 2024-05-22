@@ -8,6 +8,7 @@ import { IndicesArray, Nullable } from '@babylonjs/core/types';
 import { Space } from '@babylonjs/core/Maths/math.axis';
 import { JoltJSPlugin } from './jolt-physics';
 import Jolt from './jolt-import';
+import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 declare class TransformNodeWithImpostor extends TransformNode {
     _physicsImpostor: Nullable<PhysicsImpostor>;
     get physicsImpostor(): Nullable<PhysicsImpostor>;
@@ -56,6 +57,7 @@ type ImpostorMeshParam = 'mesh';
 type ImpostorBoolParam = 'frozen' | 'sensor';
 type ImpostorCollisionFilterParam = 'collision';
 type ImpostorHeightMapParam = 'heightMap';
+type ImpostorShapeParam = 'copyShape';
 interface CollisionData {
     group?: number;
     subGroup?: number;
@@ -78,6 +80,7 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
         collision?: CollisionData;
         heightMap?: HeightMapData;
         sensor?: boolean;
+        copyShape?: PhysicsImpostor;
     }
     interface PhysicsImpostor {
         get joltPluginData(): JoltPluginData;
@@ -88,11 +91,14 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
         getParam(param: ImpostorVec3Param): Vector3 | undefined;
         getParam(param: ImpostorCollisionFilterParam): CollisionData | undefined;
         getParam(param: ImpostorHeightMapParam): HeightMapData | undefined;
+        getParam(param: ImpostorShapeParam): PhysicsImpostor | undefined;
+        getShapeVertexData(): VertexData;
         JoltPhysicsCallback: JoltPhysicsCollideCallbacks;
         registerOnJoltPhysicsCollide(kind: 'on-contact-add' | 'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactCallback): void;
         registerOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidateCallback): void;
         unregisterOnJoltPhysicsCollide(kind: 'on-contact-add' | 'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactCallback): void;
         unregisterOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidateCallback): void;
+        setShape(type: number, param: PhysicsImpostorParameters): void;
         onJoltCollide(kind: 'on-contact-add' | 'on-contact-persist', event: {
             body: PhysicsImpostor;
             ioSettings: JoltContactSetting;

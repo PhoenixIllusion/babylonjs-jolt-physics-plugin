@@ -1,7 +1,7 @@
 import { IPhysicsEnginePlugin, PhysicsImpostorJoint } from '@babylonjs/core/Physics/v1/IPhysicsEnginePlugin';
 import Jolt from './jolt-import';
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math';
-import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import { PhysicsImpostor, PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { IMotorEnabledJoint, PhysicsJoint } from '@babylonjs/core/Physics/v1/physicsJoint';
 import '@babylonjs/core/Physics/physicsEngineComponent';
 import { Nullable } from '@babylonjs/core/types';
@@ -89,6 +89,7 @@ export declare class JoltJSPlugin implements IPhysicsEnginePlugin {
     setBodyFriction(impostor: PhysicsImpostor, friction: number): void;
     getBodyRestitution(impostor: PhysicsImpostor): number;
     setBodyRestitution(impostor: PhysicsImpostor, restitution: number): void;
+    setShape(impostor: PhysicsImpostor, type: number, params: PhysicsImpostorParameters): void;
     sleepBody(impostor: PhysicsImpostor): void;
     wakeUpBody(impostor: PhysicsImpostor): void;
     raycast(from: Vector3, to: Vector3): PhysicsRaycastResult;
