@@ -14,7 +14,6 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { PhysicsImpostor, PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import '@phoenixillusion/babylonjs-jolt-plugin/impostor';
-import Jolt from '@phoenixillusion/babylonjs-jolt-plugin/import';
 import { Material } from '@babylonjs/core/Materials/material';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { Engine } from '@babylonjs/core/Engines/engine';

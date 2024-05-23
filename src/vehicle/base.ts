@@ -6,7 +6,7 @@ import { Vehicle } from "./types";
 import { BaseVehicleInput } from "./input";
 import { PhysicsImpostor } from "@babylonjs/core/Physics/v1/physicsImpostor";
 import { Engine, Transmission, Wheel } from "./wrapped";
-import { Vector3 } from "@babylonjs/core";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 
 
 export function configureWheel(wheel: Jolt.WheelSettings, setting: Vehicle.WheelSetting): void {
