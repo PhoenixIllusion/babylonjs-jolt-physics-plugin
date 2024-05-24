@@ -518,6 +518,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     } else {
       this._bodyInterface.SetShape(body.GetID(), shape, true, Jolt.EActivation_Activate);
     }
+    shape.Release();
   }
 
   sleepBody(impostor: PhysicsImpostor): void {

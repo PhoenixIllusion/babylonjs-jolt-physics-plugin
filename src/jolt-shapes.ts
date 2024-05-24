@@ -67,6 +67,7 @@ export function createJoltShape(impostor: PhysicsImpostor, tempVectorA: Jolt.Vec
   }
   const shape = shapeResult.Get();
   shape.AddRef();
+  shapeResult.Clear();
   Jolt.destroy(settings);
   return shape;
 }

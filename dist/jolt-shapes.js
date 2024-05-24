@@ -50,6 +50,7 @@ export function createJoltShape(impostor, tempVectorA, tempVectorB, tempQuat) {
     }
     const shape = shapeResult.Get();
     shape.AddRef();
+    shapeResult.Clear();
     Jolt.destroy(settings);
     return shape;
 }
