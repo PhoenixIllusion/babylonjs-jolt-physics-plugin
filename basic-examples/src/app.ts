@@ -1,6 +1,6 @@
 import './style.css';
 
-import { JoltJSPlugin } from '@phoenixillusion/babylonjs-jolt-plugin';
+import { Jolt, JoltJSPlugin, loadJolt } from '@phoenixillusion/babylonjs-jolt-plugin';
 
 import { SceneFunction } from './util/example';
 import { Engine } from '@babylonjs/core/Engines/engine';
@@ -10,6 +10,8 @@ import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight';
 import "@babylonjs/core/Physics/physicsEngineComponent";
 import { Scene } from '@babylonjs/core/scene';
 import { Camera } from '@babylonjs/core/Cameras/camera';
+import { MemoryAvailableElement, setupMemoryAvailable } from './util/memory-available';
+import { AdvancedDynamicTexture } from '@babylonjs/gui/2D/advancedDynamicTexture';
 
 export interface SceneConfig {
     getCamera(): Camera | undefined;
@@ -24,6 +26,14 @@ export class App {
     private canvas: HTMLCanvasElement;
     private createScene: SceneFunction;
     private config?: SceneConfig;
+    static instance: App;
+
+    private engine?: Engine;
+    private scene?: Scene;
+    public ui?: AdvancedDynamicTexture;
+
+    private memoryAvailableEle?: MemoryAvailableElement;
+
     constructor(module: SceneModule) {
         this.createScene = module.default;
         this.config = module.config;
@@ -32,17 +42,41 @@ export class App {
         canvas.id = 'gameCanvas';
         document.body.style.height = window.innerHeight + 'px';
         document.body.appendChild(canvas);
+
+        this.init();
+        App.instance = this;
+    }
+
+    disposeScene() {
+        this.scene?.dispose();
+        this.ui?.dispose();
+        this.scene = undefined;
+    }
+    dispose() {
+        this.engine?.dispose();
+        this.engine = undefined;
+    }
+    load(module: SceneModule) {
+        this.dispose();
+        this.createScene = module.default;
+        this.config = module.config;
         this.init();
     }
+
     async init() {
-
+        const curURL = new URL(window.location.href);
+        if(!this.memoryAvailableEle && curURL.searchParams.get('mem')) {
+            await loadJolt({});
+            this.memoryAvailableEle = setupMemoryAvailable(Jolt);
+        }
         // initialize babylon scene and engine
-        var engine = new Engine(this.canvas, true);
-        var scene = new Scene(engine);
-
+        const engine = this.engine = new Engine(this.canvas, true);
+        const scene = this.scene = new Scene(engine);
+        this.ui = AdvancedDynamicTexture.CreateFullscreenUI('gui');
+ 
         scene.enablePhysics(new Vector3(0, -9.8, 0), await JoltJSPlugin.loadPlugin())
 
-        if (!(this.config && this.config.getCamera())) {
+        if (!(this.config && this.config.getCamera)) {
             const camera = new FlyCamera('camera1', new Vector3(0, 15, 30), scene);
             // This targets the camera to scene origin
             camera.setTarget(new Vector3(0, 10, 0));
@@ -59,30 +93,21 @@ export class App {
         // Default intensity is 1. Let's dim the light a small amount
         light.intensity = 0.7;
 
-        const callback = this.createScene(scene);
-
-        /*
-        // hide/show the Inspector
-        window.addEventListener('keydown', (ev) => {
-            // Shift+Ctrl+Alt+I
-            if (ev.shiftKey && ev.ctrlKey && ev.altKey && ev.keyCode === 73) {
-                if (scene.debugLayer.isVisible()) {
-                    scene.debugLayer.hide();
-                } else {
-                    scene.debugLayer.show();
-                }
-            }
-        });*/
+        const maybeCallback = this.createScene(scene);
+        const callback = maybeCallback instanceof Promise ? await maybeCallback: maybeCallback;
 
         let last = performance.now();
         // run the main render loop
         engine.runRenderLoop(() => {
-            if (callback) {
-                const now = performance.now();
-                callback(now, now - last);
-                last = now;
+            const scene = this.scene;
+            if(scene) {
+                if (callback) {
+                    const now = performance.now();
+                    callback(now, now - last);
+                    last = now;
+                }
+                scene.render();
             }
-            scene.render();
         });
     }
 }

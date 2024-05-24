@@ -1,7 +1,6 @@
 import { MeshBuilder, SceneCallback, createBox, createFloor } from '../util/example';
 import { DefaultTrackedInput, TrackededVehicleController, Vehicle, createBasicTracked } from '@phoenixillusion/babylonjs-jolt-plugin/vehicle';
 import { SceneConfig } from '../app';
-import { FollowCamera } from '@babylonjs/core/Cameras/followCamera';
 import { Camera } from '@babylonjs/core/Cameras/camera';
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
@@ -9,20 +8,15 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
 import { PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
-import { setupTachometer, setupVehicleInput } from '../util/vehicle-utils';
-
-let camera: FollowCamera;
+import { loadTrack, setupTachometer, setupVehicleInput } from '../util/vehicle-utils';
 
 export const config: SceneConfig = {
   getCamera: function (): Camera | undefined {
-    camera = new FollowCamera('follow-camera', new Vector3(0, 15, 30));
-    camera.radius = 15;
-    return camera;
+    return undefined;
   }
 }
 
-export default (scene: Scene): SceneCallback => {
-  const floor = createFloor({ friction: 1, mass: 0, restitution: 0 });
+export default async (scene: Scene): Promise<SceneCallback> => {
   const tiledTexture = new Texture('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAAAAABX3VL4AAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5wsCAyocY2BWPgAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAOSURBVAjXY2D4z/CfAQAGAAH/P9ph1wAAAABJRU5ErkJggg==');
   tiledTexture.onLoadObservable.add(() => {
     tiledTexture.wrapU = 1;
@@ -33,8 +27,6 @@ export default (scene: Scene): SceneCallback => {
   })
   const material = new StandardMaterial('tile');
   material.diffuseTexture = tiledTexture;
-  floor.ground.material = material;
-
 
   const physicSetting: PhysicsImpostorParameters = { mass: 6200, restitution: 0, friction: 0 };
   const car = createBox(new Vector3(0, 2, 0), Quaternion.FromEulerAngles(0, Math.PI, 0), new Vector3(0.9, .2, 2), physicSetting, '#FF0000');
@@ -44,9 +36,10 @@ export default (scene: Scene): SceneCallback => {
   const vehicleInput = new DefaultTrackedInput(car.physics.physicsBody);
   const controller = new TrackededVehicleController(car.physics, wheeledConfig, vehicleInput);
 
+  await loadTrack(scene);
   const carWheels: Mesh[] = []
   wheeledConfig.wheels.forEach((o, i) => {
-    const mesh = MeshBuilder.CreateCylinder('cylinder', { diameter: 2 * o.radius, height: o.width, tessellation: 16 });
+    const mesh = MeshBuilder.CreateCylinder('cylinder', { diameter: o.radius * 2, height: o.width, tessellation: 16 });
     mesh.position = controller.wheels[i].worldPosition;
     mesh.rotationQuaternion = controller.wheels[i].worldRotation;
     mesh.material = material;
@@ -54,18 +47,26 @@ export default (scene: Scene): SceneCallback => {
     carWheels.push(mesh);
   })
   const followPoint = new Mesh('camera-follow', scene);
-  followPoint.rotate(new Vector3(0, 1, 0), Math.PI);
-  followPoint.parent = car.box;
 
-  if (camera)
-    camera.lockedTarget = followPoint;
-
-
-  const input = setupVehicleInput(scene);
+  const { camera, input } = setupVehicleInput(scene);
   setupTachometer(controller, scene);
+  camera.getRoot().parent = followPoint;
+
+  let stdTorque = controller.engine.maxTorque;
+
+  const rotateVector = new Vector3();
   return (_time: number, _delta: number) => {
     vehicleInput.input.forward = input.direction.z;
     vehicleInput.input.right = input.direction.x;
     vehicleInput.input.handBrake = input.handbrake;
+
+    const newTorque = input.boost ? 1.1*stdTorque : stdTorque;
+    if(controller.engine.maxTorque != newTorque) {
+      controller.engine.maxTorque = newTorque;
+    }
+
+    followPoint.position.copyFrom(car.box.position);
+    car.box.rotationQuaternion?.toEulerAnglesToRef(rotateVector)
+    camera.getRoot().rotation.y = rotateVector.y;
   }
 }

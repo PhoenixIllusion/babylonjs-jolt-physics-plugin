@@ -28,3 +28,10 @@ basic-tachometer {
   right: 10px;
   top: 40%;
 }
+
+memory-available {
+  position: fixed;
+  left: 50%;
+  top: 10px;
+  transform: translateX(-50%);
+}

@@ -1,14 +1,5 @@
 import { IBaseVehicleController } from "@phoenixillusion/babylonjs-jolt-plugin/vehicle";
-
-interface IDynamicProp {
-  update(): void;
-}
-class DynamicProp<T extends HTMLElement> implements IDynamicProp {
-  constructor(public ele: T, private onUpdate: (ele: T)=> void) {}
-  update() {
-    this.onUpdate(this.ele);
-  }
-}
+import { DynamicProp, IDynamicProp } from "./custom-ele-util";
 
 function deg(d: number) { return d/360 * 2 * Math.PI }
 export class TachometerElement extends HTMLElement {

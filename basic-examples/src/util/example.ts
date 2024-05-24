@@ -31,7 +31,7 @@ export const MeshBuilder = {
 }
 
 export type SceneCallback = (void | ((time: number, delta: number) => void))
-export type SceneFunction = (scene: Scene) => SceneCallback;
+export type SceneFunction = (scene: Scene) => SceneCallback | Promise<SceneCallback>;
 
 export const DegreesToRadians = (deg: number) => deg * (Math.PI / 180.0);
 
@@ -243,6 +243,7 @@ export function createHeightField(buffer: Uint8Array, material: Material, IMAGE_
   mesh.material = material;
   mesh.physicsImpostor = new PhysicsImpostor(mesh, PhysicsImpostor.HeightmapImpostor, {
     mass: 0,
+    friction: 1,
     heightMap: {
       size: IMAGE_SIZE,
       data: heightBuffer,
@@ -252,9 +253,9 @@ export function createHeightField(buffer: Uint8Array, material: Material, IMAGE_
   return mesh;
 }
 
-export function createTexture(image: HTMLImageElement): Texture {
+export function createTexture(image: HTMLImageElement, sampling: number = Texture.BILINEAR_SAMPLINGMODE): Texture {
   return new Texture(`texture`, Engine.LastCreatedScene, true,
-    true, Texture.BILINEAR_SAMPLINGMODE,
+    true, sampling,
     null, null, image, true);
 }
 
