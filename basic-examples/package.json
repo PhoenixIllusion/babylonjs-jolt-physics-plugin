@@ -16,7 +16,7 @@
     "vite-plugin-virtual-mpa": "1.10.1"
   },
   "dependencies": {
-    "@phoenixillusion/babylonjs-jolt-plugin": "github:PhoenixIllusion/babylonjs-jolt-physics-plugin#v1.2.0",
+    "@phoenixillusion/babylonjs-jolt-plugin": "github:PhoenixIllusion/babylonjs-jolt-physics-plugin#v1.2.1",
     "@babylonjs/core": "7.7.2",
     "@babylonjs/gui": "7.7.2",
     "@babylonjs/gui-editor": "7.7.2",
