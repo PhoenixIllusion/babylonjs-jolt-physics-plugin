@@ -104,7 +104,7 @@ export function setupVehicleInput(scene: Scene): { input: VehicleInput, camera: 
 
   camera.setController(listener);
   camera.changeTiltY(-.3);
-  camera.setDistance(12);
+  camera.setDistance(25);
   return { input, camera };
 }
 
