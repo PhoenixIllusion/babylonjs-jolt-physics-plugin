@@ -218,7 +218,7 @@ export function getImagePixels(img: HTMLImageElement): Uint8Array {
   canvas.width = img.width;
   canvas.height = img.height;
   const ctx = canvas.getContext('2d')!;
-  ctx.drawImage(img, 0, 0);
+  ctx.drawImage(img, 0, 0, img.width, img.height);
   const imgData = ctx.getImageData(0, 0, img.width, img.height);
   return new Uint8Array(imgData.data.buffer);
 }

@@ -27,6 +27,7 @@ basic-tachometer {
   position: fixed;
   right: 10px;
   top: 40%;
+  transform: translateY(-50%);
 }
 
 memory-available {
