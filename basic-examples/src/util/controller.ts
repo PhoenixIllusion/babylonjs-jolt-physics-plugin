@@ -11,7 +11,7 @@ import { BaseCameraPointersInput } from "@babylonjs/core/Cameras/Inputs/BaseCame
 import { Camera } from "@babylonjs/core/Cameras/camera";
 import { App } from "../app";
 
-type OnInputCheck<T,K extends BaseKeyCodes> = (camera: T, joystickState: Vector2, keyboardState: KeyCodeState<K>) => void;
+type OnInputCheck<T, K extends BaseKeyCodes> = (camera: T, joystickState: Vector2, keyboardState: KeyCodeState<K>) => void;
 
 export class CameraCombinedInput<T extends Camera, K extends BaseKeyCodes> extends BaseCameraPointersInput {
   SWIPE_SENSIBILITY = 1.5;
@@ -28,7 +28,7 @@ export class CameraCombinedInput<T extends Camera, K extends BaseKeyCodes> exten
 
   getSimpleName = () => "joystick"
 
-  constructor(private _onInputCheck: OnInputCheck<T,K>, private cameraSetup: CameraSetup, keycodes: K) {
+  constructor(private _onInputCheck: OnInputCheck<T, K>, private cameraSetup: CameraSetup, keycodes: K) {
     super();
     this.joystick = new JoystickControl(App.instance.ui!);
     this.keyboard = new KeyboardControl(keycodes);
@@ -61,11 +61,11 @@ export class CameraCombinedInput<T extends Camera, K extends BaseKeyCodes> exten
   }
 
   checkInputs() {
-      let engine = EngineStore.LastCreatedEngine!;
-      if (this.keyboard.state.ROTATE_LEFT) this.cameraSetup.rotate(-this.SWIPE_SENSIBILITY * engine.getDeltaTime() / 500);
-      if (this.keyboard.state.ROTATE_RIGHT) this.cameraSetup.rotate(this.SWIPE_SENSIBILITY * engine.getDeltaTime() / 500);
-      if (this.keyboard.state.ROTATE_UP) this.cameraSetup.changeTiltY(-this.SWIPE_SENSIBILITY * engine.getDeltaTime() / 500);
-      if (this.keyboard.state.ROTATE_DOWN) this.cameraSetup.changeTiltY(this.SWIPE_SENSIBILITY * engine.getDeltaTime() / 500);
+    let engine = EngineStore.LastCreatedEngine!;
+    if (this.keyboard.state.ROTATE_LEFT) this.cameraSetup.rotate(-this.SWIPE_SENSIBILITY * engine.getDeltaTime() / 500);
+    if (this.keyboard.state.ROTATE_RIGHT) this.cameraSetup.rotate(this.SWIPE_SENSIBILITY * engine.getDeltaTime() / 500);
+    if (this.keyboard.state.ROTATE_UP) this.cameraSetup.changeTiltY(-this.SWIPE_SENSIBILITY * engine.getDeltaTime() / 500);
+    if (this.keyboard.state.ROTATE_DOWN) this.cameraSetup.changeTiltY(this.SWIPE_SENSIBILITY * engine.getDeltaTime() / 500);
     this._onInputCheck(this.camera, this.joystick.joystickDelta, this.keyboard.state)
   }
 

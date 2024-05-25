@@ -1,4 +1,4 @@
-import { MeshBuilder, SceneCallback, createBox, createFloor } from '../util/example';
+import { MeshBuilder, SceneCallback, createBox } from '../util/example';
 import { DefaultTrackedInput, TrackededVehicleController, Vehicle, createBasicTracked } from '@phoenixillusion/babylonjs-jolt-plugin/vehicle';
 import { SceneConfig } from '../app';
 import { Camera } from '@babylonjs/core/Cameras/camera';
@@ -52,7 +52,7 @@ export default async (scene: Scene): Promise<SceneCallback> => {
   setupTachometer(controller, scene);
   camera.getRoot().parent = followPoint;
 
-  let stdTorque = controller.engine.maxTorque;
+  let stdInertia = controller.engine.inertia;
 
   const rotateVector = new Vector3();
   return (_time: number, _delta: number) => {
@@ -60,9 +60,9 @@ export default async (scene: Scene): Promise<SceneCallback> => {
     vehicleInput.input.right = input.direction.x;
     vehicleInput.input.handBrake = input.handbrake;
 
-    const newTorque = input.boost ? 1.1*stdTorque : stdTorque;
-    if(controller.engine.maxTorque != newTorque) {
-      controller.engine.maxTorque = newTorque;
+    const newInertia = input.boost ? 0.25 * stdInertia : stdInertia;
+    if (controller.engine.inertia != newInertia) {
+      controller.engine.inertia = newInertia;
     }
 
     followPoint.position.copyFrom(car.box.position);

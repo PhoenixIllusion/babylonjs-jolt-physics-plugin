@@ -65,7 +65,7 @@ export class App {
 
     async init() {
         const curURL = new URL(window.location.href);
-        if(!this.memoryAvailableEle && curURL.searchParams.get('mem')) {
+        if (!this.memoryAvailableEle && curURL.searchParams.get('mem')) {
             await loadJolt({});
             this.memoryAvailableEle = setupMemoryAvailable(Jolt);
         }
@@ -73,7 +73,7 @@ export class App {
         const engine = this.engine = new Engine(this.canvas, true);
         const scene = this.scene = new Scene(engine);
         this.ui = AdvancedDynamicTexture.CreateFullscreenUI('gui');
- 
+
         scene.enablePhysics(new Vector3(0, -9.8, 0), await JoltJSPlugin.loadPlugin())
 
         if (!(this.config && this.config.getCamera)) {
@@ -94,13 +94,13 @@ export class App {
         light.intensity = 0.7;
 
         const maybeCallback = this.createScene(scene);
-        const callback = maybeCallback instanceof Promise ? await maybeCallback: maybeCallback;
+        const callback = maybeCallback instanceof Promise ? await maybeCallback : maybeCallback;
 
         let last = performance.now();
         // run the main render loop
         engine.runRenderLoop(() => {
             const scene = this.scene;
-            if(scene) {
+            if (scene) {
                 if (callback) {
                     const now = performance.now();
                     callback(now, now - last);

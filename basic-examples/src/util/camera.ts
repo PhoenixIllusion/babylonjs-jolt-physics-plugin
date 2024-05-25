@@ -3,6 +3,7 @@ import { Matrix, Vector3 } from "@babylonjs/core/Maths/math.vector";
 import { TransformNode } from "@babylonjs/core/Meshes/transformNode";
 import { CameraCombinedInput } from "./controller";
 import { Scene } from "@babylonjs/core/scene";
+import { BaseKeyCodes } from "./controller/keyboard";
 
 export class CameraSetup {
 
@@ -33,7 +34,7 @@ export class CameraSetup {
     this.camera = new FreeCamera("cam", new Vector3(0, 0, -50), scene);
     this.camera.fov = 0.47350045992678597;
     this.camera.parent = yTilt;
-  }  
+  }
 
   public setDistance(dist: number) {
     this.camera.position.z = this._targetDistance = -dist;
@@ -64,7 +65,7 @@ export class CameraSetup {
     return this.camera.getViewMatrix();
   }
 
-  public setController(input: CameraCombinedInput<FreeCamera>) {
+  public setController<T extends BaseKeyCodes>(input: CameraCombinedInput<FreeCamera, T>) {
     this.camera.inputs.clear();
     this.camera.attachControl();
     this.camera.inputs.add(input);

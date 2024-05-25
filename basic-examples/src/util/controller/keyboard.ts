@@ -17,12 +17,12 @@ export class BaseKeyCodes {
   ROTATE_DOWN: KeyboardEventTypes[] = ['KeyC'];
 }
 
-export type KeyCodeState<T extends BaseKeyCodes> = {[key in keyof T]: boolean};
+export type KeyCodeState<T extends BaseKeyCodes> = { [key in keyof T]: boolean };
 
 export class KeyState<T extends BaseKeyCodes> {
   state: KeyCodeState<T>;
   constructor(keycodes: T) {
-    const state: {[k: string]: boolean} = {};
+    const state: { [k: string]: boolean } = {};
     Object.keys(keycodes).forEach(key => {
       state[key] = false;
     });
@@ -59,8 +59,8 @@ export class KeyboardControl<T extends BaseKeyCodes> {
       if (!evt.metaKey) {
         if (info.type === KeyboardEventTypes.KEYDOWN || info.type === KeyboardEventTypes.KEYUP) {
           const set_state = info.type === KeyboardEventTypes.KEYDOWN ? true : false;
-          Object.entries(this.keys).forEach(([k,v])=> {
-            if(v.indexOf(key)>=0) {
+          Object.entries(this.keys).forEach(([k, v]) => {
+            if (v.indexOf(key) >= 0) {
               this.state[k as keyof T] = set_state;
             }
           })

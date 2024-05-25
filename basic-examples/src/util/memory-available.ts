@@ -48,10 +48,10 @@ export class MemoryAvailableElement extends HTMLElement {
         time = NOW;
         const freeMem = this.jolt.JoltInterface.prototype.sGetFreeMemory();
         const totalMem = this.jolt.JoltInterface.prototype.sGetTotalMemory();
-        const percentUsed = (100 * (totalMem-freeMem - this.base) / totalMem).toFixed(2) + '%';
+        const percentUsed = (100 * (totalMem - freeMem - this.base) / totalMem).toFixed(2) + '%';
         barInner.style.width = percentUsed;
         barInner.innerText = percentUsed;
-        memoryText.innerText = `${totalMem-freeMem - this.base} (+ ${this.base}) / ${totalMem}`;
+        memoryText.innerText = `${totalMem - freeMem - this.base} (+ ${this.base}) / ${totalMem}`;
       }
     }));
     const dispose = document.createElement('button');

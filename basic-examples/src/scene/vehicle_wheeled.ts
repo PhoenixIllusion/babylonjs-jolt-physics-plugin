@@ -1,4 +1,4 @@
-import { MeshBuilder, SceneCallback, createBox, createFloor } from '../util/example';
+import { MeshBuilder, SceneCallback, createBox } from '../util/example';
 import { DefaultWheeledVehicleInput, WheeledVehicleController, Vehicle, createBasicCar } from '@phoenixillusion/babylonjs-jolt-plugin/vehicle';
 import { SceneConfig } from '../app';
 import { FollowCamera } from '@babylonjs/core/Cameras/followCamera';
@@ -66,7 +66,7 @@ export default async (scene: Scene): Promise<SceneCallback> => {
     vehicleInput.input.handBrake = input.handbrake;
 
     const newInertia = input.boost ? 0.25 * stdInertia : stdInertia;
-    if(controller.engine.inertia != newInertia) {
+    if (controller.engine.inertia != newInertia) {
       controller.engine.inertia = newInertia;
     }
 

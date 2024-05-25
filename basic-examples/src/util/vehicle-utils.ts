@@ -14,9 +14,9 @@ import { loadImage, getImagePixels, createTexture, createHeightField } from "./e
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 
 export interface VehicleInput {
-    direction: Vector3,
-    handbrake: boolean,
-    boost: boolean;
+  direction: Vector3,
+  handbrake: boolean,
+  boost: boolean;
 }
 
 class VehicleKeyCodes extends BaseKeyCodes {
@@ -33,9 +33,9 @@ export async function loadTrack(scene: Scene) {
   const buffer = getImagePixels(svg);
 
   const terrainMaterial = new TerrainMaterial('terrain', scene);
-  terrainMaterial.mixTexture = await createTexture( await loadImage('race_track_mix.svg', 824, 824), Texture.NEAREST_NEAREST);
+  terrainMaterial.mixTexture = await createTexture(await loadImage('race_track_mix.svg', 824, 824), Texture.NEAREST_NEAREST);
   const t1 = terrainMaterial.diffuseTexture1 = new Texture('textures/dirt.jpg');
-  const t2 = terrainMaterial.diffuseTexture2 =  new Texture('textures/grass.jpg');
+  const t2 = terrainMaterial.diffuseTexture2 = new Texture('textures/grass.jpg');
   const t3 = terrainMaterial.diffuseTexture3 = new Texture('textures/bush.jpg');
   t1.uScale = t1.vScale = t2.uScale = t2.vScale = t3.uScale = t3.vScale = 50;
   const heightField = createHeightField(buffer, terrainMaterial, 824, 0.5, 0, 30);
@@ -43,8 +43,8 @@ export async function loadTrack(scene: Scene) {
 }
 
 function createCommandButton(text: string, index: number) {
-  const state = { pressed: false};
-  const button = Button.CreateSimpleButton('button-'+text, text);
+  const state = { pressed: false };
+  const button = Button.CreateSimpleButton('button-' + text, text);
   button.color = "white";
   button.background = "green";
   const screenSize = CameraCombinedInput.getScreenSize();
@@ -85,10 +85,10 @@ export function setupVehicleInput(scene: Scene): { input: VehicleInput, camera: 
     if (keyboard.BACKWARD) input.direction.z -= 1;
     if (keyboard.BRAKE) input.handbrake = true;
     if (keyboard.BOOST) input.boost = true;
-    if(breakButtonDown.pressed) {
+    if (breakButtonDown.pressed) {
       input.handbrake = true;
     }
-    if(boostButtonDown.pressed) {
+    if (boostButtonDown.pressed) {
       input.boost = true;
     }
 

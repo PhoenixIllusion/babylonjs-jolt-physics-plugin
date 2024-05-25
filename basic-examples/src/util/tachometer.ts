@@ -1,7 +1,7 @@
 import { IBaseVehicleController } from "@phoenixillusion/babylonjs-jolt-plugin/vehicle";
 import { DynamicProp, IDynamicProp } from "./custom-ele-util";
 
-function deg(d: number) { return d/360 * 2 * Math.PI }
+function deg(d: number) { return d / 360 * 2 * Math.PI }
 export class TachometerElement extends HTMLElement {
   public controller?: IBaseVehicleController
 
@@ -17,8 +17,8 @@ export class TachometerElement extends HTMLElement {
 
     const shadow = this.attachShadow({ mode: "open" });
     const style = document.createElement('style');
-    style.innerHTML = 
-`:host {
+    style.innerHTML =
+      `:host {
     position: relative;
     padding: 10px 0;
     width: 200px;
@@ -72,7 +72,7 @@ export class TachometerElement extends HTMLElement {
   :host .gears .active ,:host .modes .active {
     color: red;
   }
-`; 
+`;
     shadow.appendChild(style);
     const tachometerBase = document.createElement('div');
     tachometerBase.className = "base";
@@ -99,9 +99,9 @@ export class TachometerElement extends HTMLElement {
   maxRPMDrawn = 10;
 
   private getRadialPoint(angle: number, dist: number) {
-    const x = 100 + Math.cos(deg(angle))*dist;
-    const y = 100 + Math.sin(deg(angle))*dist;
-    return [x,y];
+    const x = 100 + Math.cos(deg(angle)) * dist;
+    const y = 100 + Math.sin(deg(angle)) * dist;
+    return [x, y];
   }
 
   private calculateRPMAngle(rpm: number): number {
@@ -109,8 +109,8 @@ export class TachometerElement extends HTMLElement {
     const startAngle = this.startAngle;
     const endAngle = this.endAngle;
 
-    const percent = rpm/maxRPMDrawn;
-    return startAngle + (endAngle-startAngle) * percent;
+    const percent = rpm / maxRPMDrawn;
+    return startAngle + (endAngle - startAngle) * percent;
   }
 
   private renderBackground() {
@@ -125,9 +125,9 @@ export class TachometerElement extends HTMLElement {
     ctx.arc(100, 100, 90, deg(startAngle), deg(endAngle));
     ctx.stroke();
 
-    const maxRPMDrawn = this.maxRPMDrawn = Math.ceil(controller.engine.maxRPM/1000) * 1000;
-    const numHatch = maxRPMDrawn/1000 * 2;
-    const hatchAngle = (endAngle-startAngle)/numHatch;
+    const maxRPMDrawn = this.maxRPMDrawn = Math.ceil(controller.engine.maxRPM / 1000) * 1000;
+    const numHatch = maxRPMDrawn / 1000 * 2;
+    const hatchAngle = (endAngle - startAngle) / numHatch;
 
     //redline
     const redlineStart = this.calculateRPMAngle(controller.transmission.shiftUpRPM);
@@ -141,20 +141,20 @@ export class TachometerElement extends HTMLElement {
     ctx.strokeStyle = 'white';
     ctx.textBaseline = "middle";
     ctx.font = "14px Arial"
-    for(let i=0; i <=numHatch; i++) {
+    for (let i = 0; i <= numHatch; i++) {
       const angle = startAngle + hatchAngle * i;
       let hatchStart = 80;
       let lineWidth = 2;
-      if(i % 2 == 0) {
+      if (i % 2 == 0) {
         hatchStart = 72;
         lineWidth = 3;
-        const [xT,yT] = this.getRadialPoint(angle, 60);
+        const [xT, yT] = this.getRadialPoint(angle, 60);
         ctx.lineWidth = 1.5;
-        const text = ""+i/2;
-        ctx.strokeText(text, xT - ctx.measureText(text).width/2, yT);
+        const text = "" + i / 2;
+        ctx.strokeText(text, xT - ctx.measureText(text).width / 2, yT);
       }
-      const [xS,yS] = this.getRadialPoint(angle, hatchStart)
-      const [xE,yE] = this.getRadialPoint(angle, 90+lineWidth/2)
+      const [xS, yS] = this.getRadialPoint(angle, hatchStart)
+      const [xE, yE] = this.getRadialPoint(angle, 90 + lineWidth / 2)
 
       ctx.lineWidth = lineWidth;
       ctx.beginPath();
@@ -179,10 +179,10 @@ export class TachometerElement extends HTMLElement {
     const speedMPH = document.createElement('div');
     speedMPH.className = 'value'
     speed.appendChild(speedMPH);
-    this.dynamicItems.push(new DynamicProp(speedMPH, 
+    this.dynamicItems.push(new DynamicProp(speedMPH,
       (x) => {
         x.innerText = `${this.toMPH(this.controller!.getLinearVelocity().length())}`
-    }))
+      }))
     const label = document.createElement('div');
     label.innerText = 'mph'
     label.className = 'label'
@@ -210,9 +210,9 @@ export class TachometerElement extends HTMLElement {
     const gears = document.createElement('div');
     gears.className = 'gears';
 
-    const gearNames = ['R','N'];
+    const gearNames = ['R', 'N'];
     this.controller!.transmission.gearRatios.forEach((_o, i) => {
-      gearNames.push(''+(1+i));
+      gearNames.push('' + (1 + i));
     });
     const allGears: HTMLDivElement[] = [];
     gearNames.forEach(name => {
@@ -225,7 +225,7 @@ export class TachometerElement extends HTMLElement {
     this.dynamicItems.push(new DynamicProp(gears, () => {
       const currentGear = this.controller!.transmission.gear;
       allGears.forEach((gear, i) => {
-        gear.classList.toggle('active', (i-1) === currentGear);
+        gear.classList.toggle('active', (i - 1) === currentGear);
       })
     }));
     return gears;
@@ -237,8 +237,8 @@ export class TachometerElement extends HTMLElement {
 
     ctx.beginPath();
     const angle = this.calculateRPMAngle(this.controller!.engine.rpm);
-    const [xS,yS] = this.getRadialPoint(angle, 6)
-    const [xE,yE] = this.getRadialPoint(angle, 50)
+    const [xS, yS] = this.getRadialPoint(angle, 6)
+    const [xE, yE] = this.getRadialPoint(angle, 50)
 
     ctx.strokeStyle = 'red';
     ctx.lineWidth = 3;

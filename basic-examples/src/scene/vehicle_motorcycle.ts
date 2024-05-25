@@ -28,8 +28,6 @@ export default async (scene: Scene): Promise<SceneCallback> => {
   const material = new StandardMaterial('tile');
   material.diffuseTexture = tiledTexture;
 
-  await loadTrack(scene);
-
   const physicSetting: PhysicsImpostorParameters = { mass: 300, restitution: 0, friction: 0, centerOffMass: new Vector3(0, -.3, 0), disableBidirectionalTransformation: true };
   const car = createBox(new Vector3(0, 2, 0), Quaternion.FromEulerAngles(0, Math.PI, 0), new Vector3(0.1, .3, 0.4), physicSetting, '#FF0000');
   car.box.material!.wireframe = true;
@@ -38,6 +36,8 @@ export default async (scene: Scene): Promise<SceneCallback> => {
   const vehicleInput = new DefaultMotorcycleInput(car.physics.physicsBody);
   const controller = new MotorcycleController(car.physics, wheeledConfig, vehicleInput);
 
+
+  await loadTrack(scene);
   const carWheels: Mesh[] = []
   wheeledConfig.wheels.forEach((o, i) => {
     const mesh = MeshBuilder.CreateCylinder('cylinder', { diameter: o.radius * 2, height: o.width, tessellation: 16 });
@@ -53,7 +53,7 @@ export default async (scene: Scene): Promise<SceneCallback> => {
   setupTachometer(controller, scene);
   camera.getRoot().parent = followPoint;
 
-  let stdTorque = controller.engine.maxTorque;
+  let stdInertia = controller.engine.inertia;
 
   const rotateVector = new Vector3();
   return (_time: number, _delta: number) => {
@@ -61,9 +61,9 @@ export default async (scene: Scene): Promise<SceneCallback> => {
     vehicleInput.input.right = input.direction.x;
     vehicleInput.input.handBrake = input.handbrake;
 
-    const newTorque = input.boost ? 1.1*stdTorque : stdTorque;
-    if(controller.engine.maxTorque != newTorque) {
-      controller.engine.maxTorque = newTorque;
+    const newInertia = input.boost ? 0.25 * stdInertia : stdInertia;
+    if (controller.engine.inertia != newInertia) {
+      controller.engine.inertia = newInertia;
     }
 
     followPoint.position.copyFrom(car.box.position);
