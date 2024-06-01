@@ -6,6 +6,7 @@ import { configureWheeledVehicleConstraint } from "./wheeled";
 import { Vehicle } from "./types";
 import { BaseVehicleInput, DefaultVehicleInput } from "./input";
 import { BaseVehicleController } from "./base";
+import { WheelWV } from "./wrapped";
 
 
 function configureMotorcycleLean(motorcycle: Jolt.MotorcycleControllerSettings, settings: Vehicle.MotorcycleLeanSettings) {
@@ -63,6 +64,9 @@ export class DefaultMotorcycleInput extends DefaultVehicleInput implements BaseV
         // When we've come to a stop, accept the new direction
         this.previousForward = forward;
       }
+    }
+    if(this.input.brake) {
+      brake = 1.0;
     }
 
     if (this.input.handBrake) {
@@ -137,7 +141,7 @@ export function createBasicMotorcycle(vehicle: { height: number, length: number 
   }
 }
 
-export class MotorcycleController extends BaseVehicleController<Vehicle.WheelSettingWV, Jolt.MotorcycleController> {
+export class MotorcycleController extends BaseVehicleController<Vehicle.WheelSettingWV, WheelWV, Jolt.MotorcycleController> {
   constructor(impostor: PhysicsImpostor, settings: Vehicle.MotorcycleVehicleSettings, input: BaseVehicleInput<Jolt.MotorcycleController>) {
     super(impostor, settings, createMotorcycleConstraint(settings), input);
   }
@@ -149,5 +153,8 @@ export class MotorcycleController extends BaseVehicleController<Vehicle.WheelSet
   }
   getTransmission(controller: Jolt.MotorcycleController): Jolt.VehicleTransmission {
     return controller.GetTransmission();
+  }
+  getWheel(wheel: Jolt.Wheel): WheelWV {
+    return new WheelWV(Jolt.castObject(wheel, Jolt.WheelWV));
   }
 }

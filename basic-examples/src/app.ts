@@ -1,6 +1,6 @@
 import './style.css';
 
-import { Jolt, JoltJSPlugin, loadJolt } from '@phoenixillusion/babylonjs-jolt-plugin';
+import { Jolt, JoltJSPlugin, loadJolt, setJoltModule } from '@phoenixillusion/babylonjs-jolt-plugin';
 
 import { SceneFunction } from './util/example';
 import { Engine } from '@babylonjs/core/Engines/engine';
@@ -12,6 +12,9 @@ import { Scene } from '@babylonjs/core/scene';
 import { Camera } from '@babylonjs/core/Cameras/camera';
 import { MemoryAvailableElement, setupMemoryAvailable } from './util/memory-available';
 import { AdvancedDynamicTexture } from '@babylonjs/gui/2D/advancedDynamicTexture';
+
+import initJolt from 'jolt-physics/wasm';
+import joltWasmUrl from 'jolt-physics/jolt-physics.wasm.wasm?url'
 
 export interface SceneConfig {
     getCamera(): Camera | undefined;
@@ -74,7 +77,9 @@ export class App {
         const scene = this.scene = new Scene(engine);
         this.ui = AdvancedDynamicTexture.CreateFullscreenUI('gui');
 
-        scene.enablePhysics(new Vector3(0, -9.8, 0), await JoltJSPlugin.loadPlugin())
+
+        setJoltModule(() => initJolt({locateFile: () => joltWasmUrl}))
+        scene.enablePhysics(new Vector3(0, -9.8, 0), await JoltJSPlugin.loadPlugin(false))
 
         if (!(this.config && this.config.getCamera)) {
             const camera = new FlyCamera('camera1', new Vector3(0, 15, 30), scene);

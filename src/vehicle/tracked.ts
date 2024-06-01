@@ -5,6 +5,7 @@ import { BaseVehicleController, configureEngine, configureTransmission, configur
 import { Vehicle } from "./types";
 import { BaseVehicleInput, DefaultVehicleInput } from "./input";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { WheelTV } from "./wrapped";
 
 function configureWheelTV(wheel: Jolt.WheelSettingsTV, setting: Vehicle.WheelSettingTV) {
   configureWheel(wheel, setting);
@@ -129,6 +130,10 @@ export class DefaultTrackedInput extends DefaultVehicleInput implements BaseVehi
 
     forward = this.input.forward;
 
+    if(this.input.handBrake) {
+      brake = 1.0;
+    }
+
     if (this.input.right) {
       if (this.input.right > 0) {
         if (brake == 0.0 && forward == 0.0 && Math.abs(velocity) < this.minVelocityPivotTurn) {
@@ -161,8 +166,6 @@ export class DefaultTrackedInput extends DefaultVehicleInput implements BaseVehi
         this.previousForward = forward;
       }
     }
-
-
     controller.SetDriverInput(forward, leftRatio, rightRatio, brake);
     if (rightRatio != 0.0 || leftRatio != 0.0 || forward != 0.0 || brake != 0.0)
       bodyInterface.ActivateBody(this.bodyId);
@@ -170,7 +173,7 @@ export class DefaultTrackedInput extends DefaultVehicleInput implements BaseVehi
 }
 
 
-export class TrackededVehicleController extends BaseVehicleController<Vehicle.WheelSettingTV, Jolt.TrackedVehicleController> {
+export class TrackededVehicleController extends BaseVehicleController<Vehicle.WheelSettingTV, WheelTV, Jolt.TrackedVehicleController> {
   constructor(impostor: PhysicsImpostor, settings: Vehicle.TrackVehicleSettings, input: BaseVehicleInput<Jolt.TrackedVehicleController>) {
     super(impostor, settings, configureTrackedVehicleConstraint(settings, new Jolt.TrackedVehicleControllerSettings()), input);
   }
@@ -182,5 +185,8 @@ export class TrackededVehicleController extends BaseVehicleController<Vehicle.Wh
   }
   getTransmission(controller: Jolt.TrackedVehicleController): Jolt.VehicleTransmission {
     return controller.GetTransmission();
+  }
+  getWheel(wheel: Jolt.Wheel): WheelTV {
+    return new WheelTV(Jolt.castObject(wheel, Jolt.WheelTV));
   }
 }

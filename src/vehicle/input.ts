@@ -5,6 +5,7 @@ import { GetJoltQuat, GetJoltVec3 } from "../jolt-util";
 export interface VehicleInputState {
   forward: number;
   right: number;
+  brake: boolean;
   handBrake: boolean
 }
 
@@ -13,7 +14,7 @@ export interface BaseVehicleInput<T extends Jolt.VehicleController> {
 }
 
 export class DefaultVehicleInput {
-  public input: VehicleInputState = { forward: 0, right: 0, handBrake: false };
+  public input: VehicleInputState = { forward: 0, right: 0, handBrake: false, brake: false };
   protected bodyId: Jolt.BodyID;
 
   constructor(protected body: Jolt.Body) {

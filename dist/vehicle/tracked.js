@@ -113,6 +113,9 @@ export class DefaultTrackedInput extends DefaultVehicleInput {
         let forward = 0.0, leftRatio = 1.0, rightRatio = 1.0, brake = 0.0;
         const velocity = this.getVelocity();
         forward = this.input.forward;
+        if (this.input.handBrake) {
+            brake = 1.0;
+        }
         if (this.input.right) {
             if (this.input.right > 0) {
                 if (brake == 0.0 && forward == 0.0 && Math.abs(velocity) < this.minVelocityPivotTurn) {

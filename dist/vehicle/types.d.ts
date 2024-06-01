@@ -26,6 +26,8 @@ export declare namespace Vehicle {
         maxBrakeTorque?: number;
         maxHandBrakeTorque?: number;
         maxSteerAngle?: number;
+        lateralFriction?: [number, number][];
+        longitudinalFriction?: [number, number][];
     }
     interface WheelSettingTV extends WheelSetting {
         longitudinalFriction?: number;

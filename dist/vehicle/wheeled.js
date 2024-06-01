@@ -14,6 +14,18 @@ function configureWheelWV(wheel, setting) {
     if (setting.maxHandBrakeTorque !== undefined) {
         wheel.mMaxHandBrakeTorque = setting.maxHandBrakeTorque;
     }
+    if (setting.lateralFriction !== undefined) {
+        wheel.mLateralFriction.Clear();
+        setting.lateralFriction.forEach(([x, y]) => {
+            wheel.mLateralFriction.AddPoint(x, y);
+        });
+    }
+    if (setting.longitudinalFriction !== undefined) {
+        wheel.mLongitudinalFriction.Clear();
+        setting.longitudinalFriction.forEach(([x, y]) => {
+            wheel.mLongitudinalFriction.AddPoint(x, y);
+        });
+    }
 }
 export function configureWheeledVehicleConstraint(settings, controllerSettings) {
     const vehicle = createVehicleConstraint(settings);

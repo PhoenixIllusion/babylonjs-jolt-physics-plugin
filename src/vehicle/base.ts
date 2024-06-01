@@ -168,13 +168,13 @@ export interface IBaseVehicleController {
   getAngularVelocity(): Vector3;
 }
 
-export abstract class BaseVehicleController<T extends Vehicle.WheelSetting, K extends Jolt.VehicleController> implements IBaseVehicleController{
+export abstract class BaseVehicleController<T extends Vehicle.WheelSetting, W extends Wheel, K extends Jolt.VehicleController> implements IBaseVehicleController{
   private _physicsStepListener: (delta: number) => void;
 
   protected controller: K;
   public transmission: Transmission;
   public engine: Engine;
-  public wheels: Wheel[] = [];
+  public wheels: W[] = [];
 
   constructor(protected impostor: PhysicsImpostor, settings: Vehicle.VehicleSettings<T>, constraintSettings: Jolt.VehicleConstraintSettings, input: BaseVehicleInput<K>) {
     const joltPlugin: JoltJSPlugin = impostor.joltPluginData.plugin;
@@ -189,7 +189,7 @@ export abstract class BaseVehicleController<T extends Vehicle.WheelSetting, K ex
     this.transmission = new Transmission(this.getTransmission(controller));
 
     settings.wheels.forEach((_o, i) => {
-      this.wheels.push(new Wheel(constraint.GetWheel(i)))
+      this.wheels.push(this.getWheel(constraint.GetWheel(i)))
     })
 
     const wheelRight = new Jolt.Vec3(0, 1, 0)
@@ -207,7 +207,9 @@ export abstract class BaseVehicleController<T extends Vehicle.WheelSetting, K ex
   abstract getController(controller: Jolt.VehicleController): K;
   abstract getEngine(controller: K): Jolt.VehicleEngine;
   abstract getTransmission(controller: K): Jolt.VehicleTransmission;
-
+  abstract getWheel(wheel: Jolt.Wheel): W;
+  
   getLinearVelocity() { return this.impostor.getLinearVelocity()! }
   getAngularVelocity() { return this.impostor.getAngularVelocity()! }
+  
 }

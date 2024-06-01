@@ -5,9 +5,11 @@ import "../jolt-impostor";
 import { BaseVehicleController, configureEngine, configureTransmission, configureWheel, createDifferential, createVehicleConstraint } from "./base";
 import { Vehicle } from "./types";
 import { BaseVehicleInput, DefaultVehicleInput } from "./input";
+import { WheelWV } from "./wrapped";
 
 function configureWheelWV(wheel: Jolt.WheelSettingsWV, setting: Vehicle.WheelSettingWV) {
   configureWheel(wheel, setting);
+
   if (setting.maxSteerAngle !== undefined) {
     wheel.mMaxSteerAngle = setting.maxSteerAngle;
   }
@@ -16,6 +18,18 @@ function configureWheelWV(wheel: Jolt.WheelSettingsWV, setting: Vehicle.WheelSet
   }
   if (setting.maxHandBrakeTorque !== undefined) {
     wheel.mMaxHandBrakeTorque = setting.maxHandBrakeTorque;
+  }
+  if(setting.lateralFriction !== undefined) {
+    wheel.mLateralFriction.Clear();
+    setting.lateralFriction.forEach(([x,y]) => {
+      wheel.mLateralFriction.AddPoint(x,y);
+    });
+  }
+  if(setting.longitudinalFriction !== undefined) {
+    wheel.mLongitudinalFriction.Clear();
+    setting.longitudinalFriction.forEach(([x,y]) => {
+      wheel.mLongitudinalFriction.AddPoint(x,y);
+    });
   }
 }
 
@@ -73,6 +87,9 @@ export class DefaultWheeledVehicleInput extends DefaultVehicleInput implements B
         this.previousForward = forward;
       }
     }
+    if(this.input.brake) {
+      brake = 1.0;
+    }
 
     if (this.input.handBrake) {
       forward = 0.0;
@@ -122,7 +139,7 @@ export function createBasicCar(vehicle: { width: number, height: number, length:
   }
 }
 
-export class WheeledVehicleController extends BaseVehicleController<Vehicle.WheelSettingWV, Jolt.WheeledVehicleController> {
+export class WheeledVehicleController extends BaseVehicleController<Vehicle.WheelSettingWV, WheelWV, Jolt.WheeledVehicleController> {
   constructor(impostor: PhysicsImpostor, settings: Vehicle.MotorcycleVehicleSettings, input: BaseVehicleInput<Jolt.WheeledVehicleController>) {
     super(impostor, settings, createWheeledVehicleConstraint(settings), input);
   }
@@ -134,5 +151,8 @@ export class WheeledVehicleController extends BaseVehicleController<Vehicle.Whee
   }
   getTransmission(controller: Jolt.WheeledVehicleController): Jolt.VehicleTransmission {
     return controller.GetTransmission();
+  }
+  getWheel(wheel: Jolt.Wheel): WheelWV {
+    return new WheelWV(Jolt.castObject(wheel, Jolt.WheelWV));
   }
 }

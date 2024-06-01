@@ -28,7 +28,7 @@ function clamp(min: number, val: number, max: number) {
   return Math.min(max, Math.max(min, val));
 }
 
-export async function loadTrack(scene: Scene) {
+export async function loadTrack(scene: Scene, friction = 1) {
   const svg = await loadImage('race_track_height.svg', 824, 824);
   const buffer = getImagePixels(svg);
 
@@ -39,7 +39,7 @@ export async function loadTrack(scene: Scene) {
   const t3 = terrainMaterial.diffuseTexture3 = new Texture('textures/bush.jpg');
   t1.uScale = t1.vScale = t2.uScale = t2.vScale = t3.uScale = t3.vScale = 50;
   const heightField = createHeightField(buffer, terrainMaterial, 824, 0.5, 0, 30);
-  heightField.physicsImpostor!.friction = 1;
+  heightField.physicsImpostor!.friction = friction;
 }
 
 function createCommandButton(text: string, index: number) {

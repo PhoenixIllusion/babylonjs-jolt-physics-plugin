@@ -32,6 +32,8 @@ export namespace Vehicle {
     maxBrakeTorque?: number;
     maxHandBrakeTorque?: number;
     maxSteerAngle?: number;
+    lateralFriction?: [number,number][];
+    longitudinalFriction?: [number,number][];
   }
 
   export interface WheelSettingTV extends WheelSetting {

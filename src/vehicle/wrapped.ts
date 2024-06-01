@@ -43,6 +43,70 @@ export class Wheel {
   }
 }
 
+export class WheelTV extends Wheel {
+  settingsTV: Jolt.WheelSettingsTV;
+
+  private _longitudinalFriction: number;
+  private _lateralFriction: number;
+
+  constructor(wheel: Jolt.WheelTV) {
+    super(wheel);
+    const settings = this.settingsTV = wheel.GetSettings();
+    this._longitudinalFriction = settings.mLongitudinalFriction;
+    this._lateralFriction = settings.mLateralFriction;
+  }
+
+  get longitudinalFriction() { return this._longitudinalFriction; }
+  set longitudinalFriction(v: number) { this._longitudinalFriction = v; this.settingsTV.mLongitudinalFriction = v; }
+
+  get lateralFriction() { return this._lateralFriction }
+  set lateralFriction(v: number) { this._lateralFriction = v; this.settingsTV.mLateralFriction = v; }
+}
+
+export class WheelWV extends Wheel {
+  settingsWV: Jolt.WheelSettingsWV;
+
+  private _maxBrakeTorque: number;
+  private _maxHandBrakeTorque: number;
+  private _maxSteerAngle: number;
+  private _lateralFriction: [number,number][] = [];
+  private _longitudinalFriction: [number,number][] = [];
+
+  constructor(wheel: Jolt.WheelWV) {
+    super(wheel);
+    const settings = this.settingsWV = wheel.GetSettings();
+    this._maxBrakeTorque = settings.mMaxBrakeTorque;
+    this._maxHandBrakeTorque = settings.mMaxHandBrakeTorque;
+    this._maxSteerAngle = settings.mMaxSteerAngle;
+  }
+
+  get maxBrakeTorque() { return this._maxBrakeTorque; }
+  set maxBrakeTorque(v: number) { this._maxBrakeTorque = v; this.settingsWV.mMaxBrakeTorque = v; }
+
+  get maxHandBrakeTorque() { return this._maxHandBrakeTorque }
+  set maxHandBrakeTorque(v: number) { this._maxHandBrakeTorque = v; this.settingsWV.mMaxBrakeTorque = v; }
+
+  get maxSteerAngle() { return this._maxSteerAngle }
+  set maxSteerAngle(v: number) { this._maxSteerAngle = v; this.settingsWV.mMaxSteerAngle = v; }
+
+
+  get lateralFriction() { return this._lateralFriction }
+  set lateralFriction(v: [number,number][]) {
+    this.settingsWV.mLateralFriction.Clear();
+    v.forEach(([x,y]) => {
+      this.settingsWV.mLateralFriction.AddPoint(x,y);
+    });
+  }
+
+  get longitudinalFriction() { return this._longitudinalFriction }
+  set longitudinalFriction(v: [number,number][]) {
+    this.settingsWV.mLongitudinalFriction.Clear();
+    v.forEach(([x,y]) => {
+      this.settingsWV.mLongitudinalFriction.AddPoint(x,y);
+    });
+  }
+}
+
 export class Engine {
   private _maxTorque: number;
   private _minRPM: number;
