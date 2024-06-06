@@ -1,6 +1,6 @@
 
 import Jolt from './jolt-import';
-import { GetJoltQuat, GetJoltVec3, LAYER_MOVING, RawPointer, SetJoltVec3, wrapJolt } from './jolt-util';
+import { GetJoltVec3, LAYER_MOVING, RawPointer, SetJoltQuat, SetJoltVec3, wrapJolt } from './jolt-util';
 import { JoltJSPlugin, JoltPluginData } from '.';
 import { IPhysicsEnabledObject, PhysicsImpostor, PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Scene } from '@babylonjs/core/scene';
@@ -57,7 +57,7 @@ interface UpdateFiltersData {
 }
 
 export interface CharacterVirtualInputHandler {
-  processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number, tmp: Jolt.Vec3): void;
+  processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number, tmpVec3: Jolt.Vec3, tmpQuat: Jolt.Quat): void;
   updateCharacter(character: Jolt.CharacterVirtual, tmp: Jolt.Vec3): void;
 }
 
@@ -85,9 +85,6 @@ export class StandardCharacterVirtualHandler implements CharacterVirtualInputHan
 
   public enableCharacterInertia = true;
 
-  public upRotationX = 0;
-  public upRotationZ = 0;
-
   public groundState: GroundState = GroundState.ON_GROUND;
   public userState: CharacterState = CharacterState.IDLE;
 
@@ -98,12 +95,13 @@ export class StandardCharacterVirtualHandler implements CharacterVirtualInputHan
 
   private _new_velocity: Vector3 = new Vector3();
 
-  private _charUpRot: Quaternion = new Quaternion();
-  private _charUp: Vector3 = new Vector3();
+  public up: Vector3 = new Vector3(0,1,0);
+  public rotation: Quaternion = Quaternion.Identity();
+
   private _linVelocity: Vector3 = new Vector3();
   private _groundVelocity: Vector3 = new Vector3();
   private _gravity: Vector3 = new Vector3();
-  processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number, _tmpVec3: Jolt.Vec3) {
+  processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number, _tmpVec3: Jolt.Vec3, _tmpQuat: Jolt.Quat) {
 
     const player_controls_horizontal_velocity = this.controlMovementDuringJump || character.IsSupported();
     if (player_controls_horizontal_velocity) {
@@ -122,15 +120,16 @@ export class StandardCharacterVirtualHandler implements CharacterVirtualInputHan
       // While in air we allow sliding
       this.allowSliding = true;
     }
-    const upRot = _tmpVec3;
-    upRot.Set(this.upRotationX, 0, this.upRotationZ);
-    const character_up_rotation = Jolt.Quat.prototype.sEulerAngles(upRot);
-    character.SetUp(character_up_rotation.RotateAxisY());
+    const characterUp = this.up;
+    const upRotation = this.rotation;
+
+    const character_up = SetJoltVec3(characterUp, _tmpVec3);
+    const character_up_rotation = SetJoltQuat(upRotation, _tmpQuat);
+
+    character.SetUp(character_up);
     character.SetRotation(character_up_rotation);
-    const upRotation = GetJoltQuat(character_up_rotation, this._charUpRot);
 
     character.UpdateGroundVelocity();
-    const characterUp = GetJoltVec3(character.GetUp(), this._charUp);
     const linearVelocity = GetJoltVec3(character.GetLinearVelocity(), this._linVelocity);
     const vVel = Vector3.Dot(linearVelocity, characterUp);
     const current_vertical_velocity = characterUp.multiplyByFloats(vVel, vVel, vVel);
@@ -207,6 +206,7 @@ export class JoltCharacterVirtual {
   public contactListener?: Jolt.CharacterContactListenerJS;
 
   private _jolt_temp1!: Jolt.Vec3;
+  private _jolt_tempQuat1!: Jolt.Quat;
   constructor(private impostor: JoltCharacterVirtualImpostor, private shape: Jolt.Shape, private world: WorldData, private plugin: JoltJSPlugin) {
   }
   init(): void {
@@ -215,7 +215,8 @@ export class JoltCharacterVirtual {
     this.mDisposables = impostor._pluginData.toDispose;
 
     this._jolt_temp1 = new Jolt.Vec3();
-    this.mDisposables.push(this._jolt_temp1);
+    this._jolt_tempQuat1 = new Jolt.Quat();
+    this.mDisposables.push(this._jolt_temp1, this._jolt_tempQuat1);
 
 
     this.mUpdateSettings = new Jolt.ExtendedUpdateSettings();
@@ -281,7 +282,7 @@ export class JoltCharacterVirtual {
     const g = this._characterUp.multiplyInPlace(this._temp2);
 
     if (this.inputHandler) {
-      this.inputHandler.processCharacterData(this.mCharacter, this.world.physicsSystem, mDeltaTime, this._jolt_temp1);
+      this.inputHandler.processCharacterData(this.mCharacter, this.world.physicsSystem, mDeltaTime, this._jolt_temp1, this._jolt_tempQuat1);
       this.inputHandler.updateCharacter(this.mCharacter, this._jolt_temp1);
     }
 

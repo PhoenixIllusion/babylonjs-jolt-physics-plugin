@@ -88,8 +88,10 @@ export class App {
 
             // This attaches the camera to the canvas
             camera.attachControl(true);
+        } else {
+            this.config.getCamera();
         }
-
+ 
 
         // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
         const light = new DirectionalLight('light', new Vector3(-1, -3, 0), scene);

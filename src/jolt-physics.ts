@@ -16,6 +16,7 @@ import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 import * as JoltConstraintManager from './constraints';
 import './jolt-impostor';
 import { createJoltShape } from './jolt-shapes';
+import { GravityUtility } from './jolt-gravity';
 export { setJoltModule } from './jolt-import'
 
 interface PossibleMotors {
@@ -220,14 +221,18 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
 
   }
 
-  applyForce(impostor: PhysicsImpostor, force: Vector3, contactPoint: Vector3): void {
+  applyForce(impostor: PhysicsImpostor, force: Vector3, contactPoint?: Vector3): void {
     if (!impostor.soft) {
       const physicsBody: Jolt.Body = impostor.physicsBody;
-      const worldPoint = this._tempVec3A;
-      const impulse = this._tempVec3B;
-      SetJoltVec3(force, impulse)
-      SetJoltVec3(contactPoint, worldPoint)
-      physicsBody.AddForce(impulse, worldPoint);
+      const forceJ = this._tempVec3B;
+      SetJoltVec3(force, forceJ)
+      if(contactPoint) {
+        const worldPoint = this._tempVec3A;
+        SetJoltVec3(contactPoint, worldPoint)
+        physicsBody.AddForce(forceJ, worldPoint);
+      } else {
+        physicsBody.AddForce(forceJ);
+      }
     } else {
       Logger.Warn('Cannot be applied to a soft body');
     }
@@ -439,8 +444,11 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     return new Vector3(velocity.GetX(), velocity.GetY(), velocity.GetZ());
   }
   setBodyMass(impostor: PhysicsImpostor, mass: number): void {
-    const physicsBody: Jolt.Body = impostor.physicsBody;
-    physicsBody.GetMotionProperties().SetInverseMass(1.0 / mass);
+    const body: Jolt.Body = impostor.physicsBody;
+    const motionProps = body.GetMotionProperties();
+    const massProps = body.GetShape().GetMassProperties();
+    massProps.ScaleToMass(mass);
+    motionProps.SetMassProperties(Jolt.EAllowedDOFs_All, massProps);
     impostor.joltPluginData.mass = mass;
   }
   getBodyMass(impostor: PhysicsImpostor): number {
@@ -634,4 +642,21 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     (this.world as any) = null;
   }
 
+  setGravityOverride(impostor: PhysicsImpostor, gravity: Vector3 | null) {
+    const gravityUtility = GravityUtility.getInstance(this);
+    if(gravity) {
+      if(impostor.joltPluginData.gravity) {
+        impostor.joltPluginData.gravity = gravity;
+      } else {
+        gravityUtility.registerGravityOverride(impostor, gravity);
+      }
+    } else {
+      gravityUtility.unregisterGravityOverride(impostor);
+    }
+  }
+
+  setGravityFactor(impostor: PhysicsImpostor, factor: number) {
+    const body: Jolt.Body = impostor.physicsBody;
+    body.GetMotionProperties().SetGravityFactor(factor);
+  }
 }

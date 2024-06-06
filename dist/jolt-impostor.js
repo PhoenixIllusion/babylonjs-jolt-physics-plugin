@@ -265,3 +265,9 @@ PhysicsImpostor.prototype.onJoltCollide = function (kind, event) {
         }
     }
 };
+PhysicsImpostor.prototype.setGravityFactor = function (factor) {
+    this.joltPluginData.plugin.setGravityFactor(this, factor);
+};
+PhysicsImpostor.prototype.setGravityOverride = function (gravity) {
+    this.joltPluginData.plugin.setGravityOverride(this, gravity);
+};

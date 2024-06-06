@@ -2,7 +2,7 @@ import Jolt from './jolt-import';
 import { JoltJSPlugin, JoltPluginData } from '.';
 import { IPhysicsEnabledObject, PhysicsImpostor, PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Scene } from '@babylonjs/core/scene';
-import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 declare class CharacterVirtualConfig {
     maxSlopeAngle: number;
     mass: number;
@@ -33,7 +33,7 @@ interface UpdateFiltersData {
     shapeFilter: Jolt.ShapeFilter;
 }
 export interface CharacterVirtualInputHandler {
-    processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number, tmp: Jolt.Vec3): void;
+    processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number, tmpVec3: Jolt.Vec3, tmpQuat: Jolt.Quat): void;
     updateCharacter(character: Jolt.CharacterVirtual, tmp: Jolt.Vec3): void;
 }
 export declare const enum GroundState {
@@ -55,18 +55,16 @@ export declare class StandardCharacterVirtualHandler implements CharacterVirtual
     characterSpeed: number;
     jumpSpeed: number;
     enableCharacterInertia: boolean;
-    upRotationX: number;
-    upRotationZ: number;
     groundState: GroundState;
     userState: CharacterState;
     updateInput(inMovementDirection: Vector3, inJump: boolean): void;
     private _new_velocity;
-    private _charUpRot;
-    private _charUp;
+    up: Vector3;
+    rotation: Quaternion;
     private _linVelocity;
     private _groundVelocity;
     private _gravity;
-    processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number, _tmpVec3: Jolt.Vec3): void;
+    processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number, _tmpVec3: Jolt.Vec3, _tmpQuat: Jolt.Quat): void;
     updateCharacter(character: Jolt.CharacterVirtual, tempVec: Jolt.Vec3): void;
 }
 export declare class JoltCharacterVirtual {
@@ -82,6 +80,7 @@ export declare class JoltCharacterVirtual {
     config: CharacterVirtualConfig;
     contactListener?: Jolt.CharacterContactListenerJS;
     private _jolt_temp1;
+    private _jolt_tempQuat1;
     constructor(impostor: JoltCharacterVirtualImpostor, shape: Jolt.Shape, world: WorldData, plugin: JoltJSPlugin);
     init(): void;
     private _characterUp;

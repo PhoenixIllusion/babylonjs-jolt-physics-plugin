@@ -1,5 +1,5 @@
 import Jolt from './jolt-import';
-import { GetJoltQuat, GetJoltVec3, LAYER_MOVING, SetJoltVec3, wrapJolt } from './jolt-util';
+import { GetJoltVec3, LAYER_MOVING, SetJoltQuat, SetJoltVec3, wrapJolt } from './jolt-util';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Logger } from '@babylonjs/core/Misc/logger';
@@ -48,13 +48,11 @@ export class StandardCharacterVirtualHandler {
         this.characterSpeed = 6.0;
         this.jumpSpeed = 15.0;
         this.enableCharacterInertia = true;
-        this.upRotationX = 0;
-        this.upRotationZ = 0;
         this.groundState = GroundState.ON_GROUND;
         this.userState = CharacterState.IDLE;
         this._new_velocity = new Vector3();
-        this._charUpRot = new Quaternion();
-        this._charUp = new Vector3();
+        this.up = new Vector3(0, 1, 0);
+        this.rotation = Quaternion.Identity();
         this._linVelocity = new Vector3();
         this._groundVelocity = new Vector3();
         this._gravity = new Vector3();
@@ -63,7 +61,7 @@ export class StandardCharacterVirtualHandler {
         this.inMovementDirection.copyFrom(inMovementDirection);
         this.inJump = inJump;
     }
-    processCharacterData(character, physicsSys, inDeltaTime, _tmpVec3) {
+    processCharacterData(character, physicsSys, inDeltaTime, _tmpVec3, _tmpQuat) {
         const player_controls_horizontal_velocity = this.controlMovementDuringJump || character.IsSupported();
         if (player_controls_horizontal_velocity) {
             // True if the player intended to move
@@ -82,14 +80,13 @@ export class StandardCharacterVirtualHandler {
             // While in air we allow sliding
             this.allowSliding = true;
         }
-        const upRot = _tmpVec3;
-        upRot.Set(this.upRotationX, 0, this.upRotationZ);
-        const character_up_rotation = Jolt.Quat.prototype.sEulerAngles(upRot);
-        character.SetUp(character_up_rotation.RotateAxisY());
+        const characterUp = this.up;
+        const upRotation = this.rotation;
+        const character_up = SetJoltVec3(characterUp, _tmpVec3);
+        const character_up_rotation = SetJoltQuat(upRotation, _tmpQuat);
+        character.SetUp(character_up);
         character.SetRotation(character_up_rotation);
-        const upRotation = GetJoltQuat(character_up_rotation, this._charUpRot);
         character.UpdateGroundVelocity();
-        const characterUp = GetJoltVec3(character.GetUp(), this._charUp);
         const linearVelocity = GetJoltVec3(character.GetLinearVelocity(), this._linVelocity);
         const vVel = Vector3.Dot(linearVelocity, characterUp);
         const current_vertical_velocity = characterUp.multiplyByFloats(vVel, vVel, vVel);
@@ -163,7 +160,8 @@ export class JoltCharacterVirtual {
         const impostor = this.impostor;
         this.mDisposables = impostor._pluginData.toDispose;
         this._jolt_temp1 = new Jolt.Vec3();
-        this.mDisposables.push(this._jolt_temp1);
+        this._jolt_tempQuat1 = new Jolt.Quat();
+        this.mDisposables.push(this._jolt_temp1, this._jolt_tempQuat1);
         this.mUpdateSettings = new Jolt.ExtendedUpdateSettings();
         const settings = new Jolt.CharacterVirtualSettings();
         settings.mMass = this.config.mass;
@@ -215,7 +213,7 @@ export class JoltCharacterVirtual {
         this._temp2.set(gravLen, gravLen, gravLen);
         const g = this._characterUp.multiplyInPlace(this._temp2);
         if (this.inputHandler) {
-            this.inputHandler.processCharacterData(this.mCharacter, this.world.physicsSystem, mDeltaTime, this._jolt_temp1);
+            this.inputHandler.processCharacterData(this.mCharacter, this.world.physicsSystem, mDeltaTime, this._jolt_temp1, this._jolt_tempQuat1);
             this.inputHandler.updateCharacter(this.mCharacter, this._jolt_temp1);
         }
         this.mCharacter.SetMaxSlopeAngle(this.config.maxSlopeAngle);

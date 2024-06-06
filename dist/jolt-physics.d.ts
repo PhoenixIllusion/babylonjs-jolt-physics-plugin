@@ -57,7 +57,7 @@ export declare class JoltJSPlugin implements IPhysicsEnginePlugin {
     private _stepSimulation;
     getPluginVersion(): number;
     applyImpulse(impostor: PhysicsImpostor, force: Vector3, contactPoint: Vector3): void;
-    applyForce(impostor: PhysicsImpostor, force: Vector3, contactPoint: Vector3): void;
+    applyForce(impostor: PhysicsImpostor, force: Vector3, contactPoint?: Vector3): void;
     generatePhysicsBody(impostor: PhysicsImpostor): void;
     GetImpostorForBodyId(id: number): PhysicsImpostor;
     /**
@@ -101,4 +101,6 @@ export declare class JoltJSPlugin implements IPhysicsEnginePlugin {
     getBoxSizeToRef(impostor: PhysicsImpostor, result: Vector3): void;
     syncMeshWithImpostor(mesh: AbstractMesh, impostor: PhysicsImpostor): void;
     dispose(): void;
+    setGravityOverride(impostor: PhysicsImpostor, gravity: Vector3 | null): void;
+    setGravityFactor(impostor: PhysicsImpostor, factor: number): void;
 }

@@ -210,7 +210,12 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
     getParam(param: ImpostorHeightMapParam): HeightMapData | undefined;
     getParam(param: ImpostorShapeParam): PhysicsImpostor | undefined;
 
+    applyForce(force: Vector3): void;
+    applyForce(force: Vector3, contactPoint?: Vector3): void;
+
     getShapeVertexData(): VertexData;
+    setGravityFactor(percent: number): void;
+    setGravityOverride(gravity: Vector3|null): void;
 
     JoltPhysicsCallback: JoltPhysicsCollideCallbacks;
     registerOnJoltPhysicsCollide(kind: 'on-contact-add' | 'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactCallback): void;
@@ -231,9 +236,10 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
 
 export interface JoltPluginData {
   toDispose: any[];
-  mass: any;
-  friction: any;
-  restitution: any;
+  gravity?: Vector3;
+  mass: number;
+  friction?: number;
+  restitution?: number;
   frozen: boolean;
   plugin: JoltJSPlugin;
 }
@@ -365,4 +371,12 @@ PhysicsImpostor.prototype.onJoltCollide = function (kind: JoltCollisionKey, even
       }
     }
   }
+}
+
+PhysicsImpostor.prototype.setGravityFactor = function (factor: number): void {
+  this.joltPluginData.plugin.setGravityFactor(this, factor);
+}
+
+PhysicsImpostor.prototype.setGravityOverride = function (gravity: Vector3 | null): void {
+  this.joltPluginData.plugin.setGravityOverride(this, gravity);
 }

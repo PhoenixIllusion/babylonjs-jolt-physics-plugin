@@ -10,6 +10,7 @@ import '@babylonjs/core/Physics/physicsEngineComponent';
 import * as JoltConstraintManager from './constraints';
 import './jolt-impostor';
 import { createJoltShape } from './jolt-shapes';
+import { GravityUtility } from './jolt-gravity';
 export { setJoltModule } from './jolt-import';
 export var Jolt_Type;
 (function (Jolt_Type) {
@@ -173,11 +174,16 @@ export class JoltJSPlugin {
     applyForce(impostor, force, contactPoint) {
         if (!impostor.soft) {
             const physicsBody = impostor.physicsBody;
-            const worldPoint = this._tempVec3A;
-            const impulse = this._tempVec3B;
-            SetJoltVec3(force, impulse);
-            SetJoltVec3(contactPoint, worldPoint);
-            physicsBody.AddForce(impulse, worldPoint);
+            const forceJ = this._tempVec3B;
+            SetJoltVec3(force, forceJ);
+            if (contactPoint) {
+                const worldPoint = this._tempVec3A;
+                SetJoltVec3(contactPoint, worldPoint);
+                physicsBody.AddForce(forceJ, worldPoint);
+            }
+            else {
+                physicsBody.AddForce(forceJ);
+            }
         }
         else {
             Logger.Warn('Cannot be applied to a soft body');
@@ -373,8 +379,11 @@ export class JoltJSPlugin {
         return new Vector3(velocity.GetX(), velocity.GetY(), velocity.GetZ());
     }
     setBodyMass(impostor, mass) {
-        const physicsBody = impostor.physicsBody;
-        physicsBody.GetMotionProperties().SetInverseMass(1.0 / mass);
+        const body = impostor.physicsBody;
+        const motionProps = body.GetMotionProperties();
+        const massProps = body.GetShape().GetMassProperties();
+        massProps.ScaleToMass(mass);
+        motionProps.SetMassProperties(Jolt.EAllowedDOFs_All, massProps);
         impostor.joltPluginData.mass = mass;
     }
     getBodyMass(impostor) {
@@ -555,5 +564,23 @@ export class JoltJSPlugin {
         });
         this._raycaster.dispose();
         this.world = null;
+    }
+    setGravityOverride(impostor, gravity) {
+        const gravityUtility = GravityUtility.getInstance(this);
+        if (gravity) {
+            if (impostor.joltPluginData.gravity) {
+                impostor.joltPluginData.gravity = gravity;
+            }
+            else {
+                gravityUtility.registerGravityOverride(impostor, gravity);
+            }
+        }
+        else {
+            gravityUtility.unregisterGravityOverride(impostor);
+        }
+    }
+    setGravityFactor(impostor, factor) {
+        const body = impostor.physicsBody;
+        body.GetMotionProperties().SetGravityFactor(factor);
     }
 }
