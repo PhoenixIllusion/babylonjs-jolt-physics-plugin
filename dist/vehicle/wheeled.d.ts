@@ -4,6 +4,7 @@ import "../jolt-impostor";
 import { BaseVehicleController } from "./base";
 import { Vehicle } from "./types";
 import { BaseVehicleInput, DefaultVehicleInput } from "./input";
+import { WheelWV } from "./wrapped";
 export declare function configureWheeledVehicleConstraint(settings: Vehicle.WheeledVehicleSettings, controllerSettings: Jolt.WheeledVehicleControllerSettings): Jolt.VehicleConstraintSettings;
 export declare class DefaultWheeledVehicleInput extends DefaultVehicleInput implements BaseVehicleInput<Jolt.WheeledVehicleController> {
     private previousForward;
@@ -18,9 +19,10 @@ export declare function createBasicCar(vehicle: {
     radius: number;
     width: number;
 }, fourWheelDrive: boolean): Vehicle.WheeledVehicleSettings;
-export declare class WheeledVehicleController extends BaseVehicleController<Vehicle.WheelSettingWV, Jolt.WheeledVehicleController> {
+export declare class WheeledVehicleController extends BaseVehicleController<Vehicle.WheelSettingWV, WheelWV, Jolt.WheeledVehicleController> {
     constructor(impostor: PhysicsImpostor, settings: Vehicle.MotorcycleVehicleSettings, input: BaseVehicleInput<Jolt.WheeledVehicleController>);
     getController(controller: Jolt.VehicleController): Jolt.WheeledVehicleController;
     getEngine(controller: Jolt.WheeledVehicleController): Jolt.VehicleEngine;
     getTransmission(controller: Jolt.WheeledVehicleController): Jolt.VehicleTransmission;
+    getWheel(wheel: Jolt.Wheel): WheelWV;
 }

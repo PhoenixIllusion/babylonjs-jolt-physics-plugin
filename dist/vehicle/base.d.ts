@@ -19,17 +19,18 @@ export interface IBaseVehicleController {
     getLinearVelocity(): Vector3;
     getAngularVelocity(): Vector3;
 }
-export declare abstract class BaseVehicleController<T extends Vehicle.WheelSetting, K extends Jolt.VehicleController> implements IBaseVehicleController {
+export declare abstract class BaseVehicleController<T extends Vehicle.WheelSetting, W extends Wheel, K extends Jolt.VehicleController> implements IBaseVehicleController {
     protected impostor: PhysicsImpostor;
     private _physicsStepListener;
     protected controller: K;
     transmission: Transmission;
     engine: Engine;
-    wheels: Wheel[];
+    wheels: W[];
     constructor(impostor: PhysicsImpostor, settings: Vehicle.VehicleSettings<T>, constraintSettings: Jolt.VehicleConstraintSettings, input: BaseVehicleInput<K>);
     abstract getController(controller: Jolt.VehicleController): K;
     abstract getEngine(controller: K): Jolt.VehicleEngine;
     abstract getTransmission(controller: K): Jolt.VehicleTransmission;
+    abstract getWheel(wheel: Jolt.Wheel): W;
     getLinearVelocity(): Vector3;
     getAngularVelocity(): Vector3;
 }

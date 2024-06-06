@@ -2,6 +2,7 @@ import Jolt from "../jolt-import";
 export interface VehicleInputState {
     forward: number;
     right: number;
+    brake: boolean;
     handBrake: boolean;
 }
 export interface BaseVehicleInput<T extends Jolt.VehicleController> {

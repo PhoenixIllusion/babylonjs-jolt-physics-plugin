@@ -4,6 +4,7 @@ import "../jolt-impostor";
 import { Vehicle } from "./types";
 import { BaseVehicleInput, DefaultVehicleInput } from "./input";
 import { BaseVehicleController } from "./base";
+import { WheelWV } from "./wrapped";
 export declare class DefaultMotorcycleInput extends DefaultVehicleInput implements BaseVehicleInput<Jolt.MotorcycleController> {
     steerSpeed: number;
     private previousForward;
@@ -18,9 +19,10 @@ export declare function createBasicMotorcycle(vehicle: {
     radius: number;
     width: number;
 }): Vehicle.MotorcycleVehicleSettings;
-export declare class MotorcycleController extends BaseVehicleController<Vehicle.WheelSettingWV, Jolt.MotorcycleController> {
+export declare class MotorcycleController extends BaseVehicleController<Vehicle.WheelSettingWV, WheelWV, Jolt.MotorcycleController> {
     constructor(impostor: PhysicsImpostor, settings: Vehicle.MotorcycleVehicleSettings, input: BaseVehicleInput<Jolt.MotorcycleController>);
     getController(controller: Jolt.VehicleController): Jolt.MotorcycleController;
     getEngine(controller: Jolt.MotorcycleController): Jolt.VehicleEngine;
     getTransmission(controller: Jolt.MotorcycleController): Jolt.VehicleTransmission;
+    getWheel(wheel: Jolt.Wheel): WheelWV;
 }

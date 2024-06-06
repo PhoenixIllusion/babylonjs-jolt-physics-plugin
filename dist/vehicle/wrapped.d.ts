@@ -22,6 +22,35 @@ export declare class Wheel {
     set forward(v: Vector3);
     updateFrom(transform: Jolt.Mat44): void;
 }
+export declare class WheelTV extends Wheel {
+    settingsTV: Jolt.WheelSettingsTV;
+    private _longitudinalFriction;
+    private _lateralFriction;
+    constructor(wheel: Jolt.WheelTV);
+    get longitudinalFriction(): number;
+    set longitudinalFriction(v: number);
+    get lateralFriction(): number;
+    set lateralFriction(v: number);
+}
+export declare class WheelWV extends Wheel {
+    settingsWV: Jolt.WheelSettingsWV;
+    private _maxBrakeTorque;
+    private _maxHandBrakeTorque;
+    private _maxSteerAngle;
+    private _lateralFriction;
+    private _longitudinalFriction;
+    constructor(wheel: Jolt.WheelWV);
+    get maxBrakeTorque(): number;
+    set maxBrakeTorque(v: number);
+    get maxHandBrakeTorque(): number;
+    set maxHandBrakeTorque(v: number);
+    get maxSteerAngle(): number;
+    set maxSteerAngle(v: number);
+    get lateralFriction(): [number, number][];
+    set lateralFriction(v: [number, number][]);
+    get longitudinalFriction(): [number, number][];
+    set longitudinalFriction(v: [number, number][]);
+}
 export declare class Engine {
     private engine;
     private _maxTorque;

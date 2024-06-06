@@ -9,10 +9,10 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
 import { PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
-import { loadTrack, setupTachometer, setupVehicleInput } from '../util/vehicle-utils';
+import {  setupTachometer, setupVehicleInput } from '../util/vehicle-utils';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
-import { ParticleSystem } from '@babylonjs/core';
+import { ParticleSystem } from '@babylonjs/core/Particles/particleSystem';
 
 let camera: FollowCamera;
 
@@ -109,7 +109,7 @@ export default async (scene: Scene): Promise<SceneCallback> => {
   material.diffuseTexture = tiledTexture;
 
   const centerOfMass = new Vector3(0, -.435, 0);
-  const physicSetting: PhysicsImpostorParameters = { mass: 125, restitution: 0, friction: 0, centerOffMass: centerOfMass };
+  const physicSetting: PhysicsImpostorParameters = { mass: 125, restitution: 0, friction: 0, centerOfMass: centerOfMass };
   
   const elements = await loadKartTrack();
 

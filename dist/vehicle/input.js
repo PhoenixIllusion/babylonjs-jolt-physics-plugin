@@ -3,7 +3,7 @@ import { GetJoltQuat, GetJoltVec3 } from "../jolt-util";
 export class DefaultVehicleInput {
     constructor(body) {
         this.body = body;
-        this.input = { forward: 0, right: 0, handBrake: false };
+        this.input = { forward: 0, right: 0, handBrake: false, brake: false };
         this._linearV = new Vector3();
         this._rotationQ = new Quaternion();
         this.bodyId = body.GetID();

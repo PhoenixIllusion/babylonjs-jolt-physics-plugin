@@ -3,6 +3,7 @@ import "../jolt-impostor";
 import { BaseVehicleController, configureEngine, configureTransmission, configureWheel, createVehicleConstraint } from "./base";
 import { DefaultVehicleInput } from "./input";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { WheelTV } from "./wrapped";
 function configureWheelTV(wheel, setting) {
     configureWheel(wheel, setting);
     if (setting.lateralFriction !== undefined) {
@@ -164,5 +165,8 @@ export class TrackededVehicleController extends BaseVehicleController {
     }
     getTransmission(controller) {
         return controller.GetTransmission();
+    }
+    getWheel(wheel) {
+        return new WheelTV(Jolt.castObject(wheel, Jolt.WheelTV));
     }
 }

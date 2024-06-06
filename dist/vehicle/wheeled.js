@@ -3,6 +3,7 @@ import Jolt from "../jolt-import";
 import "../jolt-impostor";
 import { BaseVehicleController, configureEngine, configureTransmission, configureWheel, createDifferential, createVehicleConstraint } from "./base";
 import { DefaultVehicleInput } from "./input";
+import { WheelWV } from "./wrapped";
 function configureWheelWV(wheel, setting) {
     configureWheel(wheel, setting);
     if (setting.maxSteerAngle !== undefined) {
@@ -76,6 +77,9 @@ export class DefaultWheeledVehicleInput extends DefaultVehicleInput {
                 this.previousForward = forward;
             }
         }
+        if (this.input.brake) {
+            brake = 1.0;
+        }
         if (this.input.handBrake) {
             forward = 0.0;
             handBrake = 1.0;
@@ -130,5 +134,8 @@ export class WheeledVehicleController extends BaseVehicleController {
     }
     getTransmission(controller) {
         return controller.GetTransmission();
+    }
+    getWheel(wheel) {
+        return new WheelWV(Jolt.castObject(wheel, Jolt.WheelWV));
     }
 }

@@ -30,6 +30,49 @@ export class Wheel {
         GetJoltQuat(transform.GetRotation().GetQuaternion(), this.worldRotation);
     }
 }
+export class WheelTV extends Wheel {
+    constructor(wheel) {
+        super(wheel);
+        const settings = this.settingsTV = wheel.GetSettings();
+        this._longitudinalFriction = settings.mLongitudinalFriction;
+        this._lateralFriction = settings.mLateralFriction;
+    }
+    get longitudinalFriction() { return this._longitudinalFriction; }
+    set longitudinalFriction(v) { this._longitudinalFriction = v; this.settingsTV.mLongitudinalFriction = v; }
+    get lateralFriction() { return this._lateralFriction; }
+    set lateralFriction(v) { this._lateralFriction = v; this.settingsTV.mLateralFriction = v; }
+}
+export class WheelWV extends Wheel {
+    constructor(wheel) {
+        super(wheel);
+        this._lateralFriction = [];
+        this._longitudinalFriction = [];
+        const settings = this.settingsWV = wheel.GetSettings();
+        this._maxBrakeTorque = settings.mMaxBrakeTorque;
+        this._maxHandBrakeTorque = settings.mMaxHandBrakeTorque;
+        this._maxSteerAngle = settings.mMaxSteerAngle;
+    }
+    get maxBrakeTorque() { return this._maxBrakeTorque; }
+    set maxBrakeTorque(v) { this._maxBrakeTorque = v; this.settingsWV.mMaxBrakeTorque = v; }
+    get maxHandBrakeTorque() { return this._maxHandBrakeTorque; }
+    set maxHandBrakeTorque(v) { this._maxHandBrakeTorque = v; this.settingsWV.mMaxBrakeTorque = v; }
+    get maxSteerAngle() { return this._maxSteerAngle; }
+    set maxSteerAngle(v) { this._maxSteerAngle = v; this.settingsWV.mMaxSteerAngle = v; }
+    get lateralFriction() { return this._lateralFriction; }
+    set lateralFriction(v) {
+        this.settingsWV.mLateralFriction.Clear();
+        v.forEach(([x, y]) => {
+            this.settingsWV.mLateralFriction.AddPoint(x, y);
+        });
+    }
+    get longitudinalFriction() { return this._longitudinalFriction; }
+    set longitudinalFriction(v) {
+        this.settingsWV.mLongitudinalFriction.Clear();
+        v.forEach(([x, y]) => {
+            this.settingsWV.mLongitudinalFriction.AddPoint(x, y);
+        });
+    }
+}
 export class Engine {
     constructor(engine) {
         this.engine = engine;

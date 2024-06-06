@@ -1,7 +1,7 @@
 import Jolt from "../jolt-import";
 import { LAYER_MOVING, SetJoltVec3 } from "../jolt-util";
 import "../jolt-impostor";
-import { Engine, Transmission, Wheel } from "./wrapped";
+import { Engine, Transmission } from "./wrapped";
 export function configureWheel(wheel, setting) {
     SetJoltVec3(setting.position, wheel.mPosition);
     wheel.mWidth = setting.width;
@@ -160,7 +160,7 @@ export class BaseVehicleController {
         this.engine = new Engine(this.getEngine(controller));
         this.transmission = new Transmission(this.getTransmission(controller));
         settings.wheels.forEach((_o, i) => {
-            this.wheels.push(new Wheel(constraint.GetWheel(i)));
+            this.wheels.push(this.getWheel(constraint.GetWheel(i)));
         });
         const wheelRight = new Jolt.Vec3(0, 1, 0);
         const wheelUp = new Jolt.Vec3(1, 0, 0);

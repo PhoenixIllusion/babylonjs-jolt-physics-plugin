@@ -4,6 +4,7 @@ import "../jolt-impostor";
 import { configureWheeledVehicleConstraint } from "./wheeled";
 import { DefaultVehicleInput } from "./input";
 import { BaseVehicleController } from "./base";
+import { WheelWV } from "./wrapped";
 function configureMotorcycleLean(motorcycle, settings) {
     if (settings.maxAngle !== undefined) {
         motorcycle.mMaxLeanAngle = settings.maxAngle;
@@ -53,6 +54,9 @@ export class DefaultMotorcycleInput extends DefaultVehicleInput {
                 // When we've come to a stop, accept the new direction
                 this.previousForward = forward;
             }
+        }
+        if (this.input.brake) {
+            brake = 1.0;
         }
         if (this.input.handBrake) {
             forward = 0.0;
@@ -132,5 +136,8 @@ export class MotorcycleController extends BaseVehicleController {
     }
     getTransmission(controller) {
         return controller.GetTransmission();
+    }
+    getWheel(wheel) {
+        return new WheelWV(Jolt.castObject(wheel, Jolt.WheelWV));
     }
 }

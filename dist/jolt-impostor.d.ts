@@ -53,7 +53,7 @@ export declare class ThinPhysicsNode implements IPhysicsEnabledObject {
 }
 type ImpostorNumberParamReq = 'mass';
 type ImpostorNumberParam = 'friction' | 'restitution' | 'radiusBottom' | 'radiusTop';
-type ImpostorVec3Param = 'extents' | 'centerOffMass';
+type ImpostorVec3Param = 'extents' | 'centerOfMass';
 type ImpostorMeshParam = 'mesh';
 type ImpostorBoolParam = 'frozen' | 'sensor';
 type ImpostorCollisionFilterParam = 'collision';
@@ -76,7 +76,7 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
         extents?: Vector3;
         radiusBottom?: number;
         radiusTop?: number;
-        centerOffMass?: Vector3;
+        centerOfMass?: Vector3;
         mesh?: IPhysicsEnabledObject;
         collision?: CollisionData;
         heightMap?: HeightMapData;
