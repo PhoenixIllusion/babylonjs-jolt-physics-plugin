@@ -21,7 +21,7 @@
     "@babylonjs/core": "6.x-7.x"
   },
   "dependencies": {
-    "jolt-physics": "0.21.0"
+    "jolt-physics": "0.24.0"
   },
   "exports": {
     ".": "./dist/index.js",
