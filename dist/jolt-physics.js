@@ -429,7 +429,7 @@ export class JoltJSPlugin {
     }*/
     setShape(impostor, type, params) {
         impostor.type = type;
-        const keys = ['extents', 'centerOffMass', 'radiusBottom', 'radiusTop', 'mesh', 'copyShape'];
+        const keys = ['extents', 'centerOfMass', 'radiusBottom', 'radiusTop', 'mesh', 'copyShape'];
         keys.forEach(key => {
             impostor.setParam(key, params[key]);
         });

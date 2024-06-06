@@ -496,7 +496,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
 
   setShape(impostor: PhysicsImpostor, type: number, params: PhysicsImpostorParameters): void {
     impostor.type = type;
-    const keys: (keyof PhysicsImpostorParameters)[] = ['extents', 'centerOffMass', 'radiusBottom', 'radiusTop', 'mesh', 'copyShape'];
+    const keys: (keyof PhysicsImpostorParameters)[] = ['extents', 'centerOfMass', 'radiusBottom', 'radiusTop', 'mesh', 'copyShape'];
     keys.forEach(key => {
       impostor.setParam(key, params[key])
     });

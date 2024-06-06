@@ -198,8 +198,8 @@ function createShapeSettings(impostor: PhysicsImpostor, tempVec3A: Jolt.Vec3, te
     throw new Error('Unsupported Shape: Impostor Type' + impostor.type);
   }
 
-  if (impostor.getParam('centerOffMass')) {
-    const CoM = impostor.getParam('centerOffMass')!;
+  if (impostor.getParam('centerOfMass')) {
+    const CoM = impostor.getParam('centerOfMass')!;
     const offset = SetJoltVec3(CoM, new Jolt.Vec3());
     const newVal = new Jolt.OffsetCenterOfMassShapeSettings(offset, returnValue);
     Jolt.destroy(offset);
