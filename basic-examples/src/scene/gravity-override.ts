@@ -52,7 +52,7 @@ export default (scene: Scene): SceneCallback => {
     }
     if(gravity) {
       boxes.forEach(box => {
-        box.setGravityOverride(gravity);
+        box.setGravityOverride(gravity!);
       })
     }
   }

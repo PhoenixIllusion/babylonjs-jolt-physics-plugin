@@ -13,7 +13,8 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { createPath3DWithCatmullRomPath } from '@phoenixillusion/babylonjs-jolt-plugin/path';
 import { HemisphericLight } from '@babylonjs/core/Lights/hemisphericLight';
 import { GravityInterface } from '@phoenixillusion/babylonjs-jolt-plugin/gravity';
-import { Color4, Engine, UniversalCamera, Viewport } from '@babylonjs/core';
+import { Viewport } from '@babylonjs/core/Maths/math.viewport';
+import { UniversalCamera } from '@babylonjs/core/Cameras/universalCamera';
 let camera: FollowCamera;
 
 export const config: SceneConfig = {
