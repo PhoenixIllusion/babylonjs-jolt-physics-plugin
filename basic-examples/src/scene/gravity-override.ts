@@ -4,18 +4,19 @@ import { Scene } from '@babylonjs/core/scene';
 
 import '@babylonjs/core/Culling/ray';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import { GravityPoint, GravityVector, GravityInterface } from '@phoenixillusion/babylonjs-jolt-plugin/gravity';
 
 export default (scene: Scene): SceneCallback => {
   createFloor({ friction: 0.8, mass: 0, restitution: 0 });
 
-  let pointGravity: Vector3 | undefined = undefined;
+  const pointGravity = new GravityPoint(new Vector3(0,15,0), 9.81);
+  const linearGravity = new GravityVector(new Vector3(-9.81, 0, 0));
 
   const boxes: PhysicsImpostor[] = [];
   for (let i = 0; i < 10; i++) {
     // Create physics body
     const position = new Vector3(-10.0 + 2.0 * i, 15, 0);
     const box = createBox(position, Quaternion.Identity(), new Vector3(0.5, 0.5, 0.5), { mass: 10, friction: 0.1 * i, restitution: 0.2 }, '#990099');
-    box.physics.setGravityOverride(new Vector3(0, -9.81, 0));
     boxes.push(box.physics)
     position.z -= 2;
     createBox(position, Quaternion.Identity(), new Vector3(0.5, 0.5, 0.5), { mass: 10, friction: 0.1 * i, restitution: 0.2 }, '#ff0000');
@@ -37,25 +38,22 @@ export default (scene: Scene): SceneCallback => {
   gravityCenter.isPickable = true;
 
   scene.onPointerDown = (_evt, _pickInfo, _type) => {
+    let gravity: GravityInterface | undefined = undefined;
     if(_pickInfo.pickedMesh == gravityLeft) {
-      boxes.forEach(box => box.setGravityOverride(new Vector3(-9.81, 0, 0)));
-      pointGravity = undefined;
+      gravity = linearGravity;
+      linearGravity.gravity.set(-9.81, 0, 0);
     }
     if(_pickInfo.pickedMesh == gravityRight) {
-      boxes.forEach(box => box.setGravityOverride(new Vector3(9.81, 0, 0)))
-      pointGravity = undefined;
+      gravity = linearGravity;
+      linearGravity.gravity.set(9.81, 0, 0);
     }
     if(_pickInfo.pickedMesh == gravityCenter) {
-      pointGravity = gravityCenter.position;
+      gravity = pointGravity;
     }
-  }
-
-  return (_time: number, _delta: number) => {
-    if(pointGravity) {
+    if(gravity) {
       boxes.forEach(box => {
-        const newGravity = pointGravity!.subtract(box.object.getAbsolutePosition()).normalize().scale(9.81*3);
-        box.setGravityOverride(newGravity);
-      });
+        box.setGravityOverride(gravity);
+      })
     }
   }
 }

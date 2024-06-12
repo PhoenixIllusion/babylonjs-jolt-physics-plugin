@@ -13,7 +13,6 @@ import { Camera } from '@babylonjs/core/Cameras/camera';
 import { MemoryAvailableElement, setupMemoryAvailable } from './util/memory-available';
 import { AdvancedDynamicTexture } from '@babylonjs/gui/2D/advancedDynamicTexture';
 
-import initJolt from 'jolt-physics/wasm';
 import joltWasmUrl from 'jolt-physics/jolt-physics.wasm.wasm?url'
 
 export interface SceneConfig {
@@ -77,9 +76,12 @@ export class App {
         const scene = this.scene = new Scene(engine);
         this.ui = AdvancedDynamicTexture.CreateFullscreenUI('gui');
 
-
-        setJoltModule(() => initJolt({locateFile: () => joltWasmUrl}))
-        scene.enablePhysics(new Vector3(0, -9.8, 0), await JoltJSPlugin.loadPlugin(false))
+        const initJolt = (await import('jolt-physics/wasm')).default;
+        setJoltModule(() => initJolt({
+            locateFile: () => joltWasmUrl,
+          }));
+        const joltPlugin = await JoltJSPlugin.loadPlugin(false);
+        scene.enablePhysics(new Vector3(0, -9.8, 0), joltPlugin)
 
         if (!(this.config && this.config.getCamera)) {
             const camera = new FlyCamera('camera1', new Vector3(0, 15, 30), scene);
@@ -103,16 +105,16 @@ export class App {
         const maybeCallback = this.createScene(scene);
         const callback = maybeCallback instanceof Promise ? await maybeCallback : maybeCallback;
 
-        let last = performance.now();
+        joltPlugin.registerPerPhysicsStepCallback(delta => {
+            if(callback) [
+                callback(performance.now(), delta)
+            ]
+        })
+        
         // run the main render loop
         engine.runRenderLoop(() => {
             const scene = this.scene;
             if (scene) {
-                if (callback) {
-                    const now = performance.now();
-                    callback(now, now - last);
-                    last = now;
-                }
                 scene.render();
             }
         });

@@ -1,7 +1,8 @@
 import Jolt from "../jolt-import";
-import { LAYER_MOVING, SetJoltVec3 } from "../jolt-util";
+import { GetJoltVec3, LAYER_MOVING, SetJoltVec3 } from "../jolt-util";
 import "../jolt-impostor";
 import { Engine, Transmission } from "./wrapped";
+import { Vector3 } from "@babylonjs/core/Maths/math.vector";
 export function configureWheel(wheel, setting) {
     SetJoltVec3(setting.position, wheel.mPosition);
     wheel.mWidth = setting.width;
@@ -150,6 +151,7 @@ export class BaseVehicleController {
     constructor(impostor, settings, constraintSettings, input) {
         this.impostor = impostor;
         this.wheels = [];
+        this.gravity = null;
         const joltPlugin = impostor.joltPluginData.plugin;
         const physicsBody = impostor.physicsBody;
         const constraint = new Jolt.VehicleConstraint(physicsBody, constraintSettings);
@@ -164,16 +166,34 @@ export class BaseVehicleController {
         });
         const wheelRight = new Jolt.Vec3(0, 1, 0);
         const wheelUp = new Jolt.Vec3(1, 0, 0);
+        const gravityJ = new Jolt.Vec3(1, 0, 0);
+        const bodyCoM = new Vector3();
         this._physicsStepListener = (delta) => {
             this.wheels.forEach((o, i) => {
                 const transform = constraint.GetWheelLocalTransform(i, wheelRight, wheelUp);
                 o.updateFrom(transform);
             });
             input.onPrePhysicsUpdate(bodyInterface, controller, delta);
+            if (this._previousGravity && !this.gravity) {
+                constraint.ResetGravityOverride();
+                this._previousGravity = undefined;
+            }
+            if (this.gravity) {
+                const gravity = this.gravity.getGravity(() => GetJoltVec3(physicsBody.GetCenterOfMassPosition(), bodyCoM));
+                if (!this._previousGravity?.equals(gravity)) {
+                    this._previousGravity = this._previousGravity || new Vector3();
+                    this._previousGravity?.copyFrom(gravity);
+                    SetJoltVec3(gravity, gravityJ);
+                    constraint.OverrideGravity(gravityJ);
+                }
+            }
         };
         joltPlugin.registerPerPhysicsStepCallback(this._physicsStepListener);
-        impostor._pluginData.toDispose.push(wheelRight, wheelUp, ...toDispose);
+        impostor._pluginData.toDispose.push(wheelRight, wheelUp, gravityJ, ...toDispose);
     }
     getLinearVelocity() { return this.impostor.getLinearVelocity(); }
     getAngularVelocity() { return this.impostor.getAngularVelocity(); }
+    setGravityOverride(gravity) {
+        this.gravity = gravity;
+    }
 }

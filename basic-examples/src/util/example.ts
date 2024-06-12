@@ -19,6 +19,7 @@ import { Texture } from '@babylonjs/core/Materials/Textures/texture';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { CreateLines } from '@babylonjs/core/Meshes/Builders/linesBuilder';
 import { Scene } from '@babylonjs/core/scene';
+import { CreateRibbon } from '@babylonjs/core/Meshes/Builders/ribbonBuilder';
 
 export const MeshBuilder = {
   CreateSphere,
@@ -27,7 +28,8 @@ export const MeshBuilder = {
   CreateCapsule,
   CreateGround,
   CreateGroundFromHeightMapVertexData,
-  CreateLines
+  CreateLines,
+  CreateRibbon
 }
 
 export type SceneCallback = (void | ((time: number, delta: number) => void))

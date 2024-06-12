@@ -12,6 +12,7 @@ import { JoltJSPlugin } from './jolt-physics';
 import Jolt from './jolt-import';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { Scene } from '@babylonjs/core/scene';
+import { GravityInterface } from './gravity/types';
 
 class TransformNodeWithImpostor extends TransformNode {
   _physicsImpostor: Nullable<PhysicsImpostor> = null;
@@ -215,7 +216,7 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
 
     getShapeVertexData(): VertexData;
     setGravityFactor(percent: number): void;
-    setGravityOverride(gravity: Vector3|null): void;
+    setGravityOverride(gravity: GravityInterface | null): void;
 
     JoltPhysicsCallback: JoltPhysicsCollideCallbacks;
     registerOnJoltPhysicsCollide(kind: 'on-contact-add' | 'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactCallback): void;
@@ -236,7 +237,7 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
 
 export interface JoltPluginData {
   toDispose: any[];
-  gravity?: Vector3;
+  gravity?: GravityInterface;
   mass: number;
   friction?: number;
   restitution?: number;
@@ -377,6 +378,6 @@ PhysicsImpostor.prototype.setGravityFactor = function (factor: number): void {
   this.joltPluginData.plugin.setGravityFactor(this, factor);
 }
 
-PhysicsImpostor.prototype.setGravityOverride = function (gravity: Vector3 | null): void {
+PhysicsImpostor.prototype.setGravityOverride = function (gravity: GravityInterface | null): void {
   this.joltPluginData.plugin.setGravityOverride(this, gravity);
 }

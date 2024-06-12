@@ -1,7 +1,6 @@
 import { DegreesToRadians, MeshBuilder, SceneCallback, createBox, createFloor, createSphere } from '../util/example';
 import { DefaultWheeledVehicleInput, WheeledVehicleController, Vehicle, createBasicCar } from '@phoenixillusion/babylonjs-jolt-plugin/vehicle';
 import { SceneConfig } from '../app';
-import { FollowCamera } from '@babylonjs/core/Cameras/followCamera';
 import { Camera } from '@babylonjs/core/Cameras/camera';
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
@@ -14,13 +13,9 @@ import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { ParticleSystem } from '@babylonjs/core/Particles/particleSystem';
 
-let camera: FollowCamera;
-
 export const config: SceneConfig = {
   getCamera: function (): Camera | undefined {
-    camera = new FollowCamera('follow-camera', new Vector3(0, 15, 30));
-    camera.radius = 15;
-    return camera;
+    return undefined;
   }
 }
 
@@ -82,15 +77,12 @@ class Pickup {
   pickedUp = false;
   
   constructor(private mesh: AbstractMesh) {
-
   }
 
   trigger() {
     this.pickedUp = true;
     this.mesh.isVisible = false;
   }
-
-
 }
 
 

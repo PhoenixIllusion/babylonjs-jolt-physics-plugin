@@ -1,8 +1,11 @@
 
 import { PhysicsImpostor } from "@babylonjs/core/Physics/v1/physicsImpostor";
-import './jolt-impostor';
-import { JoltJSPlugin } from "./jolt-physics";
+import '../jolt-impostor';
+import { JoltJSPlugin } from "../jolt-physics";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { GetJoltVec3 } from "../jolt-util";
+import Jolt from "../jolt-import";
+import { GravityInterface } from "./types";
 
 export class GravityUtility {
   private static _instance?: GravityUtility;
@@ -17,18 +20,23 @@ export class GravityUtility {
     return instance;
   }
 
-  gravityForce = new Vector3();
+  private _gravityForce = new Vector3();
+  private _bodyCoM = new Vector3();
   onPhysicsStep(_delta: number): void {
     this._impostors.forEach(impostor => {
       const gravity = impostor.joltPluginData.gravity;
-      if(gravity) {
-        gravity.scaleToRef(impostor.joltPluginData.mass, this.gravityForce);
-        impostor.applyForce(this.gravityForce);
+      const body: Jolt.Body = impostor.physicsBody;
+      if(gravity && body.IsActive() ) {
+        this._gravityForce.copyFrom(gravity.getGravity(() => {
+          return GetJoltVec3(body.GetCenterOfMassPosition(), this._bodyCoM);
+        }));
+        this._gravityForce.scaleInPlace(impostor.joltPluginData.mass);
+        impostor.applyForce(this._gravityForce);
       }
     })
   }
 
-  registerGravityOverride(impostor: PhysicsImpostor, gravity: Vector3) {
+  registerGravityOverride(impostor: PhysicsImpostor, gravity: GravityInterface) {
     impostor.joltPluginData.gravity = gravity;
     impostor.setGravityFactor(0);
     this._impostors.push(impostor);

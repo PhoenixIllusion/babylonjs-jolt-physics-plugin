@@ -10,6 +10,7 @@ import { JoltJSPlugin } from './jolt-physics';
 import Jolt from './jolt-import';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { Scene } from '@babylonjs/core/scene';
+import { GravityInterface } from './gravity/types';
 declare class TransformNodeWithImpostor extends TransformNode {
     _physicsImpostor: Nullable<PhysicsImpostor>;
     get physicsImpostor(): Nullable<PhysicsImpostor>;
@@ -97,7 +98,7 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
         applyForce(force: Vector3, contactPoint?: Vector3): void;
         getShapeVertexData(): VertexData;
         setGravityFactor(percent: number): void;
-        setGravityOverride(gravity: Vector3 | null): void;
+        setGravityOverride(gravity: GravityInterface | null): void;
         JoltPhysicsCallback: JoltPhysicsCollideCallbacks;
         registerOnJoltPhysicsCollide(kind: 'on-contact-add' | 'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactCallback): void;
         registerOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidateCallback): void;
@@ -115,7 +116,7 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
 }
 export interface JoltPluginData {
     toDispose: any[];
-    gravity?: Vector3;
+    gravity?: GravityInterface;
     mass: number;
     friction?: number;
     restitution?: number;

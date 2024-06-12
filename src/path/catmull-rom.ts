@@ -9,7 +9,7 @@ export function createPath3DWithCatmullRomPath(points: Vector3[], normals: Vecto
     const b = normal.cross(t).normalize();
     Vector3.CrossToRef(t, b, normal).normalize();
   }
-  const catmullRom: Curve3 = Curve3.CreateCatmullRomSpline(points, curveResolution, true);
+  const catmullRom: Curve3 = Curve3.CreateCatmullRomSpline(points, curveResolution, looped);
   const curvePoints = catmullRom.getPoints();
   const curveNormals: Vector3[] = [];
   normals.forEach((normal, i) => {

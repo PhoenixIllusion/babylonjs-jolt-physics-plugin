@@ -74,4 +74,8 @@ export class CameraSetup {
   getRoot() {
     return this._camRoot;
   }
+
+  getCamera() {
+    return this.camera;
+  }
 }

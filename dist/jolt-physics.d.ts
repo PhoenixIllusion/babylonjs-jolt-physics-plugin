@@ -8,6 +8,7 @@ import { Nullable } from '@babylonjs/core/types';
 import { PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResult';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 import './jolt-impostor';
+import { GravityInterface } from './gravity/types';
 export { setJoltModule } from './jolt-import';
 export declare const enum Jolt_Type {
     CHARACTER = 200,
@@ -101,6 +102,6 @@ export declare class JoltJSPlugin implements IPhysicsEnginePlugin {
     getBoxSizeToRef(impostor: PhysicsImpostor, result: Vector3): void;
     syncMeshWithImpostor(mesh: AbstractMesh, impostor: PhysicsImpostor): void;
     dispose(): void;
-    setGravityOverride(impostor: PhysicsImpostor, gravity: Vector3 | null): void;
+    setGravityOverride(impostor: PhysicsImpostor, gravity: GravityInterface | null): void;
     setGravityFactor(impostor: PhysicsImpostor, factor: number): void;
 }

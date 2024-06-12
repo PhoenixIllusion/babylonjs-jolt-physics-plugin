@@ -6,6 +6,7 @@ import { BaseVehicleInput } from "./input";
 import { PhysicsImpostor } from "@babylonjs/core/Physics/v1/physicsImpostor";
 import { Engine, Transmission, Wheel } from "./wrapped";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { GravityInterface } from "../gravity/types";
 export declare function configureWheel(wheel: Jolt.WheelSettings, setting: Vehicle.WheelSetting): void;
 export declare function createVehicleConstraint<T extends Vehicle.WheelSetting>(settings: Vehicle.VehicleSettings<T>): Jolt.VehicleConstraintSettings;
 export declare function configureEngine(engine: Jolt.VehicleEngineSettings, settings: Vehicle.EngineSettings): void;
@@ -26,6 +27,8 @@ export declare abstract class BaseVehicleController<T extends Vehicle.WheelSetti
     transmission: Transmission;
     engine: Engine;
     wheels: W[];
+    private gravity;
+    private _previousGravity?;
     constructor(impostor: PhysicsImpostor, settings: Vehicle.VehicleSettings<T>, constraintSettings: Jolt.VehicleConstraintSettings, input: BaseVehicleInput<K>);
     abstract getController(controller: Jolt.VehicleController): K;
     abstract getEngine(controller: K): Jolt.VehicleEngine;
@@ -33,4 +36,5 @@ export declare abstract class BaseVehicleController<T extends Vehicle.WheelSetti
     abstract getWheel(wheel: Jolt.Wheel): W;
     getLinearVelocity(): Vector3;
     getAngularVelocity(): Vector3;
+    setGravityOverride(gravity: GravityInterface | null): void;
 }

@@ -6,6 +6,7 @@ import { IPhysicsEnabledObject, PhysicsImpostor, PhysicsImpostorParameters } fro
 import { Scene } from '@babylonjs/core/scene';
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Logger } from '@babylonjs/core/Misc/logger';
+import { GravityInterface } from './gravity/types';
 
 
 class CharacterVirtualConfig {
@@ -57,7 +58,10 @@ interface UpdateFiltersData {
 }
 
 export interface CharacterVirtualInputHandler {
-  processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number, tmpVec3: Jolt.Vec3, tmpQuat: Jolt.Quat): void;
+  up: Vector3;
+  rotation: Quaternion;
+  gravity?: GravityInterface;
+  processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, gravity: Vector3, inDeltaTime: number, tmpVec3: Jolt.Vec3, tmpQuat: Jolt.Quat): void;
   updateCharacter(character: Jolt.CharacterVirtual, tmp: Jolt.Vec3): void;
 }
 
@@ -95,13 +99,15 @@ export class StandardCharacterVirtualHandler implements CharacterVirtualInputHan
 
   private _new_velocity: Vector3 = new Vector3();
 
+  public autoUp = true;
   public up: Vector3 = new Vector3(0,1,0);
   public rotation: Quaternion = Quaternion.Identity();
+  public gravity?: GravityInterface;
 
   private _linVelocity: Vector3 = new Vector3();
   private _groundVelocity: Vector3 = new Vector3();
-  private _gravity: Vector3 = new Vector3();
-  processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number, _tmpVec3: Jolt.Vec3, _tmpQuat: Jolt.Quat) {
+
+  processCharacterData(character: Jolt.CharacterVirtual, _physicsSys: Jolt.PhysicsSystem, gravity: Vector3, inDeltaTime: number, _tmpVec3: Jolt.Vec3, _tmpQuat: Jolt.Quat) {
 
     const player_controls_horizontal_velocity = this.controlMovementDuringJump || character.IsSupported();
     if (player_controls_horizontal_velocity) {
@@ -120,9 +126,16 @@ export class StandardCharacterVirtualHandler implements CharacterVirtualInputHan
       // While in air we allow sliding
       this.allowSliding = true;
     }
-    const characterUp = this.up;
-    const upRotation = this.rotation;
 
+    const upRotation = this.rotation.clone();
+    if(this.autoUp) {
+      gravity.negateToRef(this.up);
+      this.up.normalize();
+      const rot = Quaternion.FromUnitVectorsToRef(new Vector3(0,1,0), this.up, new Quaternion());
+      upRotation.multiplyInPlace(rot);
+    }
+
+    const characterUp = this.up;
     const character_up = SetJoltVec3(characterUp, _tmpVec3);
     const character_up_rotation = SetJoltQuat(upRotation, _tmpQuat);
 
@@ -134,9 +147,9 @@ export class StandardCharacterVirtualHandler implements CharacterVirtualInputHan
     const vVel = Vector3.Dot(linearVelocity, characterUp);
     const current_vertical_velocity = characterUp.multiplyByFloats(vVel, vVel, vVel);
     const ground_velocity = GetJoltVec3(character.GetGroundVelocity(), this._groundVelocity);
-    const gravity = GetJoltVec3(physicsSys.GetGravity(), this._gravity);
+    const gVel = Vector3.Dot(this._groundVelocity, characterUp);
 
-    const moving_towards_ground = (current_vertical_velocity.y - ground_velocity.y) < 0.1;
+    const moving_towards_ground = (vVel - gVel) < 0.1;
     const groundState = character.GetGroundState();
     if (groundState == Jolt.EGroundState_OnGround) {
       this.groundState = GroundState.ON_GROUND;
@@ -171,7 +184,7 @@ export class StandardCharacterVirtualHandler implements CharacterVirtualInputHan
 
 
     // Gravity
-    this._new_velocity.addInPlace(gravity.multiplyByFloats(inDeltaTime, inDeltaTime, inDeltaTime).applyRotationQuaternion(upRotation));
+    this._new_velocity.addInPlace(gravity.multiplyByFloats(inDeltaTime, inDeltaTime, inDeltaTime));
 
     if (player_controls_horizontal_velocity) {
       // Player input
@@ -254,57 +267,63 @@ export class JoltCharacterVirtual {
   private _temp1: Vector3 = new Vector3();
   private _temp2: Vector3 = new Vector3();
 
+  private _gravity: Vector3 = new Vector3();
+
   prePhysicsUpdate(mDeltaTime: number) {
-    GetJoltVec3(this.mCharacter.GetUp(), this._characterUp);
-    if (!this.config.enableStickToFloor) {
-      this.mUpdateSettings.mStickToFloorStepDown.Set(0, 0, 0)
-    }
-    else {
-      const len = -this.mUpdateSettings.mStickToFloorStepDown.Length();
-      const vec = this._temp1;
-      this._temp2.set(len, len, len);
-      this._characterUp.multiplyToRef(this._temp2, vec);
-      SetJoltVec3(vec, this.mUpdateSettings.mStickToFloorStepDown);
-    }
-
-    if (!this.config.enableWalkStairs) {
-      this.mUpdateSettings.mWalkStairsStepUp.Set(0, 0, 0);
-    }
-    else {
-      const len = -this.mUpdateSettings.mWalkStairsStepUp.Length();
-      const vec = this._temp1;
-      this._temp2.set(len, len, len);
-      this._characterUp.multiplyToRef(this._temp2, vec);
-      SetJoltVec3(vec, this.mUpdateSettings.mWalkStairsStepUp);
-    }
-    const gravLen = -this.world.physicsSystem.GetGravity().Length();
-    this._temp2.set(gravLen, gravLen, gravLen);
-    const g = this._characterUp.multiplyInPlace(this._temp2);
-
     if (this.inputHandler) {
-      this.inputHandler.processCharacterData(this.mCharacter, this.world.physicsSystem, mDeltaTime, this._jolt_temp1, this._jolt_tempQuat1);
+      this._characterUp.copyFrom(this.inputHandler.up);
+      if (!this.config.enableStickToFloor) {
+        this.mUpdateSettings.mStickToFloorStepDown.Set(0, 0, 0)
+      }
+      else {
+        const len = -this.mUpdateSettings.mStickToFloorStepDown.Length();
+        const vec = this._temp1;
+        this._temp2.set(len, len, len);
+        this._characterUp.multiplyToRef(this._temp2, vec);
+        SetJoltVec3(vec, this.mUpdateSettings.mStickToFloorStepDown);
+      }
+
+      if (!this.config.enableWalkStairs) {
+        this.mUpdateSettings.mWalkStairsStepUp.Set(0, 0, 0);
+      }
+      else {
+        const len = -this.mUpdateSettings.mWalkStairsStepUp.Length();
+        const vec = this._temp1;
+        this._temp2.set(len, len, len);
+        this._characterUp.multiplyToRef(this._temp2, vec);
+        SetJoltVec3(vec, this.mUpdateSettings.mWalkStairsStepUp);
+      }
+
+      const gravity = this.inputHandler.gravity;
+      if(!gravity) {
+        GetJoltVec3(this.world.physicsSystem.GetGravity(), this._gravity);
+      } else {
+        this._gravity.copyFrom(gravity.getGravity(() => GetJoltVec3(this.mCharacter.GetPosition(), this._temp1)));
+      }
+
+      this.inputHandler.processCharacterData(this.mCharacter, this.world.physicsSystem, this._gravity, mDeltaTime, this._jolt_temp1, this._jolt_tempQuat1);
       this.inputHandler.updateCharacter(this.mCharacter, this._jolt_temp1);
+
+      this.mCharacter.SetMaxSlopeAngle(this.config.maxSlopeAngle);
+      this.mCharacter.SetMaxStrength(this.config.maxStrength);
+      this.mCharacter.SetMass(this.config.mass);
+      this.mCharacter.SetPenetrationRecoverySpeed(this.config.penetrationRecoverySpeed);
+
+      const inGravity = SetJoltVec3(this._gravity, this._jolt_temp1);
+      const {
+        movingBPFilter,
+        movingLayerFilter,
+        bodyFilter,
+        shapeFilter } = this.updateFilterData;
+      this.mCharacter.ExtendedUpdate(mDeltaTime,
+        inGravity,
+        this.mUpdateSettings,
+        movingBPFilter,
+        movingLayerFilter,
+        bodyFilter,
+        shapeFilter,
+        this.world.jolt.GetTempAllocator());
     }
-
-    this.mCharacter.SetMaxSlopeAngle(this.config.maxSlopeAngle);
-    this.mCharacter.SetMaxStrength(this.config.maxStrength);
-    this.mCharacter.SetMass(this.config.mass);
-    this.mCharacter.SetPenetrationRecoverySpeed(this.config.penetrationRecoverySpeed);
-
-    const inGravity = SetJoltVec3(g, this._jolt_temp1);
-    const {
-      movingBPFilter,
-      movingLayerFilter,
-      bodyFilter,
-      shapeFilter } = this.updateFilterData;
-    this.mCharacter.ExtendedUpdate(mDeltaTime,
-      inGravity,
-      this.mUpdateSettings,
-      movingBPFilter,
-      movingLayerFilter,
-      bodyFilter,
-      shapeFilter,
-      this.world.jolt.GetTempAllocator());
   }
 
   getCharacter(): Jolt.CharacterVirtual {

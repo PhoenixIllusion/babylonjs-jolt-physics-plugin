@@ -1,5 +1,5 @@
 import Jolt from "../jolt-import";
-import { LAYER_MOVING, SetJoltVec3 } from "../jolt-util";
+import { GetJoltVec3, LAYER_MOVING, SetJoltVec3 } from "../jolt-util";
 import type { JoltJSPlugin } from "../jolt-physics";
 import "../jolt-impostor";
 import { Vehicle } from "./types";
@@ -7,6 +7,7 @@ import { BaseVehicleInput } from "./input";
 import { PhysicsImpostor } from "@babylonjs/core/Physics/v1/physicsImpostor";
 import { Engine, Transmission, Wheel } from "./wrapped";
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { GravityInterface } from "../gravity/types";
 
 
 export function configureWheel(wheel: Jolt.WheelSettings, setting: Vehicle.WheelSetting): void {
@@ -176,6 +177,9 @@ export abstract class BaseVehicleController<T extends Vehicle.WheelSetting, W ex
   public engine: Engine;
   public wheels: W[] = [];
 
+  private gravity: GravityInterface | null = null;
+  private _previousGravity?: Vector3;
+
   constructor(protected impostor: PhysicsImpostor, settings: Vehicle.VehicleSettings<T>, constraintSettings: Jolt.VehicleConstraintSettings, input: BaseVehicleInput<K>) {
     const joltPlugin: JoltJSPlugin = impostor.joltPluginData.plugin;
     const physicsBody: Jolt.Body = impostor.physicsBody;
@@ -192,17 +196,32 @@ export abstract class BaseVehicleController<T extends Vehicle.WheelSetting, W ex
       this.wheels.push(this.getWheel(constraint.GetWheel(i)))
     })
 
-    const wheelRight = new Jolt.Vec3(0, 1, 0)
-    const wheelUp = new Jolt.Vec3(1, 0, 0)
+    const wheelRight = new Jolt.Vec3(0, 1, 0);
+    const wheelUp = new Jolt.Vec3(1, 0, 0);
+    const gravityJ = new Jolt.Vec3(1, 0, 0);
+    const bodyCoM = new Vector3();
     this._physicsStepListener = (delta: number) => {
       this.wheels.forEach((o, i) => {
         const transform = constraint.GetWheelLocalTransform(i, wheelRight, wheelUp);
         o.updateFrom(transform);
       })
       input.onPrePhysicsUpdate(bodyInterface, controller, delta);
+      if(this._previousGravity && !this.gravity) {
+        constraint.ResetGravityOverride();
+        this._previousGravity = undefined;
+      }
+      if(this.gravity) {
+        const gravity = this.gravity.getGravity(() => GetJoltVec3(physicsBody.GetCenterOfMassPosition(), bodyCoM));
+        if(!this._previousGravity?.equals(gravity)) {
+          this._previousGravity = this._previousGravity || new Vector3();
+          this._previousGravity?.copyFrom(gravity);
+          SetJoltVec3(gravity, gravityJ);
+          constraint.OverrideGravity(gravityJ)
+        }
+      }
     };
     joltPlugin.registerPerPhysicsStepCallback(this._physicsStepListener);
-    impostor._pluginData.toDispose.push(wheelRight, wheelUp, ...toDispose);
+    impostor._pluginData.toDispose.push(wheelRight, wheelUp, gravityJ, ...toDispose);
   }
   abstract getController(controller: Jolt.VehicleController): K;
   abstract getEngine(controller: K): Jolt.VehicleEngine;
@@ -212,4 +231,7 @@ export abstract class BaseVehicleController<T extends Vehicle.WheelSetting, W ex
   getLinearVelocity() { return this.impostor.getLinearVelocity()! }
   getAngularVelocity() { return this.impostor.getAngularVelocity()! }
   
+  setGravityOverride(gravity: GravityInterface | null): void {
+    this.gravity = gravity;
+  }
 }

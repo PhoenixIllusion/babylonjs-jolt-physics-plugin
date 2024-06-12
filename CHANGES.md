@@ -1,6 +1,24 @@
 
 ### API Changes
 
+
+#### Version 1.3.0
+* Wheeled Vehicle - Modify traction using friction curves
+
+##### Major
+* Gravity System and GravityInterface
+  * setGravityOverride available on physicsImpostors, characters, and vehicle controllers
+
+##### New Demos
+* Vehicle Kart - high speed track with collectables
+* Gravity Override
+* Gravity Factor
+* Character Virtual - Sphere and Ribbon gravity
+* Vehicle Kart - Sphere and Ribbon gravity
+
+##### Breaking in 1.3.0
+* Center of Mass - fixed spelling
+
 #### Version 1.2.0
 * Heightfield - enable support of alphaFilter
 * Motors - changing target value will auto-activate the constraint

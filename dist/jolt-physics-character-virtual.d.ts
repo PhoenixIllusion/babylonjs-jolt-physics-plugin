@@ -3,6 +3,7 @@ import { JoltJSPlugin, JoltPluginData } from '.';
 import { IPhysicsEnabledObject, PhysicsImpostor, PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { Scene } from '@babylonjs/core/scene';
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { GravityInterface } from './gravity/types';
 declare class CharacterVirtualConfig {
     maxSlopeAngle: number;
     mass: number;
@@ -33,7 +34,10 @@ interface UpdateFiltersData {
     shapeFilter: Jolt.ShapeFilter;
 }
 export interface CharacterVirtualInputHandler {
-    processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number, tmpVec3: Jolt.Vec3, tmpQuat: Jolt.Quat): void;
+    up: Vector3;
+    rotation: Quaternion;
+    gravity?: GravityInterface;
+    processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, gravity: Vector3, inDeltaTime: number, tmpVec3: Jolt.Vec3, tmpQuat: Jolt.Quat): void;
     updateCharacter(character: Jolt.CharacterVirtual, tmp: Jolt.Vec3): void;
 }
 export declare const enum GroundState {
@@ -59,12 +63,13 @@ export declare class StandardCharacterVirtualHandler implements CharacterVirtual
     userState: CharacterState;
     updateInput(inMovementDirection: Vector3, inJump: boolean): void;
     private _new_velocity;
+    autoUp: boolean;
     up: Vector3;
     rotation: Quaternion;
+    gravity?: GravityInterface;
     private _linVelocity;
     private _groundVelocity;
-    private _gravity;
-    processCharacterData(character: Jolt.CharacterVirtual, physicsSys: Jolt.PhysicsSystem, inDeltaTime: number, _tmpVec3: Jolt.Vec3, _tmpQuat: Jolt.Quat): void;
+    processCharacterData(character: Jolt.CharacterVirtual, _physicsSys: Jolt.PhysicsSystem, gravity: Vector3, inDeltaTime: number, _tmpVec3: Jolt.Vec3, _tmpQuat: Jolt.Quat): void;
     updateCharacter(character: Jolt.CharacterVirtual, tempVec: Jolt.Vec3): void;
 }
 export declare class JoltCharacterVirtual {
@@ -86,6 +91,7 @@ export declare class JoltCharacterVirtual {
     private _characterUp;
     private _temp1;
     private _temp2;
+    private _gravity;
     prePhysicsUpdate(mDeltaTime: number): void;
     getCharacter(): Jolt.CharacterVirtual;
     setPosition(position: Vector3): void;

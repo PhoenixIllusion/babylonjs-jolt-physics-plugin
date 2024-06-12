@@ -33,7 +33,7 @@ export default async (scene: Scene): Promise<SceneCallback> => {
   const material = new StandardMaterial('tile');
   material.diffuseTexture = tiledTexture;
 
-  const physicSetting: PhysicsImpostorParameters = { mass: 1500, restitution: 0, friction: 0, centerOffMass: new Vector3(0, -.4, 0) };
+  const physicSetting: PhysicsImpostorParameters = { mass: 1500, restitution: 0, friction: 0, centerOfMass: new Vector3(0, -.4, 0) };
   const car = createBox(new Vector3(0, 2, 0), Quaternion.FromEulerAngles(0, Math.PI, 0), new Vector3(0.9, .2, 2), physicSetting, '#FF0000');
   car.box.material!.wireframe = true;
 

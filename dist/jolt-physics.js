@@ -10,7 +10,7 @@ import '@babylonjs/core/Physics/physicsEngineComponent';
 import * as JoltConstraintManager from './constraints';
 import './jolt-impostor';
 import { createJoltShape } from './jolt-shapes';
-import { GravityUtility } from './jolt-gravity';
+import { GravityUtility } from './gravity/utility';
 export { setJoltModule } from './jolt-import';
 export var Jolt_Type;
 (function (Jolt_Type) {
@@ -209,6 +209,7 @@ export class JoltJSPlugin {
                 shape.Release();
                 imp.physicsBody = char.getCharacter();
                 imp._pluginData.controller = char;
+                imp._pluginData.plugin = this;
                 this._impostorLookup[-performance.now()] = impostor;
                 return;
             }
@@ -566,6 +567,15 @@ export class JoltJSPlugin {
         this.world = null;
     }
     setGravityOverride(impostor, gravity) {
+        if (impostor instanceof JoltCharacterVirtualImpostor) {
+            const charImp = impostor;
+            const char = charImp._pluginData.controller;
+            const inputHandler = char.inputHandler;
+            if (inputHandler) {
+                inputHandler.gravity = gravity ? gravity : undefined;
+            }
+            return;
+        }
         const gravityUtility = GravityUtility.getInstance(this);
         if (gravity) {
             if (impostor.joltPluginData.gravity) {

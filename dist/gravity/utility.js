@@ -1,6 +1,6 @@
-import './jolt-impostor';
+import '../jolt-impostor';
 import { Vector3 } from "@babylonjs/core/Maths/math.vector";
-import { GetJoltVec3 } from "./jolt-util";
+import { GetJoltVec3 } from "../jolt-util";
 export class GravityUtility {
     constructor() {
         this._impostors = [];
@@ -18,23 +18,18 @@ export class GravityUtility {
     onPhysicsStep(_delta) {
         this._impostors.forEach(impostor => {
             const gravity = impostor.joltPluginData.gravity;
-            const gravityPoint = impostor.joltPluginData.gravityPoint;
             const body = impostor.physicsBody;
             if (gravity && body.IsActive()) {
-                this._gravityForce.copyFrom(gravity);
-                if (gravityPoint) {
-                    const pos = GetJoltVec3(body.GetCenterOfMassPosition(), this._bodyCoM);
-                    const magnitude = gravity.length();
-                    gravityPoint.subtractToRef(pos, this._gravityForce).normalize().scaleInPlace(magnitude);
-                }
+                this._gravityForce.copyFrom(gravity.getGravity(() => {
+                    return GetJoltVec3(body.GetCenterOfMassPosition(), this._bodyCoM);
+                }));
                 this._gravityForce.scaleInPlace(impostor.joltPluginData.mass);
                 impostor.applyForce(this._gravityForce);
             }
         });
     }
-    registerGravityOverride(impostor, gravity, point) {
+    registerGravityOverride(impostor, gravity) {
         impostor.joltPluginData.gravity = gravity;
-        impostor.joltPluginData.gravityPoint = point;
         impostor.setGravityFactor(0);
         this._impostors.push(impostor);
     }

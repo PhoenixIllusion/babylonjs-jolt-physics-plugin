@@ -9,7 +9,7 @@ import { KeyboardEventTypes } from "@babylonjs/core/Events/keyboardEvents";
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
 import { Button } from "@babylonjs/gui/2D/controls/button";
 import { App } from "../app";
-import { TerrainMaterial } from "@babylonjs/materials";
+import { TerrainMaterial } from "@babylonjs/materials/terrain/terrainMaterial";
 import { loadImage, getImagePixels, createTexture, createHeightField } from "./example";
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 

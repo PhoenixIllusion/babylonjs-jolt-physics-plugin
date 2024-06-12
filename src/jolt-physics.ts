@@ -16,7 +16,8 @@ import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 import * as JoltConstraintManager from './constraints';
 import './jolt-impostor';
 import { createJoltShape } from './jolt-shapes';
-import { GravityUtility } from './jolt-gravity';
+import { GravityUtility } from './gravity/utility';
+import { GravityInterface } from './gravity/types';
 export { setJoltModule } from './jolt-import'
 
 interface PossibleMotors {
@@ -259,6 +260,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         shape.Release();
         imp.physicsBody = char.getCharacter();
         imp._pluginData.controller = char;
+        imp._pluginData.plugin = this;
         this._impostorLookup[-performance.now()] = impostor;
         return;
       }
@@ -642,7 +644,18 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     (this.world as any) = null;
   }
 
-  setGravityOverride(impostor: PhysicsImpostor, gravity: Vector3 | null) {
+  setGravityOverride(impostor: PhysicsImpostor, gravity: GravityInterface | null) {
+
+    if (impostor instanceof JoltCharacterVirtualImpostor) {
+      const charImp = impostor as JoltCharacterVirtualImpostor;
+      const char = charImp._pluginData.controller;
+      const inputHandler = char.inputHandler;
+      if(inputHandler) {
+        inputHandler.gravity = gravity ? gravity : undefined;
+      }
+      return;
+    }
+
     const gravityUtility = GravityUtility.getInstance(this);
     if(gravity) {
       if(impostor.joltPluginData.gravity) {
