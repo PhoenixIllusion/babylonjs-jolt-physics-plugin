@@ -80,7 +80,7 @@ export class App {
         setJoltModule(() => initJolt({
             locateFile: () => joltWasmUrl,
           }));
-        const joltPlugin = await JoltJSPlugin.loadPlugin(false);
+        const joltPlugin = await JoltJSPlugin.loadPlugin(true);
         scene.enablePhysics(new Vector3(0, -9.8, 0), joltPlugin)
 
         if (!(this.config && this.config.getCamera)) {

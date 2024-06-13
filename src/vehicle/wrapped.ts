@@ -168,7 +168,7 @@ export class Transmission {
     }
   }
 
-  changeGear(gear: number, friction: number = 0) {
+  changeGear(gear: number, friction: number = 1) {
     this.transmission.Set(gear, friction);
   }
   get gear() { return this.transmission.GetCurrentGear(); }

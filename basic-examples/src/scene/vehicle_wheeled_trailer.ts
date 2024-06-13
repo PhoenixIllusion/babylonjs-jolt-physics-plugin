@@ -1,5 +1,5 @@
 import { MeshBuilder, SceneCallback, createBox } from '../util/example';
-import { DefaultTrackedInput, TrackededVehicleController, Vehicle, createBasicTracked } from '@phoenixillusion/babylonjs-jolt-plugin/vehicle';
+import { DefaultWheeledVehicleInput, WheeledVehicleController, Vehicle, createBasicCar } from '@phoenixillusion/babylonjs-jolt-plugin/vehicle';
 import { SceneConfig } from '../app';
 import { Camera } from '@babylonjs/core/Cameras/camera';
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
@@ -9,6 +9,8 @@ import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
 import { PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { loadTrack, setupTachometer, setupVehicleInput } from '../util/vehicle-utils';
+import { JoltDistanceJoint } from '@phoenixillusion/babylonjs-jolt-plugin';
+import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 
 export const config: SceneConfig = {
   getCamera: function (): Camera | undefined {
@@ -21,38 +23,49 @@ export default async (scene: Scene): Promise<SceneCallback> => {
   tiledTexture.onLoadObservable.add(() => {
     tiledTexture.wrapU = 1;
     tiledTexture.wrapV = 1;
-    tiledTexture.vScale = 1;
-    tiledTexture.uScale = 1;
+    tiledTexture.vScale = 3;
+    tiledTexture.uScale = 3;
     tiledTexture.updateSamplingMode(Texture.NEAREST_NEAREST);
   })
   const material = new StandardMaterial('tile');
   material.diffuseTexture = tiledTexture;
 
-  const physicSetting: PhysicsImpostorParameters = { mass: 6200, restitution: 0, friction: 0 };
+  const physicSetting: PhysicsImpostorParameters = { mass: 1500, restitution: 0, friction: 0, centerOfMass: new Vector3(0, -.4, 0), disableBidirectionalTransformation: false };
   const car = createBox(new Vector3(0, 2, 0), Quaternion.FromEulerAngles(0, Math.PI, 0), new Vector3(0.9, .2, 2), physicSetting, '#FF0000');
   car.box.material!.wireframe = true;
-  const topTank = MeshBuilder.CreateCylinder('top-tank', { diameter: 1, height: 0.35, tessellation: 12})
-  topTank.position.set(0, 0.35, -0.75);
-  const topBarrel = MeshBuilder.CreateCylinder('top-barrel', { height: 1.5, diameter: 0.2, tessellation: 6});
-  topBarrel.rotation.set(Math.PI/2, 0, 0);
-  topBarrel.position.set(0, 0.45, 0.45);
-  topBarrel.parent = topTank.parent = car.box;
-  topBarrel.material = topTank.material = car.box.material;
 
-  const wheeledConfig: Vehicle.TrackVehicleSettings = createBasicTracked({ height: .8, length: 4, width: 1.8 }, { radius: 0.20, width: 0.1 });
-  const vehicleInput = new DefaultTrackedInput(car.physics.physicsBody);
-  const controller = new TrackededVehicleController(car.physics, wheeledConfig, vehicleInput);
+  const trailer = createBox(new Vector3(0, 2, 10), Quaternion.FromEulerAngles(0, Math.PI, 0), new Vector3(0.9, .6, 3), { ... physicSetting, centerOfMass: new Vector3(0, -0.8, 0) }, '#00FF00');
+  trailer.box.material!.wireframe = true;
+
+  function attachWheels( parent: AbstractMesh, controller: WheeledVehicleController) {
+    controller.wheels.forEach((o, i) => {
+      const mesh = MeshBuilder.CreateCylinder('cylinder', { diameter: o.radius * 2, height: o.width, tessellation: 16 });
+      mesh.position = controller.wheels[i].worldPosition;
+      mesh.rotationQuaternion = controller.wheels[i].worldRotation;
+      mesh.material = material;
+      mesh.parent = parent;
+    })
+  }
+
+  const wheeledConfig: Vehicle.WheeledVehicleSettings = createBasicCar({ height: .4, length: 4, width: 1.8 }, { radius: 0.5, width: 0.4 }, true);
+  const vehicleInput = new DefaultWheeledVehicleInput(car.physics.physicsBody);
+  const controller = new WheeledVehicleController(car.physics, wheeledConfig, vehicleInput);
+
+  const trailerConfig: Vehicle.WheeledVehicleSettings = createBasicCar({ height: .8, length: 6, width: 1.8 }, { radius: 0.5, width: 0.4 }, false);
+  const trailerInput = new DefaultWheeledVehicleInput(trailer.physics.physicsBody);
+  const trailerController = new WheeledVehicleController(trailer.physics, trailerConfig, trailerInput);
+
+  attachWheels(car.box, controller);
+
+  trailerController.transmission.mode = 'manual';
+  attachWheels(trailer.box, trailerController);
+
+  const hitch = new JoltDistanceJoint(new Vector3(0, 2, 4.5), 'World');
+  hitch.setMinMax(0.15, 0.17);
+  car.physics.addJoint(trailer.physics, hitch);
 
   await loadTrack(scene);
-  const carWheels: Mesh[] = []
-  wheeledConfig.wheels.forEach((o, i) => {
-    const mesh = MeshBuilder.CreateCylinder('cylinder', { diameter: o.radius * 2, height: o.width, tessellation: 16 });
-    mesh.position = controller.wheels[i].worldPosition;
-    mesh.rotationQuaternion = controller.wheels[i].worldRotation;
-    mesh.material = material;
-    mesh.parent = car.box;
-    carWheels.push(mesh);
-  })
+
   const followPoint = new Mesh('camera-follow', scene);
 
   const { camera, input } = setupVehicleInput(scene);
@@ -62,6 +75,7 @@ export default async (scene: Scene): Promise<SceneCallback> => {
   const stdTorque = controller.engine.maxTorque;
 
   const rotateVector = new Vector3();
+  const guideQuat = new Quaternion();
   return (_time: number, _delta: number) => {
     vehicleInput.input.forward = input.direction.z;
     vehicleInput.input.right = input.direction.x;
@@ -71,6 +85,8 @@ export default async (scene: Scene): Promise<SceneCallback> => {
     if (controller.engine.maxTorque != newTorque) {
       controller.engine.maxTorque = newTorque;
     }
+    const trailerGuide = Quaternion.FromUnitVectorsToRef(trailer.box.forward, car.box.forward, guideQuat).toEulerAngles();
+    trailerInput.input.right = -trailerGuide.y * 1.5;
 
     followPoint.position.copyFrom(car.box.position);
     car.box.rotationQuaternion?.toEulerAnglesToRef(rotateVector)

@@ -53,7 +53,7 @@ export default async (scene: Scene): Promise<SceneCallback> => {
   setupTachometer(controller, scene);
   camera.getRoot().parent = followPoint;
 
-  let stdInertia = controller.engine.inertia;
+  const stdTorque = controller.engine.maxTorque;
 
   const rotateVector = new Vector3();
   return (_time: number, _delta: number) => {
@@ -61,9 +61,9 @@ export default async (scene: Scene): Promise<SceneCallback> => {
     vehicleInput.input.right = input.direction.x;
     vehicleInput.input.handBrake = input.handbrake;
 
-    const newInertia = input.boost ? 0.25 * stdInertia : stdInertia;
-    if (controller.engine.inertia != newInertia) {
-      controller.engine.inertia = newInertia;
+    const newTorque = input.boost ? 2 * stdTorque : stdTorque;
+    if (controller.engine.maxTorque != newTorque) {
+      controller.engine.maxTorque = newTorque;
     }
 
     followPoint.position.copyFrom(car.box.position);

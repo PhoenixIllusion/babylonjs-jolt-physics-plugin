@@ -51,7 +51,6 @@ export default (scene: Scene): SceneCallback => {
   const car = createBox(new Vector3(0,10,0), Quaternion.RotationAxis(new Vector3(0,1,0), Math.PI/2), new Vector3(0.45, .1, 1), physicSetting, '#FF0000');
   car.box.material!.wireframe = true;
   
-
   const wheeledConfig: Vehicle.WheeledVehicleSettings = createBasicCar({ height: .2, length: 2, width: .9 }, { radius: .2, width: .2 }, true);
 
   const lonScale = 2;
@@ -85,13 +84,11 @@ export default (scene: Scene): SceneCallback => {
   setupTachometer(controller, scene);
   camera.getRoot().parent = followPoint;
 
-  const rotateVector = new Vector3();
   return (_time: number, _delta: number) => {
     vehicleInput.input.forward = input.direction.z;
     vehicleInput.input.right = input.direction.x;
     vehicleInput.input.handBrake = input.handbrake;
 
     followPoint.position.copyFrom(car.box.position);
-    car.box.rotationQuaternion?.toEulerAnglesToRef(rotateVector)
   }
 }

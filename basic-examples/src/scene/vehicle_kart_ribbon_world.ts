@@ -73,8 +73,6 @@ export default (scene: Scene): SceneCallback => {
   ribbon.physicsImpostor = new PhysicsImpostor(ribbon, PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 });
 
   ribbon.material = material;
-  material.sideOrientation = 2
-  //ribbon.material!.wireframe = true;
   new HemisphericLight('hemi', new Vector3(0,0,-1));
 
   const centerOfMass = new Vector3(0, -.435, 0);
@@ -126,13 +124,11 @@ export default (scene: Scene): SceneCallback => {
   pictureInPicture.fov = 0.3;
   pictureInPicture.lockedTarget = followPoint;
 
-  const rotateVector = new Vector3();
   return (_time: number, _delta: number) => {
     vehicleInput.input.forward = input.direction.z;
     vehicleInput.input.right = input.direction.x;
     vehicleInput.input.handBrake = input.handbrake;
 
     followPoint.position.copyFrom(car.box.position);
-    car.box.rotationQuaternion?.toEulerAnglesToRef(rotateVector)
   }
 }

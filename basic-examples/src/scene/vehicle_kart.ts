@@ -183,14 +183,14 @@ export default async (scene: Scene): Promise<SceneCallback> => {
     vehicleInput.input.right = input.direction.x;
     vehicleInput.input.handBrake = input.handbrake;
 
-    const newInertia = input.boost ? 2.5 * stdTorque : stdTorque;
+    const newTorque = input.boost ? 2.5 * stdTorque : stdTorque;
     if(speedBoostActive) {
       boostParticles.start()
     } else {
       boostParticles.stop();
     }
-    if (controller.engine.maxTorque != newInertia || speedBoostActive) {
-      controller.engine.maxTorque = newInertia;
+    if (controller.engine.maxTorque != newTorque || speedBoostActive) {
+      controller.engine.maxTorque = newTorque;
     }
     speedBoostActive = false;
 

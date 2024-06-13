@@ -1,7 +1,6 @@
 import { MeshBuilder, SceneCallback, createBox } from '../util/example';
 import { DefaultWheeledVehicleInput, WheeledVehicleController, Vehicle, createBasicCar } from '@phoenixillusion/babylonjs-jolt-plugin/vehicle';
 import { SceneConfig } from '../app';
-import { FollowCamera } from '@babylonjs/core/Cameras/followCamera';
 import { Camera } from '@babylonjs/core/Cameras/camera';
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Texture } from '@babylonjs/core/Materials/Textures/texture';
@@ -11,13 +10,9 @@ import { Scene } from '@babylonjs/core/scene';
 import { PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import { loadTrack, setupTachometer, setupVehicleInput } from '../util/vehicle-utils';
 
-let camera: FollowCamera;
-
 export const config: SceneConfig = {
   getCamera: function (): Camera | undefined {
-    camera = new FollowCamera('follow-camera', new Vector3(0, 15, 30));
-    camera.radius = 15;
-    return camera;
+    return undefined;
   }
 }
 
@@ -57,7 +52,7 @@ export default async (scene: Scene): Promise<SceneCallback> => {
   setupTachometer(controller, scene);
   camera.getRoot().parent = followPoint;
 
-  let stdInertia = controller.engine.inertia;
+  const stdTorque = controller.engine.maxTorque;
 
   const rotateVector = new Vector3();
   return (_time: number, _delta: number) => {
@@ -65,9 +60,9 @@ export default async (scene: Scene): Promise<SceneCallback> => {
     vehicleInput.input.right = input.direction.x;
     vehicleInput.input.handBrake = input.handbrake;
 
-    const newInertia = input.boost ? 0.25 * stdInertia : stdInertia;
-    if (controller.engine.inertia != newInertia) {
-      controller.engine.inertia = newInertia;
+    const newTorque = input.boost ? 2 * stdTorque : stdTorque;
+    if (controller.engine.maxTorque != newTorque) {
+      controller.engine.maxTorque = newTorque;
     }
 
     followPoint.position.copyFrom(car.box.position);
