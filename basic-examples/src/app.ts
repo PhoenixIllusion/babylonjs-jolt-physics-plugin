@@ -79,7 +79,7 @@ export class App {
         const initJolt = (await import('jolt-physics/wasm')).default;
         setJoltModule(() => initJolt({
             locateFile: () => joltWasmUrl,
-          }));
+        }));
         const joltPlugin = await JoltJSPlugin.loadPlugin(true);
         scene.enablePhysics(new Vector3(0, -9.8, 0), joltPlugin)
 
@@ -93,7 +93,7 @@ export class App {
         } else {
             this.config.getCamera();
         }
- 
+
 
         // This creates a light, aiming 0,1,0 - to the sky (non-mesh)
         const light = new DirectionalLight('light', new Vector3(-1, -3, 0), scene);
@@ -106,11 +106,11 @@ export class App {
         const callback = maybeCallback instanceof Promise ? await maybeCallback : maybeCallback;
 
         joltPlugin.registerPerPhysicsStepCallback(delta => {
-            if(callback) [
+            if (callback) [
                 callback(performance.now(), delta)
             ]
         })
-        
+
         // run the main render loop
         engine.runRenderLoop(() => {
             const scene = this.scene;

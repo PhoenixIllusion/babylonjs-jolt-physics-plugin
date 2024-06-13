@@ -21,7 +21,7 @@ export const config: SceneConfig = {
 }
 
 export default (scene: Scene): SceneCallback => {
-  const floor = createSphere(new Vector3(0,-4,0), 14, { mass: 0, friction: 1});
+  const floor = createSphere(new Vector3(0, -4, 0), 14, { mass: 0, friction: 1 });
   const tiledTexture = new Texture('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAAAAABX3VL4AAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5wsCAyocY2BWPgAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAOSURBVAjXY2D4z/CfAQAGAAH/P9ph1wAAAABJRU5ErkJggg==');
   tiledTexture.onLoadObservable.add(() => {
     tiledTexture.wrapU = 1;
@@ -34,30 +34,30 @@ export default (scene: Scene): SceneCallback => {
   material.diffuseTexture = tiledTexture;
   floor.sphere.material = material;
 
-  new HemisphericLight('hemi', new Vector3(0,0,-1));
-  const sphereGravity = new GravityPoint(new Vector3(0,-4,0), 9.81);
+  new HemisphericLight('hemi', new Vector3(0, 0, -1));
+  const sphereGravity = new GravityPoint(new Vector3(0, -4, 0), 9.81);
 
-  for(let j=0;j<4;j++)
-  for(let i=0; i< 360; i+= 15) {
-    const rad = DegreesToRadians(i);
-    const [x,z] = [Math.cos(rad), Math.sin(rad)]
-    const item = createBox(new Vector3(x*15, j*3-6, z*15), Quaternion.Identity(), new Vector3(0.5, 0.5, 0.5), { mass: 1, friction: 1}, '#ff44ff');
-    item.physics.setGravityOverride(sphereGravity)
-  }
+  for (let j = 0; j < 4; j++)
+    for (let i = 0; i < 360; i += 15) {
+      const rad = DegreesToRadians(i);
+      const [x, z] = [Math.cos(rad), Math.sin(rad)]
+      const item = createBox(new Vector3(x * 15, j * 3 - 6, z * 15), Quaternion.Identity(), new Vector3(0.5, 0.5, 0.5), { mass: 1, friction: 1 }, '#ff44ff');
+      item.physics.setGravityOverride(sphereGravity)
+    }
 
   const centerOfMass = new Vector3(0, -.435, 0);
   const physicSetting: PhysicsImpostorParameters = { mass: 125, restitution: 0, friction: 0, centerOfMass: centerOfMass };
-  
-  const car = createBox(new Vector3(0,10,0), Quaternion.RotationAxis(new Vector3(0,1,0), Math.PI/2), new Vector3(0.45, .1, 1), physicSetting, '#FF0000');
+
+  const car = createBox(new Vector3(0, 10, 0), Quaternion.RotationAxis(new Vector3(0, 1, 0), Math.PI / 2), new Vector3(0.45, .1, 1), physicSetting, '#FF0000');
   car.box.material!.wireframe = true;
-  
+
   const wheeledConfig: Vehicle.WheeledVehicleSettings = createBasicCar({ height: .2, length: 2, width: .9 }, { radius: .2, width: .2 }, true);
 
   const lonScale = 2;
   const latScale = 5;
   wheeledConfig.wheels.forEach(wheel => {
-    wheel.longitudinalFriction = [[0,0], [0.06, 1.2], [0.2, 1]].map(([x,y]) => ([x,y*lonScale]))
-    wheel.lateralFriction = [[0,0],[3, 1.2],[20, 1]].map(([x,y]) => ([x,y*latScale*latScale]))
+    wheel.longitudinalFriction = [[0, 0], [0.06, 1.2], [0.2, 1]].map(([x, y]) => ([x, y * lonScale]))
+    wheel.lateralFriction = [[0, 0], [3, 1.2], [20, 1]].map(([x, y]) => ([x, y * latScale * latScale]))
     wheel.position.y += 0.35;
   });
   wheeledConfig.engine = { maxTorque: 900, maxRPM: 2000 };

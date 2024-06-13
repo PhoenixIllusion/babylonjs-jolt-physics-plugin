@@ -21,7 +21,7 @@ export const config: SceneConfig = {
 }
 
 export default (scene: Scene): SceneCallback => {
-  const floor = createSphere(new Vector3(0,-4,0), 14, { mass: 0, friction: 1});
+  const floor = createSphere(new Vector3(0, -4, 0), 14, { mass: 0, friction: 1 });
   const tiledTexture = new Texture('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAAAAABX3VL4AAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5wsCAyocY2BWPgAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAOSURBVAjXY2D4z/CfAQAGAAH/P9ph1wAAAABJRU5ErkJggg==');
   tiledTexture.onLoadObservable.add(() => {
     tiledTexture.wrapU = 1;
@@ -35,7 +35,7 @@ export default (scene: Scene): SceneCallback => {
   floor.sphere.material = material;
 
 
-  const upIndicator = MeshBuilder.CreateSphere('sphere', { diameter: 0.25});
+  const upIndicator = MeshBuilder.CreateSphere('sphere', { diameter: 0.25 });
   upIndicator.material = getMaterial('#00ff00');
   upIndicator.position.y += 0.7;
   const createCharacter = () => {
@@ -61,17 +61,17 @@ export default (scene: Scene): SceneCallback => {
   inputHandler.jumpSpeed = 6;
   char.phyics.controller.inputHandler = inputHandler;
 
-  const sphereGravity = new GravityPoint(new Vector3(0,-4,0), 9.81);
+  const sphereGravity = new GravityPoint(new Vector3(0, -4, 0), 9.81);
 
   char.phyics.setGravityOverride(sphereGravity)
 
-  for(let j=0;j<4;j++)
-  for(let i=0; i< 360; i+= 15) {
-    const rad = DegreesToRadians(i);
-    const [x,z] = [Math.cos(rad), Math.sin(rad)]
-    const item = createBox(new Vector3(x*15, j*3-6, z*15), Quaternion.Identity(), new Vector3(0.25, 0.25, 0.25), { mass: 1, friction: 1}, '#ff44ff');
-    item.physics.setGravityOverride(sphereGravity)
-  }
+  for (let j = 0; j < 4; j++)
+    for (let i = 0; i < 360; i += 15) {
+      const rad = DegreesToRadians(i);
+      const [x, z] = [Math.cos(rad), Math.sin(rad)]
+      const item = createBox(new Vector3(x * 15, j * 3 - 6, z * 15), Quaternion.Identity(), new Vector3(0.25, 0.25, 0.25), { mass: 1, friction: 1 }, '#ff44ff');
+      item.physics.setGravityOverride(sphereGravity)
+    }
 
 
   const input = {
@@ -125,7 +125,7 @@ export default (scene: Scene): SceneCallback => {
 
   return (_time: number, _delta: number) => {
     inputHandler.updateInput(input.direction, input.jump);
-    upIndicator.position.copyFrom( char.mesh.position.add(inputHandler.up.scale(2)));
+    upIndicator.position.copyFrom(char.mesh.position.add(inputHandler.up.scale(2)));
 
   }
 }

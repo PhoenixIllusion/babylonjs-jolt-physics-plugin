@@ -40,39 +40,40 @@ export default (scene: Scene): SceneCallback => {
   floor.ground.material = material;
 
   const path = createPath3DWithCatmullRomPath(
-    [new Vector3(0, 0, -20), new Vector3(0, 0, -10), new Vector3(0, 0, 0), new Vector3(0, 0, 10), new Vector3(0, 0, 20), new Vector3(0,0, 30), new Vector3(0,0, 40)],
+    [new Vector3(0, 0, -20), new Vector3(0, 0, -10), new Vector3(0, 0, 0), new Vector3(0, 0, 10), new Vector3(0, 0, 20), new Vector3(0, 0, 30), new Vector3(0, 0, 40)],
     [new Vector3(0, 1, 0), new Vector3(1, 0, 0), new Vector3(0, -1, 0), new Vector3(-1, 0, 0), new Vector3(0, 1, 0), new Vector3(1, 0, 0), new Vector3(0, -1, 0)], 50, false);
 
   const ribbonGravity: GravityInterface = {
-    getGravity: (com: ()=>Vector3): Vector3 => {
-    const point = path.getClosestPositionTo(com());
-    return path.getNormalAt(point, true).scale(9.8)
-  }};
+    getGravity: (com: () => Vector3): Vector3 => {
+      const point = path.getClosestPositionTo(com());
+      return path.getNormalAt(point, true).scale(9.8)
+    }
+  };
 
   const points = path.getPoints();
   const binormals = path.getBinormals();
   const normals = path.getNormals();
-  const pathArray: [Vector3[],Vector3[]]= [[],[]];
-  points.forEach( (p,i) => {
+  const pathArray: [Vector3[], Vector3[]] = [[], []];
+  points.forEach((p, i) => {
     pathArray[1].push(p.add(binormals[i].scale(3)))
     pathArray[0].push(p.subtract(binormals[i].scale(3)))
-    if(i % 8 == 4) {
+    if (i % 8 == 4) {
       const pos = p.add(new Vector3(0, 10, 0)).add(normals[i].negate());
-      const boxes1 = createBox(pos.add(binormals[i].scale(2)), Quaternion.Identity(), new Vector3(0.25,0.25,0.25), { mass: 1, friction: 1});
-      boxes1.physics.setGravityOverride(ribbonGravity);  
-      const boxes2 = createBox(pos.subtract(binormals[i].scale(2)), Quaternion.Identity(), new Vector3(0.25,0.25,0.25), { mass: 1, friction: 1});
-      boxes2.physics.setGravityOverride(ribbonGravity);  
+      const boxes1 = createBox(pos.add(binormals[i].scale(2)), Quaternion.Identity(), new Vector3(0.25, 0.25, 0.25), { mass: 1, friction: 1 });
+      boxes1.physics.setGravityOverride(ribbonGravity);
+      const boxes2 = createBox(pos.subtract(binormals[i].scale(2)), Quaternion.Identity(), new Vector3(0.25, 0.25, 0.25), { mass: 1, friction: 1 });
+      boxes2.physics.setGravityOverride(ribbonGravity);
     }
   });
 
-  const ribbon = MeshBuilder.CreateRibbon("ribbon", { pathArray, sideOrientation: Mesh.DOUBLESIDE  }, scene);
+  const ribbon = MeshBuilder.CreateRibbon("ribbon", { pathArray, sideOrientation: Mesh.DOUBLESIDE }, scene);
   ribbon.position.y += 10;
   ribbon.physicsImpostor = new PhysicsImpostor(ribbon, PhysicsImpostor.MeshImpostor, { mass: 0 });
 
   ribbon.material = material;
   material.sideOrientation = 2
   //ribbon.material!.wireframe = true;
-  new HemisphericLight('hemi', new Vector3(0,0,-1));
+  new HemisphericLight('hemi', new Vector3(0, 0, -1));
 
   const createCharacter = () => {
     const staticShape = new Mesh('static-shape', scene);
@@ -157,6 +158,6 @@ export default (scene: Scene): SceneCallback => {
   return (_time: number, _delta: number) => {
     inputHandler.updateInput(input.direction.negate(), input.jump);
     camera.upVector.copyFrom(inputHandler.up);
-    camera.position.copyFrom(char.mesh.position.add(inputHandler.up.scale(10)).addInPlaceFromFloats(0,0,-20));
+    camera.position.copyFrom(char.mesh.position.add(inputHandler.up.scale(10)).addInPlaceFromFloats(0, 0, -20));
   }
 }

@@ -41,54 +41,55 @@ export default (scene: Scene): SceneCallback => {
   floor.ground.material = material;
 
   const path = createPath3DWithCatmullRomPath(
-    [new Vector3(0, 0, -20), new Vector3(0, 0, -10), new Vector3(0, 0, 0), new Vector3(0, 0, 10), new Vector3(0, 0, 20), new Vector3(0,0, 30), new Vector3(0,0, 40)],
+    [new Vector3(0, 0, -20), new Vector3(0, 0, -10), new Vector3(0, 0, 0), new Vector3(0, 0, 10), new Vector3(0, 0, 20), new Vector3(0, 0, 30), new Vector3(0, 0, 40)],
     [new Vector3(0, 1, 0), new Vector3(1, 0, 0), new Vector3(0, -1, 0), new Vector3(-1, 0, 0), new Vector3(0, 1, 0), new Vector3(1, 0, 0), new Vector3(0, -1, 0)]
-    .map(v => v.negate())
+      .map(v => v.negate())
     , 50, false);
 
   const ribbonGravity: GravityInterface = {
-    getGravity: (com: ()=>Vector3): Vector3 => {
-    const point = path.getClosestPositionTo(com());
-    return path.getNormalAt(point, true).scale(9.8)
-  }};
+    getGravity: (com: () => Vector3): Vector3 => {
+      const point = path.getClosestPositionTo(com());
+      return path.getNormalAt(point, true).scale(9.8)
+    }
+  };
 
   const points = path.getPoints();
   const binormals = path.getBinormals();
   const normals = path.getNormals();
-  const pathArray: [Vector3[],Vector3[]]= [[],[]];
-  points.forEach( (p,i) => {
+  const pathArray: [Vector3[], Vector3[]] = [[], []];
+  points.forEach((p, i) => {
     pathArray[1].push(p.add(binormals[i].scale(3)))
     pathArray[0].push(p.subtract(binormals[i].scale(3)))
-    if(i % 8 == 4) {
+    if (i % 8 == 4) {
       const pos = p.add(new Vector3(0, 10, 0)).add(normals[i].negate());
-      const boxes1 = createBox(pos.add(binormals[i].scale(2)), Quaternion.Identity(), new Vector3(0.25,0.25,0.25), { mass: 1, friction: 1}, '#990000');
-      boxes1.physics.setGravityOverride(ribbonGravity);  
-      const boxes2 = createBox(pos.subtract(binormals[i].scale(2)), Quaternion.Identity(), new Vector3(0.25,0.25,0.25), { mass: 1, friction: 1}, '#009900');
-      boxes2.physics.setGravityOverride(ribbonGravity);  
+      const boxes1 = createBox(pos.add(binormals[i].scale(2)), Quaternion.Identity(), new Vector3(0.25, 0.25, 0.25), { mass: 1, friction: 1 }, '#990000');
+      boxes1.physics.setGravityOverride(ribbonGravity);
+      const boxes2 = createBox(pos.subtract(binormals[i].scale(2)), Quaternion.Identity(), new Vector3(0.25, 0.25, 0.25), { mass: 1, friction: 1 }, '#009900');
+      boxes2.physics.setGravityOverride(ribbonGravity);
     }
   });
 
-  const ribbon = MeshBuilder.CreateRibbon("ribbon", { pathArray, sideOrientation: Mesh.DOUBLESIDE  }, scene);
+  const ribbon = MeshBuilder.CreateRibbon("ribbon", { pathArray, sideOrientation: Mesh.DOUBLESIDE }, scene);
   ribbon.position.y += 10;
   ribbon.physicsImpostor = new PhysicsImpostor(ribbon, PhysicsImpostor.MeshImpostor, { mass: 0, friction: 1 });
 
   ribbon.material = material;
-  new HemisphericLight('hemi', new Vector3(0,0,-1));
+  new HemisphericLight('hemi', new Vector3(0, 0, -1));
 
   const centerOfMass = new Vector3(0, -.435, 0);
   const physicSetting: PhysicsImpostorParameters = { mass: 125, restitution: 0, friction: 0, centerOfMass: centerOfMass };
-  
-  const car = createBox(new Vector3(0.5,11,-15), Quaternion.RotationAxis(new Vector3(0,1,0), 0), new Vector3(0.45, .1, 1), physicSetting, '#FF0000');
+
+  const car = createBox(new Vector3(0.5, 11, -15), Quaternion.RotationAxis(new Vector3(0, 1, 0), 0), new Vector3(0.45, .1, 1), physicSetting, '#FF0000');
   car.box.material!.wireframe = true;
-  
+
 
   const wheeledConfig: Vehicle.WheeledVehicleSettings = createBasicCar({ height: .2, length: 2, width: .9 }, { radius: .2, width: .2 }, true);
 
   const lonScale = 2;
   const latScale = 5;
   wheeledConfig.wheels.forEach(wheel => {
-    wheel.longitudinalFriction = [[0,0], [0.06, 1.2], [0.2, 1]].map(([x,y]) => ([x,y*lonScale]))
-    wheel.lateralFriction = [[0,0],[3, 1.2],[20, 1]].map(([x,y]) => ([x,y*latScale*latScale]))
+    wheel.longitudinalFriction = [[0, 0], [0.06, 1.2], [0.2, 1]].map(([x, y]) => ([x, y * lonScale]))
+    wheel.lateralFriction = [[0, 0], [3, 1.2], [20, 1]].map(([x, y]) => ([x, y * latScale * latScale]))
     wheel.position.y += 0.35;
   });
   wheeledConfig.engine = { maxTorque: 900, maxRPM: 2000 };
@@ -114,7 +115,7 @@ export default (scene: Scene): SceneCallback => {
   const { camera, input } = setupVehicleInput(scene);
   setupTachometer(controller, scene);
   camera.getRoot().parent = followPoint;
-  camera.rotate( Math.PI)
+  camera.rotate(Math.PI)
 
 
   const pictureInPicture = new UniversalCamera('follow-pip', new Vector3(-75, 30, 0));

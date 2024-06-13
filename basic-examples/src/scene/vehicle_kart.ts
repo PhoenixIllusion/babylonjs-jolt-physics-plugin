@@ -8,7 +8,7 @@ import { StandardMaterial } from '@babylonjs/core/Materials/standardMaterial';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
 import { Scene } from '@babylonjs/core/scene';
 import { PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
-import {  setupTachometer, setupVehicleInput } from '../util/vehicle-utils';
+import { setupTachometer, setupVehicleInput } from '../util/vehicle-utils';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { ParticleSystem } from '@babylonjs/core/Particles/particleSystem';
@@ -30,9 +30,9 @@ function getAreaFromRect(rect: SVGRectElement) {
   const height = rect.height.baseVal.value;
 
   return {
-    center: new Vector3(x + width/2, -0.25, y + height/2),
+    center: new Vector3(x + width / 2, -0.25, y + height / 2),
     extents: new Vector3(width, 1, height)
-  } 
+  }
 }
 
 async function loadKartTrack() {
@@ -44,24 +44,24 @@ async function loadKartTrack() {
   const svgWidth = svg.viewBox!.baseVal.width;
   const svgHeight = svg.viewBox!.baseVal.height;
   const scale = 1.5;
-  const offset = new Vector3(-(svgWidth*scale)/2 , 0, -(svgHeight*scale)/2 )
-  const floor = createFloor({friction: 1, mass: 0}, '#222222', (svgWidth*scale));
+  const offset = new Vector3(-(svgWidth * scale) / 2, 0, -(svgHeight * scale) / 2)
+  const floor = createFloor({ friction: 1, mass: 0 }, '#222222', (svgWidth * scale));
   const floorMat = floor.ground.material as StandardMaterial;
   floorMat.emissiveTexture = new Texture('kart-track-ground.svg');
   paths.forEach(path => {
     const len = path.getTotalLength();
     const start = path.getPointAtLength(0);
     const end = path.getPointAtLength(len);
-    const dx = Math.abs(start.x - end.x)*scale;
-    const dy = Math.abs(start.y - end.y)*scale;
-    const midX = ((start.x + end.x)/2)*scale;
-    const midY = ((start.y + end.y)/2)*scale;
+    const dx = Math.abs(start.x - end.x) * scale;
+    const dy = Math.abs(start.y - end.y) * scale;
+    const midX = ((start.x + end.x) / 2) * scale;
+    const midY = ((start.y + end.y) / 2) * scale;
     const height = path.getAttribute('stroke') == 'blue' ? 1.25 : .8;
-    const color =  path.getAttribute('stroke') == 'blue' ? '#990000': '#000099';
-    const extents = new Vector3(dx/2 + 0.75, height, dy/2 + 0.75);
+    const color = path.getAttribute('stroke') == 'blue' ? '#990000' : '#000099';
+    const extents = new Vector3(dx / 2 + 0.75, height, dy / 2 + 0.75);
     const physicsExtents = extents.scale(2);
     physicsExtents.y *= 10;
-    createBox(new Vector3(midX, -0.75, midY).add(offset), Quaternion.Identity(), extents, { mass: 0, extents: physicsExtents}, color);
+    createBox(new Vector3(midX, -0.75, midY).add(offset), Quaternion.Identity(), extents, { mass: 0, extents: physicsExtents }, color);
   })
   const start = getPointFromEllipse(svg.getElementById('start') as SVGEllipseElement).scale(scale).add(offset);
   const collectables = Array.from(svg.querySelectorAll('ellipse')).filter(ele => ele.id != 'start').map(ele => getPointFromEllipse(ele).scale(scale).add(offset))
@@ -75,7 +75,7 @@ async function loadKartTrack() {
 
 class Pickup {
   pickedUp = false;
-  
+
   constructor(private mesh: AbstractMesh) {
   }
 
@@ -102,36 +102,36 @@ export default async (scene: Scene): Promise<SceneCallback> => {
 
   const centerOfMass = new Vector3(0, -.435, 0);
   const physicSetting: PhysicsImpostorParameters = { mass: 125, restitution: 0, friction: 0, centerOfMass: centerOfMass };
-  
+
   const elements = await loadKartTrack();
 
-  const car = createBox(elements.start, Quaternion.RotationAxis(new Vector3(0,1,0), Math.PI/2), new Vector3(0.45, .1, 1), physicSetting, '#FF0000');
+  const car = createBox(elements.start, Quaternion.RotationAxis(new Vector3(0, 1, 0), Math.PI / 2), new Vector3(0.45, .1, 1), physicSetting, '#FF0000');
   car.box.material!.wireframe = true;
 
 
   elements.collectables.forEach(v => {
-    const sphere = createSphere(v, 0.5, { sensor: true, mass: 0}, '#ffff00');
+    const sphere = createSphere(v, 0.5, { sensor: true, mass: 0 }, '#ffff00');
     sphere.sphere.scaling.scaleInPlace(0.5);
     const material = sphere.sphere.material as StandardMaterial;
     //material.disableLighting = true; 
     material.emissiveColor = Color3.FromHexString('#aaaa00');
     const pickup = new Pickup(sphere.sphere);
-    car.physics.registerOnJoltPhysicsCollide('on-contact-add',sphere.physics, () => pickup.trigger())
+    car.physics.registerOnJoltPhysicsCollide('on-contact-add', sphere.physics, () => pickup.trigger())
   })
 
   let speedBoostActive = false;
   elements.speedRegions.forEach(region => {
-    const speedArea = createBox(region.center, Quaternion.Identity(), region.extents.scale(0.5), { sensor: true, mass: 0}, "#ffff00");
+    const speedArea = createBox(region.center, Quaternion.Identity(), region.extents.scale(0.5), { sensor: true, mass: 0 }, "#ffff00");
     speedArea.box.visibility = 0.2;
     speedArea.box.scaling.y /= 100;
     const onSpeedBoost = () => {
       speedBoostActive = true;
     }
-    car.physics.registerOnJoltPhysicsCollide('on-contact-add',speedArea.physics, onSpeedBoost)
-    car.physics.registerOnJoltPhysicsCollide('on-contact-persist',speedArea.physics, onSpeedBoost)
+    car.physics.registerOnJoltPhysicsCollide('on-contact-add', speedArea.physics, onSpeedBoost)
+    car.physics.registerOnJoltPhysicsCollide('on-contact-persist', speedArea.physics, onSpeedBoost)
   })
 
-  const CoM = MeshBuilder.CreateSphere('center-of-mass', { segments: 34, diameter: 0.2});
+  const CoM = MeshBuilder.CreateSphere('center-of-mass', { segments: 34, diameter: 0.2 });
   CoM.parent = car.box;
   CoM.position.copyFrom(centerOfMass);
   const wheeledConfig: Vehicle.WheeledVehicleSettings = createBasicCar({ height: .2, length: 2, width: .9 }, { radius: .2, width: .2 }, true);
@@ -139,8 +139,8 @@ export default async (scene: Scene): Promise<SceneCallback> => {
   const lonScale = 2;
   const latScale = 5;
   wheeledConfig.wheels.forEach(wheel => {
-    wheel.longitudinalFriction = [[0,0], [0.06, 1.2], [0.2, 1]].map(([x,y]) => ([x,y*lonScale]))
-    wheel.lateralFriction = [[0,0],[3, 1.2],[20, 1]].map(([x,y]) => ([x,y*latScale*latScale]))
+    wheel.longitudinalFriction = [[0, 0], [0.06, 1.2], [0.2, 1]].map(([x, y]) => ([x, y * lonScale]))
+    wheel.lateralFriction = [[0, 0], [3, 1.2], [20, 1]].map(([x, y]) => ([x, y * latScale * latScale]))
     wheel.position.y += 0.35;
   });
   wheeledConfig.engine = { maxTorque: 900, maxRPM: 2000 };
@@ -184,7 +184,7 @@ export default async (scene: Scene): Promise<SceneCallback> => {
     vehicleInput.input.handBrake = input.handbrake;
 
     const newTorque = input.boost ? 2.5 * stdTorque : stdTorque;
-    if(speedBoostActive) {
+    if (speedBoostActive) {
       boostParticles.start()
     } else {
       boostParticles.stop();

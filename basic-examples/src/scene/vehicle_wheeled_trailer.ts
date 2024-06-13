@@ -34,10 +34,10 @@ export default async (scene: Scene): Promise<SceneCallback> => {
   const car = createBox(new Vector3(0, 2, 0), Quaternion.FromEulerAngles(0, Math.PI, 0), new Vector3(0.9, .2, 2), physicSetting, '#FF0000');
   car.box.material!.wireframe = true;
 
-  const trailer = createBox(new Vector3(0, 2, 10), Quaternion.FromEulerAngles(0, Math.PI, 0), new Vector3(0.9, .6, 3), { ... physicSetting, centerOfMass: new Vector3(0, -0.8, 0) }, '#00FF00');
+  const trailer = createBox(new Vector3(0, 2, 10), Quaternion.FromEulerAngles(0, Math.PI, 0), new Vector3(0.9, .6, 3), { ...physicSetting, centerOfMass: new Vector3(0, -0.8, 0) }, '#00FF00');
   trailer.box.material!.wireframe = true;
 
-  function attachWheels( parent: AbstractMesh, controller: WheeledVehicleController) {
+  function attachWheels(parent: AbstractMesh, controller: WheeledVehicleController) {
     controller.wheels.forEach((o, i) => {
       const mesh = MeshBuilder.CreateCylinder('cylinder', { diameter: o.radius * 2, height: o.width, tessellation: 16 });
       mesh.position = controller.wheels[i].worldPosition;

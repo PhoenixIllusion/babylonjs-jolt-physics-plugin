@@ -31,10 +31,10 @@ export default async (scene: Scene): Promise<SceneCallback> => {
   const physicSetting: PhysicsImpostorParameters = { mass: 6200, restitution: 0, friction: 0 };
   const car = createBox(new Vector3(0, 2, 0), Quaternion.FromEulerAngles(0, Math.PI, 0), new Vector3(0.9, .2, 2), physicSetting, '#FF0000');
   car.box.material!.wireframe = true;
-  const topTank = MeshBuilder.CreateCylinder('top-tank', { diameter: 1, height: 0.35, tessellation: 12})
+  const topTank = MeshBuilder.CreateCylinder('top-tank', { diameter: 1, height: 0.35, tessellation: 12 })
   topTank.position.set(0, 0.35, -0.75);
-  const topBarrel = MeshBuilder.CreateCylinder('top-barrel', { height: 1.5, diameter: 0.2, tessellation: 6});
-  topBarrel.rotation.set(Math.PI/2, 0, 0);
+  const topBarrel = MeshBuilder.CreateCylinder('top-barrel', { height: 1.5, diameter: 0.2, tessellation: 6 });
+  topBarrel.rotation.set(Math.PI / 2, 0, 0);
   topBarrel.position.set(0, 0.45, 0.45);
   topBarrel.parent = topTank.parent = car.box;
   topBarrel.material = topTank.material = car.box.material;
