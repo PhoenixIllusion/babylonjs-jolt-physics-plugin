@@ -2,7 +2,7 @@ import { JoltCharacterVirtualImpostor, JoltCharacterVirtual } from './jolt-physi
 import Jolt, { loadJolt } from './jolt-import';
 import { ContactCollector } from './jolt-contact';
 import { RayCastUtility } from './jolt-raycast';
-import { LAYER_MOVING, LAYER_NON_MOVING, SetJoltQuat, SetJoltVec3 } from './jolt-util';
+import { SetJoltQuat, SetJoltVec3 } from './jolt-util';
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math';
 import { Logger } from '@babylonjs/core/Misc/logger';
 import { MotorEnabledJoint, PhysicsJoint } from '@babylonjs/core/Physics/v1/physicsJoint';
@@ -11,7 +11,21 @@ import * as JoltConstraintManager from './constraints';
 import './jolt-impostor';
 import { createJoltShape } from './jolt-shapes';
 import { GravityUtility } from './gravity/utility';
+import { configureSystemCollision, getObjectLayer } from './jolt-collision';
+import { BodyUtility, GetMotionType } from './jolt-body';
 export { setJoltModule } from './jolt-import';
+export var AllowedDOFs;
+(function (AllowedDOFs) {
+    AllowedDOFs[AllowedDOFs["None"] = 0] = "None";
+    AllowedDOFs[AllowedDOFs["All"] = 63] = "All";
+    AllowedDOFs[AllowedDOFs["TranslationX"] = 1] = "TranslationX";
+    AllowedDOFs[AllowedDOFs["TranslationY"] = 2] = "TranslationY";
+    AllowedDOFs[AllowedDOFs["TranslationZ"] = 4] = "TranslationZ";
+    AllowedDOFs[AllowedDOFs["RotationX"] = 8] = "RotationX";
+    AllowedDOFs[AllowedDOFs["RotationY"] = 16] = "RotationY";
+    AllowedDOFs[AllowedDOFs["RotationZ"] = 32] = "RotationZ";
+    AllowedDOFs[AllowedDOFs["Plane2D"] = 35] = "Plane2D";
+})(AllowedDOFs || (AllowedDOFs = {}));
 export var Jolt_Type;
 (function (Jolt_Type) {
     Jolt_Type[Jolt_Type["CHARACTER"] = 200] = "CHARACTER";
@@ -21,28 +35,32 @@ export class JoltJSPlugin {
     static async loadPlugin(_useDeltaForWorldStep = true, physicsSettings, importSettings) {
         await loadJolt(importSettings);
         const settings = new Jolt.JoltSettings();
-        Object.assign(settings, physicsSettings);
-        let object_filter = new Jolt.ObjectLayerPairFilterTable(2);
-        object_filter.EnableCollision(LAYER_NON_MOVING, LAYER_MOVING);
-        object_filter.EnableCollision(LAYER_MOVING, LAYER_MOVING);
-        // We use a 1-to-1 mapping between object layers and broadphase layers
-        const BP_LAYER_NON_MOVING = new Jolt.BroadPhaseLayer(0);
-        const BP_LAYER_MOVING = new Jolt.BroadPhaseLayer(1);
-        let bp_interface = new Jolt.BroadPhaseLayerInterfaceTable(2, 2);
-        bp_interface.MapObjectToBroadPhaseLayer(LAYER_NON_MOVING, BP_LAYER_NON_MOVING);
-        bp_interface.MapObjectToBroadPhaseLayer(LAYER_MOVING, BP_LAYER_MOVING);
-        Jolt.destroy(BP_LAYER_MOVING);
-        Jolt.destroy(BP_LAYER_NON_MOVING);
-        // Initialize Jolt
-        settings.mObjectLayerPairFilter = object_filter;
-        settings.mBroadPhaseLayerInterface = bp_interface;
-        settings.mObjectVsBroadPhaseLayerFilter = new Jolt.ObjectVsBroadPhaseLayerFilterTable(settings.mBroadPhaseLayerInterface, 2, settings.mObjectLayerPairFilter, 2);
+        if (physicsSettings) {
+            if (physicsSettings.maxPairs) {
+                settings.mMaxBodyPairs = physicsSettings.maxPairs;
+            }
+            if (physicsSettings.maxBodies) {
+                settings.mMaxBodies = physicsSettings.maxBodies;
+            }
+        }
+        if (physicsSettings && physicsSettings.collision) {
+            configureSystemCollision(settings, physicsSettings.collision);
+        }
+        else {
+            const collision = {
+                type: 'layer',
+                objectLayers: [{ id: 0, collides: [1] }, { id: 1, collides: [0, 1] }],
+                broadphase: [{ id: 0, includesObjectLayers: [0] }, { id: 1, includesObjectLayers: [1] }]
+            };
+            configureSystemCollision(settings, collision);
+        }
         const joltInterface = new Jolt.JoltInterface(settings);
         Jolt.destroy(settings);
-        return new JoltJSPlugin(joltInterface, _useDeltaForWorldStep);
+        return new JoltJSPlugin(joltInterface, physicsSettings, _useDeltaForWorldStep);
     }
-    constructor(jolt, _useDeltaForWorldStep = true) {
+    constructor(jolt, settings, _useDeltaForWorldStep = true) {
         this.jolt = jolt;
+        this.settings = settings;
         this._useDeltaForWorldStep = _useDeltaForWorldStep;
         this.name = 'JoltJSPlugin';
         this._timeStep = 1 / 60;
@@ -56,12 +74,14 @@ export class JoltJSPlugin {
         this._bodyInterface = this.world.GetBodyInterface();
         this._tempVec3A = new Jolt.Vec3();
         this._tempVec3B = new Jolt.Vec3();
+        this._tempVec3C = new Jolt.Vec3();
+        this._tempVec3D = new Jolt.Vec3();
         this._tempQuaternion = new Jolt.Quat();
         this._raycaster = new RayCastUtility(jolt, this);
         this._contactListener = new Jolt.ContactListenerJS();
         this._contactCollector = new ContactCollector(this._contactListener);
         this.world.SetContactListener(this._contactListener);
-        this.toDispose.push(this.jolt, this._tempVec3A, this._tempVec3B, this._tempQuaternion, this._contactListener);
+        this.toDispose.push(this.jolt, this._tempVec3A, this._tempVec3B, this._tempVec3C, this._tempVec3D, this._tempQuaternion, this._contactListener);
     }
     setGravity(gravity) {
         this._tempVec3A.Set(gravity.x, gravity.y, gravity.z);
@@ -179,10 +199,10 @@ export class JoltJSPlugin {
             if (contactPoint) {
                 const worldPoint = this._tempVec3A;
                 SetJoltVec3(contactPoint, worldPoint);
-                physicsBody.AddForce(forceJ, worldPoint);
+                this._bodyInterface.AddForce(physicsBody.GetID(), forceJ, worldPoint, Jolt.EActivation_Activate);
             }
             else {
-                physicsBody.AddForce(forceJ);
+                this._bodyInterface.AddForce(physicsBody.GetID(), forceJ, Jolt.EActivation_Activate);
             }
         }
         else {
@@ -201,9 +221,9 @@ export class JoltJSPlugin {
             return;
         }
         if (impostor.isBodyInitRequired()) {
-            const shape = createJoltShape(impostor, this._tempVec3A, this._tempVec3B, this._tempQuaternion);
             if (impostor instanceof JoltCharacterVirtualImpostor) {
                 const imp = impostor;
+                const shape = createJoltShape(impostor, this._tempVec3A, this._tempVec3B, this._tempQuaternion);
                 const char = new JoltCharacterVirtual(imp, shape, { physicsSystem: this.world, jolt: this.jolt }, this);
                 char.init();
                 shape.Release();
@@ -213,45 +233,8 @@ export class JoltJSPlugin {
                 this._impostorLookup[-performance.now()] = impostor;
                 return;
             }
-            const mass = impostor.getParam('mass');
-            const friction = impostor.getParam('friction');
-            const restitution = impostor.getParam('restitution');
-            const collision = impostor.getParam('collision');
-            const sensor = impostor.getParam('sensor');
-            impostor.object.computeWorldMatrix(true);
-            SetJoltVec3(impostor.object.position, this._tempVec3A);
-            SetJoltQuat(impostor.object.rotationQuaternion, this._tempQuaternion);
-            const isStatic = (mass === 0) ? Jolt.EMotionType_Static : Jolt.EMotionType_Dynamic;
-            const layer = (mass === 0) ? LAYER_NON_MOVING : LAYER_MOVING;
-            const settings = new Jolt.BodyCreationSettings(shape, this._tempVec3A, this._tempQuaternion, isStatic, layer);
-            if (collision) {
-                if (collision.group !== undefined) {
-                    settings.mCollisionGroup.SetGroupID(collision.group);
-                }
-                if (collision.subGroup !== undefined) {
-                    settings.mCollisionGroup.SetSubGroupID(collision.subGroup);
-                }
-                if (collision.filter !== undefined) {
-                    settings.mCollisionGroup.SetGroupFilter(collision.filter);
-                }
-            }
-            impostor.joltPluginData.mass = mass;
-            impostor.joltPluginData.friction = friction;
-            impostor.joltPluginData.restitution = restitution;
-            impostor.joltPluginData.frozen = !!impostor.getParam('frozen');
+            const body = BodyUtility.createBody(impostor, this.settings, this._bodyInterface, this._tempVec3A, this._tempVec3B, this._tempQuaternion);
             impostor.joltPluginData.plugin = this;
-            settings.mRestitution = restitution || 0;
-            settings.mFriction = friction || 0;
-            if (mass !== 0) {
-                settings.mOverrideMassProperties = Jolt.EOverrideMassProperties_CalculateInertia;
-                settings.mMassPropertiesOverride.mMass = mass;
-            }
-            if (sensor !== undefined) {
-                settings.mIsSensor = sensor;
-            }
-            const body = impostor.physicsBody = this._bodyInterface.CreateBody(settings);
-            shape.Release();
-            Jolt.destroy(settings);
             this._bodyInterface.AddBody(body.GetID(), Jolt.EActivation_Activate);
             this._impostorLookup[body.GetID().GetIndexAndSequenceNumber()] = impostor;
         }
@@ -266,6 +249,7 @@ export class JoltJSPlugin {
     removePhysicsBody(impostor) {
         if (impostor instanceof JoltCharacterVirtualImpostor) {
             if (impostor.joltPluginData) {
+                impostor.controller.onDestroy();
                 impostor.joltPluginData.toDispose.forEach((d) => {
                     Jolt.destroy(d);
                 });
@@ -464,11 +448,11 @@ export class JoltJSPlugin {
         const physicsBody = impostor.physicsBody;
         this._bodyInterface.ActivateBody(physicsBody.GetID());
     }
-    raycast(from, to) {
-        return this._raycaster.raycast(from, to);
+    raycast(from, to, query) {
+        return this._raycaster.raycast(from, to, query);
     }
-    raycastToRef(from, to, result) {
-        return this._raycaster.raycastToRef(from, to, result);
+    raycastToRef(from, to, result, query) {
+        this._raycaster.raycastToRef(from, to, result, query);
     }
     updateDistanceJoint(joint, maxDistance, minDistance) {
         if (joint.type !== PhysicsJoint.DistanceJoint) {
@@ -592,5 +576,42 @@ export class JoltJSPlugin {
     setGravityFactor(impostor, factor) {
         const body = impostor.physicsBody;
         body.GetMotionProperties().SetGravityFactor(factor);
+    }
+    moveKinematic(impostor, position, rotation, duration) {
+        const body = impostor.physicsBody;
+        const vec3 = (position != null) ? SetJoltVec3(position, this._tempVec3A) : body.GetPosition();
+        const quat = (rotation != null) ? SetJoltQuat(rotation, this._tempQuaternion) : body.GetRotation();
+        body.MoveKinematic(vec3, quat, duration);
+    }
+    setLayer(impostor, layer, mask) {
+        layer = getObjectLayer(layer, mask, this.settings);
+        if (impostor instanceof JoltCharacterVirtualImpostor) {
+            impostor.controller.setLayer(layer);
+        }
+        else {
+            const body = impostor.physicsBody;
+            this._bodyInterface.SetObjectLayer(body.GetID(), layer);
+        }
+    }
+    setMotionType(impostor, motionType) {
+        const body = impostor.physicsBody;
+        if (motionType !== 'static') {
+            const allowed = body.CanBeKinematicOrDynamic();
+            if (!allowed) {
+                throw new Error("Impostor needs to be created with Jolt PhysicsImpostorParameters 'allowDynamicOrKinematic' set tot true");
+            }
+        }
+        this._bodyInterface.SetMotionType(body.GetID(), GetMotionType(motionType), Jolt.EActivation_Activate);
+    }
+    applyBuoyancyImpulse(impostor, impulse, deltaTime) {
+        const body = impostor.physicsBody;
+        const inSurfacePosition = SetJoltVec3(impulse.surfacePosition, this._tempVec3A);
+        const inSurfaceNormal = SetJoltVec3(impulse.surfaceNormal || Vector3.UpReadOnly, this._tempVec3B);
+        const inBuoyancy = impulse.buoyancy;
+        const inLinearDrag = impulse.linearDrag;
+        const inAngularDrag = impulse.angularDrag;
+        const inFluidVelocity = SetJoltVec3(impulse.fluidVelocity || Vector3.ZeroReadOnly, this._tempVec3C);
+        const inGravity = impulse.gravity ? SetJoltVec3(impulse.gravity, this._tempVec3D) : this.world.GetGravity();
+        this._bodyInterface.ApplyBuoyancyImpulse(body.GetID(), inSurfacePosition, inSurfaceNormal, inBuoyancy, inLinearDrag, inAngularDrag, inFluidVelocity, inGravity, deltaTime);
     }
 }

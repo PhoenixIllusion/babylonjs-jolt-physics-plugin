@@ -7,4 +7,5 @@ export * from './jolt-contact';
 import Jolt from './jolt-import';
 export * from './jolt-import';
 export * from './joints';
+export * from './jolt-collision';
 export { Jolt };

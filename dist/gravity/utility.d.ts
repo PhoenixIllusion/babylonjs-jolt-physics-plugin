@@ -5,6 +5,7 @@ import { GravityInterface } from "./types";
 export declare class GravityUtility {
     private static _instance?;
     private _impostors;
+    constructor();
     static getInstance(plugin: JoltJSPlugin): GravityUtility;
     private _gravityForce;
     private _bodyCoM;

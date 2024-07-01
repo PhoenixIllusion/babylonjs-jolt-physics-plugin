@@ -19,7 +19,7 @@ export class GravityUtility {
         this._impostors.forEach(impostor => {
             const gravity = impostor.joltPluginData.gravity;
             const body = impostor.physicsBody;
-            if (gravity && body.IsActive()) {
+            if (gravity) {
                 this._gravityForce.copyFrom(gravity.getGravity(() => {
                     return GetJoltVec3(body.GetCenterOfMassPosition(), this._bodyCoM);
                 }));

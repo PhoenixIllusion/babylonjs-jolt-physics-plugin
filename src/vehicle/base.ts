@@ -169,7 +169,7 @@ export interface IBaseVehicleController {
   getAngularVelocity(): Vector3;
 }
 
-export abstract class BaseVehicleController<T extends Vehicle.WheelSetting, W extends Wheel, K extends Jolt.VehicleController> implements IBaseVehicleController{
+export abstract class BaseVehicleController<T extends Vehicle.WheelSetting, W extends Wheel, K extends Jolt.VehicleController> implements IBaseVehicleController {
   private _physicsStepListener: (delta: number) => void;
 
   protected controller: K;
@@ -206,13 +206,13 @@ export abstract class BaseVehicleController<T extends Vehicle.WheelSetting, W ex
         o.updateFrom(transform);
       })
       input.onPrePhysicsUpdate(bodyInterface, controller, delta);
-      if(this._previousGravity && !this.gravity) {
+      if (this._previousGravity && !this.gravity) {
         constraint.ResetGravityOverride();
         this._previousGravity = undefined;
       }
-      if(this.gravity) {
+      if (this.gravity) {
         const gravity = this.gravity.getGravity(() => GetJoltVec3(physicsBody.GetCenterOfMassPosition(), bodyCoM));
-        if(!this._previousGravity?.equals(gravity)) {
+        if (!this._previousGravity?.equals(gravity)) {
           this._previousGravity = this._previousGravity || new Vector3();
           this._previousGravity?.copyFrom(gravity);
           SetJoltVec3(gravity, gravityJ);
@@ -227,10 +227,10 @@ export abstract class BaseVehicleController<T extends Vehicle.WheelSetting, W ex
   abstract getEngine(controller: K): Jolt.VehicleEngine;
   abstract getTransmission(controller: K): Jolt.VehicleTransmission;
   abstract getWheel(wheel: Jolt.Wheel): W;
-  
+
   getLinearVelocity() { return this.impostor.getLinearVelocity()! }
   getAngularVelocity() { return this.impostor.getAngularVelocity()! }
-  
+
   setGravityOverride(gravity: GravityInterface | null): void {
     this.gravity = gravity;
   }

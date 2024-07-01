@@ -2,12 +2,16 @@ import { PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResu
 import Jolt from './jolt-import';
 import { SetJoltVec3, GetJoltVec3, LAYER_MOVING, SetJoltRVec3 } from './jolt-util';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
+import { getObjectLayer } from './jolt-collision';
 export class RayCastUtility {
-    constructor(jolt, plugin) {
+    constructor(jolt, plugin, settings) {
+        this.jolt = jolt;
         this.plugin = plugin;
+        this.settings = settings;
         this.toDispose = [];
         this.point = new Vector3();
         this.normal = new Vector3();
+        this._prevQuery = [LAYER_MOVING, -1];
         this._raycastResult = new PhysicsRaycastResult();
         this._ray_settings = new Jolt.RayCastSettings();
         this._ray_collector = new Jolt.CastRayClosestHitCollisionCollector();
@@ -18,11 +22,24 @@ export class RayCastUtility {
         this._ray = new Jolt.RRayCast();
         this.toDispose.push(this._ray_settings, this._ray_collector, this._bp_filter, this._object_filter, this._body_filter, this._shape_filter, this._ray);
     }
-    raycast(from, to) {
-        this.raycastToRef(from, to, this._raycastResult);
+    raycast(from, to, query) {
+        this.raycastToRef(from, to, this._raycastResult, query);
         return this._raycastResult;
     }
-    raycastToRef(from, to, result) {
+    raycastToRef(from, to, result, query) {
+        if (query && query.membership !== undefined) {
+            const layer = query.membership;
+            const mask = query.collideWith || 0xffffff;
+            const [pLayer, pMask] = this._prevQuery;
+            if (pLayer != layer || pMask != mask) {
+                const newLayer = getObjectLayer(layer, mask, this.settings);
+                Jolt.destroy(this._bp_filter);
+                Jolt.destroy(this._object_filter);
+                this._bp_filter = new Jolt.DefaultBroadPhaseLayerFilter(this.jolt.GetObjectVsBroadPhaseLayerFilter(), newLayer);
+                this._object_filter = new Jolt.DefaultObjectLayerFilter(this.jolt.GetObjectLayerPairFilter(), newLayer);
+                this._prevQuery = [layer, mask];
+            }
+        }
         const delta = to.subtract(from);
         SetJoltRVec3(from, this._ray.mOrigin);
         SetJoltVec3(delta, this._ray.mDirection);
@@ -40,10 +57,13 @@ export class RayCastUtility {
             result.setHitData(point, normal);
             result.calculateHitDistance();
         }
+        return result;
     }
     dispose() {
         this.toDispose.forEach(joltObj => {
             Jolt.destroy(joltObj);
         });
+        Jolt.destroy(this._bp_filter);
+        Jolt.destroy(this._object_filter);
     }
 }

@@ -5,17 +5,37 @@ import { PhysicsImpostor, PhysicsImpostorParameters } from '@babylonjs/core/Phys
 import { IMotorEnabledJoint, PhysicsJoint } from '@babylonjs/core/Physics/v1/physicsJoint';
 import '@babylonjs/core/Physics/physicsEngineComponent';
 import { Nullable } from '@babylonjs/core/types';
-import { PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResult';
+import { IRaycastQuery, PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResult';
 import { AbstractMesh } from '@babylonjs/core/Meshes/abstractMesh';
 import './jolt-impostor';
 import { GravityInterface } from './gravity/types';
+import { SystemCollisionConfiguration } from './jolt-collision';
+import { MotionType } from './jolt-impostor';
+import { BuoyancyImpulse } from './buoyancy/type';
 export { setJoltModule } from './jolt-import';
+export declare enum AllowedDOFs {
+    None = 0,
+    All = 63,
+    TranslationX = 1,
+    TranslationY = 2,
+    TranslationZ = 4,
+    RotationX = 8,
+    RotationY = 16,
+    RotationZ = 32,
+    Plane2D = 35
+}
 export declare const enum Jolt_Type {
     CHARACTER = 200,
     VIRTUAL_CHARACTER = 201
 }
+export interface PhysicsSettings {
+    collision?: SystemCollisionConfiguration;
+    maxBodies?: number;
+    maxPairs?: number;
+}
 export declare class JoltJSPlugin implements IPhysicsEnginePlugin {
     private jolt;
+    settings: PhysicsSettings | undefined;
     private _useDeltaForWorldStep;
     world: Jolt.PhysicsSystem;
     name: string;
@@ -24,6 +44,8 @@ export declare class JoltJSPlugin implements IPhysicsEnginePlugin {
     private _maxSteps;
     private _tempVec3A;
     private _tempVec3B;
+    private _tempVec3C;
+    private _tempVec3D;
     private _tempQuaternion;
     private _tempQuaternionBJS;
     private _bodyInterface;
@@ -32,8 +54,8 @@ export declare class JoltJSPlugin implements IPhysicsEnginePlugin {
     private _contactListener;
     private _impostorLookup;
     private toDispose;
-    static loadPlugin(_useDeltaForWorldStep?: boolean, physicsSettings?: any, importSettings?: any): Promise<JoltJSPlugin>;
-    constructor(jolt: Jolt.JoltInterface, _useDeltaForWorldStep?: boolean);
+    static loadPlugin(_useDeltaForWorldStep?: boolean, physicsSettings?: PhysicsSettings, importSettings?: any): Promise<JoltJSPlugin>;
+    constructor(jolt: Jolt.JoltInterface, settings: PhysicsSettings | undefined, _useDeltaForWorldStep?: boolean);
     setGravity(gravity: Vector3): void;
     setTimeStep(timeStep: number): void;
     /**
@@ -93,8 +115,8 @@ export declare class JoltJSPlugin implements IPhysicsEnginePlugin {
     setShape(impostor: PhysicsImpostor, type: number, params: PhysicsImpostorParameters): void;
     sleepBody(impostor: PhysicsImpostor): void;
     wakeUpBody(impostor: PhysicsImpostor): void;
-    raycast(from: Vector3, to: Vector3): PhysicsRaycastResult;
-    raycastToRef(from: Vector3, to: Vector3, result: PhysicsRaycastResult): void;
+    raycast(from: Vector3, to: Vector3, query?: IRaycastQuery): PhysicsRaycastResult;
+    raycastToRef(from: Vector3, to: Vector3, result: PhysicsRaycastResult, query?: IRaycastQuery): void;
     updateDistanceJoint(joint: PhysicsJoint, maxDistance: number, minDistance?: number | undefined): void;
     setMotor(joint: IMotorEnabledJoint, speed: number, maxForce?: number | undefined): void;
     setLimit(joint: IMotorEnabledJoint, upperLimit: number, lowerLimit?: number | undefined): void;
@@ -104,4 +126,8 @@ export declare class JoltJSPlugin implements IPhysicsEnginePlugin {
     dispose(): void;
     setGravityOverride(impostor: PhysicsImpostor, gravity: GravityInterface | null): void;
     setGravityFactor(impostor: PhysicsImpostor, factor: number): void;
+    moveKinematic(impostor: PhysicsImpostor, position: Vector3 | null, rotation: Quaternion | null, duration: number): void;
+    setLayer(impostor: PhysicsImpostor, layer: number, mask?: number): void;
+    setMotionType(impostor: PhysicsImpostor, motionType: MotionType): void;
+    applyBuoyancyImpulse(impostor: PhysicsImpostor, impulse: BuoyancyImpulse, deltaTime: number): void;
 }

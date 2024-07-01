@@ -44,6 +44,47 @@ In addition to the default `PhysicsImpostorParameters`, the following optional p
 * `sensor` - boolean : Declares this shape as a sensor. It will have no collision behavior with items, but will still trigger collision callbacks on items entering.
 * `heightMap` - `HeightMapData Config` : Contains the data needed for a `PhysicsImpostor.HeightmapImpostor` 
 * `collision` - `Collision Config` : Contains group, subgroup, and filter configuration for custom collision. Example usage: allowing 'exceptions' where an item should be solid except for a case where it is known to sometimes intersect with something else (a wall, floor, another item it is constrained to)
+* `dof` - Degrees of Freedom - Uses `AllowedDOFs` to allow movement and rotation on XYZ axis, with Jolt's shortcut for `AllowedDOFs.Plane2D`
+* `motionType`
+  - 'static' - An immovable object. Essentially frozen in place. Default for '0' mass objects
+  - 'dynamic' - A free moving object that respects standard laws of physics. Default for non-zero mass objects.
+  - 'kinematic' - An unstoppable force object that only changes behavior not due to physics, but due to program-driven commands.
+* `allowDynamicOrKinematic` - if you start an object with 'static' above and plan on changing motionType during runtime, use this flag to allow changing to 'dynamic' or 'kinematic'
+* `layer` and `mask` - See PhysicsSettings Collision system
+
+### System Collision Configuration
+During instantiating the Plugin, you may pass in a collision setup that will be used to define how objects collide in the system.
+
+#### Object Layer Pairs
+The first element defined is the object layers. In the `LayerCollisionConfiguration`, this defines a simple mapping such as "Objects of Layer Terrain can collide with layers Entities, but not Widgets", "Objects of Layer Entities collide with Terrain and Widgets". In this example, widgets are assume to be things like pistons, doors that slide into walls, or other things that may happen to move into solid objects but also block or push players and enemies.
+```typescript
+const LAYER_TERRAIN = 0;
+const LAYER_ENTITIES = 1;
+const LAYER_WIDGETS = 2;
+{
+  type: 'layer',
+  objectLayers: [
+    { id: LAYER_TERRAIN, collides: [LAYER_ENTITIES]},
+    { id: LAYER_ENTITIES, collides: [LAYER_TERRAIN,LAYER_WIDGETS]},
+    { id: LAYER_WIDGETS, collides: [LAYER_ENTITIES]}
+  ],
+  /* broadphase */
+}
+```
+#### BroadPhase Mapping
+Jolt will operate best if you can keep objects that never move in their own broad phase layer, along with having objects that move more frequently or constantly in their own layer. In the above setup, we assume that Entities and Widgets may move around.
+```typescript
+const BP_NON_MOVING = 0
+const BP_MOVING = 1
+{
+  type: 'layer',
+  /* objectLayers */
+  broadphase: [
+    { id: BP_NON_MOVING, includesObjectLayers: [ LAYER_TERRAIN ] },
+    { id: BP_MOVING, includesObjectLayers: [ LAYER_ENTITIES, LAYER_WIDGETS ] },
+  ]
+}
+```
 
 ### Constraints
 The easiest way to access constraints when building scenes programmatically is using the import `'@phoenixillusion/babylonjs-jolt-plugin/joints'`, a collection of BabylonJS `PhysicsJoint` supporting default parameters and access to Jolt specific getters and setters, as well as easy access to Motors and Springs on the constraints.

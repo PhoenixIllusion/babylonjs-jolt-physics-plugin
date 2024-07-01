@@ -1,9 +1,11 @@
-import { PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResult';
+import { IRaycastQuery, PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResult';
 import Jolt from './jolt-import';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
-import { JoltJSPlugin } from './jolt-physics';
+import { JoltJSPlugin, PhysicsSettings } from './jolt-physics';
 export declare class RayCastUtility {
+    private jolt;
     private plugin;
+    private settings?;
     private _raycastResult;
     private _ray_settings;
     private _ray;
@@ -15,8 +17,9 @@ export declare class RayCastUtility {
     private toDispose;
     point: Vector3;
     normal: Vector3;
-    constructor(jolt: Jolt.JoltInterface, plugin: JoltJSPlugin);
-    raycast(from: Vector3, to: Vector3): PhysicsRaycastResult;
-    raycastToRef(from: Vector3, to: Vector3, result: PhysicsRaycastResult): void;
+    private _prevQuery;
+    constructor(jolt: Jolt.JoltInterface, plugin: JoltJSPlugin, settings?: PhysicsSettings | undefined);
+    raycast(from: Vector3, to: Vector3, query?: IRaycastQuery): PhysicsRaycastResult;
+    raycastToRef(from: Vector3, to: Vector3, result: PhysicsRaycastResult, query?: IRaycastQuery): PhysicsRaycastResult;
     dispose(): void;
 }

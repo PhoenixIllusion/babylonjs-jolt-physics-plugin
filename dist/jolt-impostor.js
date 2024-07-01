@@ -5,6 +5,7 @@ import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { BoundingInfo } from '@babylonjs/core/Culling/boundingInfo';
 import Jolt from './jolt-import';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
+import { PhysicsEngine } from '@babylonjs/core/Physics/v1/physicsEngine';
 class TransformNodeWithImpostor extends TransformNode {
     constructor() {
         super(...arguments);
@@ -270,4 +271,25 @@ PhysicsImpostor.prototype.setGravityFactor = function (factor) {
 };
 PhysicsImpostor.prototype.setGravityOverride = function (gravity) {
     this.joltPluginData.plugin.setGravityOverride(this, gravity);
+};
+PhysicsImpostor.prototype.moveKinematicPosition = function (position, duration) {
+    this.joltPluginData.plugin.moveKinematic(this, position, null, duration);
+};
+PhysicsImpostor.prototype.moveKinematicRotation = function (rotation, duration) {
+    this.joltPluginData.plugin.moveKinematic(this, null, rotation, duration);
+};
+PhysicsImpostor.prototype.moveKinematic = function (position, rotation, duration) {
+    this.joltPluginData.plugin.moveKinematic(this, position, rotation, duration);
+};
+PhysicsImpostor.prototype.setLayer = function (layer, mask) {
+    this.joltPluginData.plugin.setLayer(this, layer, mask);
+};
+PhysicsImpostor.prototype.setMotionType = function (motionType) {
+    this.joltPluginData.plugin.setMotionType(this, motionType);
+};
+PhysicsEngine.prototype.raycast = function (from, to, query) {
+    return this.getPhysicsPlugin().raycast(from, to, query);
+};
+PhysicsEngine.prototype.raycastToRef = function (from, to, ref, query) {
+    this.getPhysicsPlugin().raycastToRef(from, to, ref, query);
 };

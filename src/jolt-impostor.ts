@@ -13,6 +13,10 @@ import Jolt from './jolt-import';
 import { VertexData } from '@babylonjs/core/Meshes/mesh.vertexData';
 import { Scene } from '@babylonjs/core/scene';
 import { GravityInterface } from './gravity/types';
+import { CollisionTableFilter } from './jolt-collision';
+import { IRaycastQuery, PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResult';
+import { PhysicsEngine } from '@babylonjs/core/Physics/v1/physicsEngine';
+import { BuoyancyInterface } from './buoyancy/type';
 
 class TransformNodeWithImpostor extends TransformNode {
   _physicsImpostor: Nullable<PhysicsImpostor> = null;
@@ -164,11 +168,12 @@ export class ThinPhysicsNode implements IPhysicsEnabledObject {
   }
 }
 
+export type MotionType = 'static' | 'dynamic' | 'kinematic'
 type ImpostorNumberParamReq = 'mass';
-type ImpostorNumberParam = 'friction' | 'restitution' | 'radiusBottom' | 'radiusTop';
+type ImpostorNumberParam = 'friction' | 'restitution' | 'radiusBottom' | 'radiusTop' | 'layer' | 'mask' | 'dof';
 type ImpostorVec3Param = 'extents' | 'centerOfMass';
 type ImpostorMeshParam = 'mesh';
-type ImpostorBoolParam = 'frozen' | 'sensor';
+type ImpostorBoolParam = 'frozen' | 'sensor' | 'allowDynamicOrKinematic';
 type ImpostorCollisionFilterParam = 'collision';
 type ImpostorHeightMapParam = 'heightMap';
 type ImpostorShapeParam = 'copyShape';
@@ -176,7 +181,7 @@ type ImpostorShapeParam = 'copyShape';
 interface CollisionData {
   group?: number;
   subGroup?: number;
-  filter?: Jolt.GroupFilter;
+  filter?: CollisionTableFilter;
 }
 
 interface HeightMapData {
@@ -184,6 +189,13 @@ interface HeightMapData {
   size: number;
   alphaFilter?: number;
   blockSize?: number;
+}
+
+declare module '@babylonjs/core/Physics/v1/physicsEngine' {
+  interface PhysicsEngine {
+    raycast(from: Vector3, to: Vector3, query?: IRaycastQuery): PhysicsRaycastResult;
+    raycastToRef(from: Vector3, to: Vector3, ref: PhysicsRaycastResult, query?: IRaycastQuery): void;
+  }
 }
 
 declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
@@ -198,6 +210,11 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
     heightMap?: HeightMapData;
     sensor?: boolean;
     copyShape?: PhysicsImpostor;
+    layer?: number;
+    mask?: number;
+    motionType?: MotionType;
+    dof?: number;
+    allowDynamicOrKinematic?: boolean;
   }
 
   interface PhysicsImpostor {
@@ -210,6 +227,7 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
     getParam(param: ImpostorCollisionFilterParam): CollisionData | undefined;
     getParam(param: ImpostorHeightMapParam): HeightMapData | undefined;
     getParam(param: ImpostorShapeParam): PhysicsImpostor | undefined;
+    getParam(param: 'motionType'): MotionType | undefined;
 
     applyForce(force: Vector3): void;
     applyForce(force: Vector3, contactPoint?: Vector3): void;
@@ -217,6 +235,15 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
     getShapeVertexData(): VertexData;
     setGravityFactor(percent: number): void;
     setGravityOverride(gravity: GravityInterface | null): void;
+
+    moveKinematicPosition(position: Vector3, duration: number): void;
+    moveKinematicRotation(rotation: Quaternion, duration: number): void;
+    moveKinematic(position: Vector3, rotation: Quaternion, duration: number): void;
+
+    setLayer(layer: number): void;
+    setLayer(layer: number, mask?: number): void;
+
+    setMotionType(motionType: MotionType): void;
 
     JoltPhysicsCallback: JoltPhysicsCollideCallbacks;
     registerOnJoltPhysicsCollide(kind: 'on-contact-add' | 'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactCallback): void;
@@ -238,6 +265,7 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
 export interface JoltPluginData {
   toDispose: any[];
   gravity?: GravityInterface;
+  buoyancy?: BuoyancyInterface;
   mass: number;
   friction?: number;
   restitution?: number;
@@ -380,4 +408,30 @@ PhysicsImpostor.prototype.setGravityFactor = function (factor: number): void {
 
 PhysicsImpostor.prototype.setGravityOverride = function (gravity: GravityInterface | null): void {
   this.joltPluginData.plugin.setGravityOverride(this, gravity);
+}
+
+
+PhysicsImpostor.prototype.moveKinematicPosition = function (position: Vector3, duration: number): void {
+  this.joltPluginData.plugin.moveKinematic(this, position, null, duration);
+}
+PhysicsImpostor.prototype.moveKinematicRotation = function (rotation: Quaternion, duration: number): void {
+  this.joltPluginData.plugin.moveKinematic(this, null, rotation, duration);
+}
+PhysicsImpostor.prototype.moveKinematic = function (position: Vector3, rotation: Quaternion, duration: number): void {
+  this.joltPluginData.plugin.moveKinematic(this, position, rotation, duration);
+}
+
+PhysicsImpostor.prototype.setLayer = function (layer: number, mask?: number): void {
+  this.joltPluginData.plugin.setLayer(this, layer, mask);
+}
+
+PhysicsImpostor.prototype.setMotionType = function (motionType: MotionType): void {
+  this.joltPluginData.plugin.setMotionType(this, motionType);
+}
+
+PhysicsEngine.prototype.raycast = function (from: Vector3, to: Vector3, query?: IRaycastQuery): PhysicsRaycastResult {
+  return (this.getPhysicsPlugin() as JoltJSPlugin).raycast(from, to, query);
+}
+PhysicsEngine.prototype.raycastToRef = function (from: Vector3, to: Vector3, ref: PhysicsRaycastResult, query?: IRaycastQuery): void {
+  (this.getPhysicsPlugin() as JoltJSPlugin).raycastToRef(from, to, ref, query);
 }

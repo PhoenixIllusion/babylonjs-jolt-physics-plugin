@@ -11,9 +11,11 @@ export class GravityUtility {
   private static _instance?: GravityUtility;
   private _impostors: PhysicsImpostor[] = [];
 
+  constructor() { /* */ }
+
   static getInstance(plugin: JoltJSPlugin): GravityUtility {
     let instance = this._instance;
-    if(!instance) {
+    if (!instance) {
       instance = this._instance = new GravityUtility();
       plugin.registerPerPhysicsStepCallback(instance.onPhysicsStep.bind(instance))
     }
@@ -26,7 +28,7 @@ export class GravityUtility {
     this._impostors.forEach(impostor => {
       const gravity = impostor.joltPluginData.gravity;
       const body: Jolt.Body = impostor.physicsBody;
-      if(gravity && body.IsActive() ) {
+      if (gravity) {
         this._gravityForce.copyFrom(gravity.getGravity(() => {
           return GetJoltVec3(body.GetCenterOfMassPosition(), this._bodyCoM);
         }));
@@ -43,7 +45,7 @@ export class GravityUtility {
   }
 
   unregisterGravityOverride(impostor: PhysicsImpostor) {
-    this._impostors.slice(this._impostors.indexOf(impostor),1);
+    this._impostors.slice(this._impostors.indexOf(impostor), 1);
     impostor.setGravityFactor(1);
     impostor.joltPluginData.gravity = undefined;
   }

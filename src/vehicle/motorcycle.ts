@@ -65,7 +65,7 @@ export class DefaultMotorcycleInput extends DefaultVehicleInput implements BaseV
         this.previousForward = forward;
       }
     }
-    if(this.input.brake) {
+    if (this.input.brake) {
       brake = 1.0;
     }
 
