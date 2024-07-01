@@ -37,7 +37,7 @@ export class JoltPathConstraint extends JoltJoint<PathConstraintParams, Jolt.Pat
         }
         this.activate();
       }
-    })
+    }, () => this.constraint!.GetPositionMotorSettings());
   }
 
   setPathNormals(normal: Vector3 | Vector3[]) {

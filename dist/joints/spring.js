@@ -10,23 +10,27 @@ export function GetSpringMode(mode) {
         case SpringMode.Stiffness: return Jolt.ESpringMode_StiffnessAndDamping;
     }
 }
-export class SpringControl {
-    constructor(_joint) {
-        this._joint = _joint;
+export class Spring {
+    constructor(getSpringSettings) {
+        this.getSpringSettings = getSpringSettings;
         this._mode = SpringMode.Frequency;
+        this._setting = { mode: 'Frequency' };
+    }
+    get springSettings() {
+        return this.getSpringSettings();
+    }
+    getSettings() {
+        return this._setting;
     }
     get settings() {
-        const setting = this._joint.getParams().spring = this._joint.getParams().spring || { mode: 'Frequency' };
-        return setting;
-    }
-    get constraint() {
-        return this._joint.constraint;
+        return this.getSettings();
     }
     set mode(mode) {
         this._mode = mode;
         this.settings.mode = mode == SpringMode.Frequency ? 'Frequency' : 'Stiffness';
-        if (this.constraint) {
-            this.constraint.GetLimitsSpringSettings().mMode = GetSpringMode(mode);
+        const settings = this.springSettings;
+        if (settings) {
+            settings.mMode = GetSpringMode(mode);
         }
     }
     get mode() {
@@ -34,8 +38,9 @@ export class SpringControl {
     }
     set frequency(val) {
         this.settings.frequency = val;
-        if (this.constraint) {
-            this.constraint.GetLimitsSpringSettings().mFrequency = val;
+        const settings = this.springSettings;
+        if (settings) {
+            settings.mFrequency = val;
         }
     }
     get frequency() {
@@ -43,8 +48,9 @@ export class SpringControl {
     }
     set damping(val) {
         this.settings.damping = val;
-        if (this.constraint) {
-            this.constraint.GetLimitsSpringSettings().mDamping = val;
+        const settings = this.springSettings;
+        if (settings) {
+            settings.mDamping = val;
         }
     }
     get damping() {
@@ -52,11 +58,24 @@ export class SpringControl {
     }
     set stiffness(val) {
         this.settings.stiffness = val;
-        if (this.constraint) {
-            this.constraint.GetLimitsSpringSettings().mStiffness = val;
+        const settings = this.springSettings;
+        if (settings) {
+            settings.mStiffness = val;
         }
     }
     get stiffness() {
         return this.settings.stiffness;
+    }
+}
+export class SpringControl extends Spring {
+    constructor(_joint) {
+        super(() => {
+            return this._joint.constraint && this._joint.constraint.GetLimitsSpringSettings();
+        });
+        this._joint = _joint;
+    }
+    getSettings() {
+        const setting = this._joint.getParams().spring = this._joint.getParams().spring || { mode: 'Frequency' };
+        return setting;
     }
 }

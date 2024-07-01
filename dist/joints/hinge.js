@@ -44,7 +44,7 @@ export class JoltHingeJoint extends JoltJoint {
                 }
                 this.activate();
             }
-        });
+        }, () => this.constraint.GetMotorSettings());
     }
     setMinMax(minAngle, maxAngle) {
         this.getParams().limitsMin = minAngle;

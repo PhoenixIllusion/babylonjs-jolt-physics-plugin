@@ -6,16 +6,14 @@ export declare enum SpringMode {
     Stiffness = 1
 }
 export declare function GetSpringMode(mode: SpringMode): Jolt.ESpringMode;
-export declare class SpringControl<P extends JoltConstraint & {
-    spring?: SpringSettings;
-}, C extends Jolt.TwoBodyConstraint & {
-    GetLimitsSpringSettings(): Jolt.SpringSettings;
-}> {
-    private _joint;
+export declare class Spring {
+    private getSpringSettings;
     private _mode;
-    constructor(_joint: JoltJoint<P, C>);
+    private _setting;
+    constructor(getSpringSettings: () => Jolt.SpringSettings | undefined);
+    private get springSettings();
+    protected getSettings(): SpringSettings;
     private get settings();
-    private get constraint();
     set mode(mode: SpringMode);
     get mode(): SpringMode;
     set frequency(val: number);
@@ -24,4 +22,13 @@ export declare class SpringControl<P extends JoltConstraint & {
     get damping(): number | undefined;
     set stiffness(val: number);
     get stiffness(): number | undefined;
+}
+export declare class SpringControl<P extends JoltConstraint & {
+    spring?: SpringSettings;
+}, C extends Jolt.TwoBodyConstraint & {
+    GetLimitsSpringSettings(): Jolt.SpringSettings;
+}> extends Spring {
+    private _joint;
+    constructor(_joint: JoltJoint<P, C>);
+    getSettings(): SpringSettings;
 }

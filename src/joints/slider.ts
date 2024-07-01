@@ -54,7 +54,7 @@ export class JoltSliderJoint extends JoltJoint<SliderConstraintParams, Jolt.Slid
         }
         this.activate();
       }
-    })
+    }, () => this.constraint!.GetMotorSettings());
   }
 
   setMinMax(minAngle: number, maxAngle: number) {

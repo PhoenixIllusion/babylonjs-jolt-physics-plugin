@@ -1,4 +1,5 @@
 import Jolt from "../jolt-import";
+import { Spring } from "./spring";
 
 export enum MotorMode {
   Off,
@@ -14,13 +15,49 @@ export function GetMode(mode: MotorMode) {
   }
 }
 
+class ForceLimit {
+  constructor(private getMotor: () => Jolt.MotorSettings) {
+
+  }
+  private get motorSettings(): Jolt.MotorSettings {
+    return this.getMotor();
+  }
+
+  get min(): number { return this.motorSettings.mMinForceLimit; }
+  set min(v: number) { this.motorSettings.mMinForceLimit = v }
+
+  get max(): number { return this.motorSettings.mMaxForceLimit; }
+  set max(v: number) { this.motorSettings.mMaxForceLimit = v }
+}
+
+class TorqueLimit {
+  constructor(private getMotor: () => Jolt.MotorSettings) {
+
+  }
+  private get motorSettings(): Jolt.MotorSettings {
+    return this.getMotor();
+  }
+  get min(): number { return this.motorSettings.mMinTorqueLimit; }
+  set min(v: number) { this.motorSettings.mMinTorqueLimit = v }
+
+  get max(): number { return this.motorSettings.mMaxTorqueLimit; }
+  set max(v: number) { this.motorSettings.mMaxTorqueLimit = v }
+}
+
 export class MotorControl {
   private _mode = MotorMode.Off;
   private _target = 0;
 
-  constructor(private _setMode: (mode: MotorMode) => void, private _setTarget: (mode: MotorMode, val: number) => void) {
+  public readonly forceLimit: ForceLimit;
+  public readonly torqueLimit: TorqueLimit;
+  public readonly spring: Spring;
 
+  constructor(private _setMode: (mode: MotorMode) => void, private _setTarget: (mode: MotorMode, val: number) => void, motorSettings: () => Jolt.MotorSettings) {
+    this.forceLimit = new ForceLimit(motorSettings);
+    this.torqueLimit = new TorqueLimit(motorSettings);
+    this.spring = new Spring(() => motorSettings().mSpringSettings);
   }
+
   set mode(mode: MotorMode) {
     this._mode = mode;
     this._setMode(mode);
@@ -36,4 +73,5 @@ export class MotorControl {
   get target() {
     return this._target;
   }
+
 }

@@ -45,12 +45,12 @@ export class JoltSwingTwistJoint extends JoltJoint<SwingTwistConstraintParams, J
       if (this.constraint) {
         this.constraint.SetTwistMotorState(GetMode(mode));
       }
-    }, (_mode, _value) => { })
+    }, (_mode, _value) => { }, () => this.constraint!.GetTwistMotorSettings());
     this.swingMotor = new MotorControl((mode) => {
       if (this.constraint) {
-        this.constraint.SetTwistMotorState(GetMode(mode));
+        this.constraint.SetSwingMotorState(GetMode(mode));
       }
-    }, (_mode, _value) => { })
+    }, (_mode, _value) => { }, () => this.constraint!.GetSwingMotorSettings());
   }
 
   setTargetAngularVelocity(inVelocity: Vector3) {

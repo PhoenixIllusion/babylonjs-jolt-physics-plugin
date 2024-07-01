@@ -28,7 +28,7 @@ export class JoltPathConstraint extends JoltJoint {
                 }
                 this.activate();
             }
-        });
+        }, () => this.constraint.GetPositionMotorSettings());
     }
     setPathNormals(normal) {
         if (normal instanceof Array && normal.length > 1 && normal.length != this.getParams().path.length) {
