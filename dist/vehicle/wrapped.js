@@ -110,7 +110,7 @@ export class Transmission {
             this._gearRatios[i] = transmission.mGearRatios.at(i);
         }
     }
-    changeGear(gear, friction = 0) {
+    changeGear(gear, friction = 1) {
         this.transmission.Set(gear, friction);
     }
     get gear() { return this.transmission.GetCurrentGear(); }

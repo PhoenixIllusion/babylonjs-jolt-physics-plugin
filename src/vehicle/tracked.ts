@@ -130,7 +130,7 @@ export class DefaultTrackedInput extends DefaultVehicleInput implements BaseVehi
 
     forward = this.input.forward;
 
-    if(this.input.handBrake) {
+    if (this.input.handBrake) {
       brake = 1.0;
     }
 

@@ -19,16 +19,16 @@ function configureWheelWV(wheel: Jolt.WheelSettingsWV, setting: Vehicle.WheelSet
   if (setting.maxHandBrakeTorque !== undefined) {
     wheel.mMaxHandBrakeTorque = setting.maxHandBrakeTorque;
   }
-  if(setting.lateralFriction !== undefined) {
+  if (setting.lateralFriction !== undefined) {
     wheel.mLateralFriction.Clear();
-    setting.lateralFriction.forEach(([x,y]) => {
-      wheel.mLateralFriction.AddPoint(x,y);
+    setting.lateralFriction.forEach(([x, y]) => {
+      wheel.mLateralFriction.AddPoint(x, y);
     });
   }
-  if(setting.longitudinalFriction !== undefined) {
+  if (setting.longitudinalFriction !== undefined) {
     wheel.mLongitudinalFriction.Clear();
-    setting.longitudinalFriction.forEach(([x,y]) => {
-      wheel.mLongitudinalFriction.AddPoint(x,y);
+    setting.longitudinalFriction.forEach(([x, y]) => {
+      wheel.mLongitudinalFriction.AddPoint(x, y);
     });
   }
 }
@@ -87,7 +87,7 @@ export class DefaultWheeledVehicleInput extends DefaultVehicleInput implements B
         this.previousForward = forward;
       }
     }
-    if(this.input.brake) {
+    if (this.input.brake) {
       brake = 1.0;
     }
 

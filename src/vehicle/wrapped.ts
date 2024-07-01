@@ -69,8 +69,8 @@ export class WheelWV extends Wheel {
   private _maxBrakeTorque: number;
   private _maxHandBrakeTorque: number;
   private _maxSteerAngle: number;
-  private _lateralFriction: [number,number][] = [];
-  private _longitudinalFriction: [number,number][] = [];
+  private _lateralFriction: [number, number][] = [];
+  private _longitudinalFriction: [number, number][] = [];
 
   constructor(wheel: Jolt.WheelWV) {
     super(wheel);
@@ -91,18 +91,18 @@ export class WheelWV extends Wheel {
 
 
   get lateralFriction() { return this._lateralFriction }
-  set lateralFriction(v: [number,number][]) {
+  set lateralFriction(v: [number, number][]) {
     this.settingsWV.mLateralFriction.Clear();
-    v.forEach(([x,y]) => {
-      this.settingsWV.mLateralFriction.AddPoint(x,y);
+    v.forEach(([x, y]) => {
+      this.settingsWV.mLateralFriction.AddPoint(x, y);
     });
   }
 
   get longitudinalFriction() { return this._longitudinalFriction }
-  set longitudinalFriction(v: [number,number][]) {
+  set longitudinalFriction(v: [number, number][]) {
     this.settingsWV.mLongitudinalFriction.Clear();
-    v.forEach(([x,y]) => {
-      this.settingsWV.mLongitudinalFriction.AddPoint(x,y);
+    v.forEach(([x, y]) => {
+      this.settingsWV.mLongitudinalFriction.AddPoint(x, y);
     });
   }
 }
@@ -163,7 +163,7 @@ export class Transmission {
     this._shiftDownRPM = transmission.mShiftDownRPM;
     this._clutchStrength = transmission.mClutchStrength;
     this._gearRatios = [];
-    for(let i=0;i<transmission.mGearRatios.size();i++) {
+    for (let i = 0; i < transmission.mGearRatios.size(); i++) {
       this._gearRatios[i] = transmission.mGearRatios.at(i);
     }
   }
@@ -173,7 +173,7 @@ export class Transmission {
   }
   get gear() { return this.transmission.GetCurrentGear(); }
   get gearRatio() { return this.transmission.GetCurrentRatio(); }
-  get gearRatios() { return this._gearRatios};
+  get gearRatios() { return this._gearRatios };
   get isSwitchingGear() { return this.transmission.IsSwitchingGear(); }
 
   set mode(v: TransmissionMode) { this._mode = v; this.transmission.mMode = v == 'auto' ? Jolt.ETransmissionMode_Auto : Jolt.ETransmissionMode_Manual }
