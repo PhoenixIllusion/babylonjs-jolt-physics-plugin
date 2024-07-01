@@ -11,7 +11,7 @@ import './jolt-impostor';
 import { GravityInterface } from './gravity/types';
 import { SystemCollisionConfiguration } from './jolt-collision';
 import { MotionType } from './jolt-impostor';
-import { BuoyancyImpulse } from './buoyancy/type';
+import { BuoyancyImpulse, BuoyancyInterface } from './buoyancy/type';
 export { setJoltModule } from './jolt-import';
 export declare enum AllowedDOFs {
     None = 0,
@@ -129,5 +129,6 @@ export declare class JoltJSPlugin implements IPhysicsEnginePlugin {
     moveKinematic(impostor: PhysicsImpostor, position: Vector3 | null, rotation: Quaternion | null, duration: number): void;
     setLayer(impostor: PhysicsImpostor, layer: number, mask?: number): void;
     setMotionType(impostor: PhysicsImpostor, motionType: MotionType): void;
+    registerBuoyancyInterface(impostor: PhysicsImpostor, buoyancy: BuoyancyInterface | null): void;
     applyBuoyancyImpulse(impostor: PhysicsImpostor, impulse: BuoyancyImpulse, deltaTime: number): void;
 }

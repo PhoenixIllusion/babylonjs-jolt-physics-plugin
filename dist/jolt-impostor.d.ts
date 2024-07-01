@@ -114,6 +114,7 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
         getShapeVertexData(): VertexData;
         setGravityFactor(percent: number): void;
         setGravityOverride(gravity: GravityInterface | null): void;
+        registerBuoyancyInterface(buoyancy: BuoyancyInterface | null): void;
         moveKinematicPosition(position: Vector3, duration: number): void;
         moveKinematicRotation(rotation: Quaternion, duration: number): void;
         moveKinematic(position: Vector3, rotation: Quaternion, duration: number): void;

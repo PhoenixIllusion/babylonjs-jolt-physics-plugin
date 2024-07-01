@@ -236,6 +236,8 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
     setGravityFactor(percent: number): void;
     setGravityOverride(gravity: GravityInterface | null): void;
 
+    registerBuoyancyInterface(buoyancy: BuoyancyInterface | null): void;
+
     moveKinematicPosition(position: Vector3, duration: number): void;
     moveKinematicRotation(rotation: Quaternion, duration: number): void;
     moveKinematic(position: Vector3, rotation: Quaternion, duration: number): void;
@@ -410,6 +412,9 @@ PhysicsImpostor.prototype.setGravityOverride = function (gravity: GravityInterfa
   this.joltPluginData.plugin.setGravityOverride(this, gravity);
 }
 
+PhysicsImpostor.prototype.registerBuoyancyInterface = function (buoyancy: BuoyancyInterface | null): void {
+  this.joltPluginData.plugin.registerBuoyancyInterface(this, buoyancy);
+}
 
 PhysicsImpostor.prototype.moveKinematicPosition = function (position: Vector3, duration: number): void {
   this.joltPluginData.plugin.moveKinematic(this, position, null, duration);

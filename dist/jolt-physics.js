@@ -13,6 +13,7 @@ import { createJoltShape } from './jolt-shapes';
 import { GravityUtility } from './gravity/utility';
 import { configureSystemCollision, getObjectLayer } from './jolt-collision';
 import { BodyUtility, GetMotionType } from './jolt-body';
+import { BuoyancyUtility } from './buoyancy/utility';
 export { setJoltModule } from './jolt-import';
 export var AllowedDOFs;
 (function (AllowedDOFs) {
@@ -602,6 +603,20 @@ export class JoltJSPlugin {
             }
         }
         this._bodyInterface.SetMotionType(body.GetID(), GetMotionType(motionType), Jolt.EActivation_Activate);
+    }
+    registerBuoyancyInterface(impostor, buoyancy) {
+        const buoyancyUtility = BuoyancyUtility.getInstance(this);
+        if (buoyancy) {
+            if (impostor.joltPluginData.buoyancy) {
+                impostor.joltPluginData.buoyancy = buoyancy;
+            }
+            else {
+                buoyancyUtility.registerBuoyancy(impostor, buoyancy);
+            }
+        }
+        else {
+            buoyancyUtility.unregisterBuoyancy(impostor);
+        }
     }
     applyBuoyancyImpulse(impostor, impulse, deltaTime) {
         const body = impostor.physicsBody;

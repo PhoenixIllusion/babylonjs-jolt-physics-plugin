@@ -21,6 +21,8 @@ import { GravityInterface } from './gravity/types';
 import { LayerCollisionConfiguration, SystemCollisionConfiguration, configureSystemCollision, getObjectLayer } from './jolt-collision';
 import { BodyUtility, GetMotionType } from './jolt-body';
 import { MotionType } from './jolt-impostor';
+import { BuoyancyImpulse, BuoyancyInterface } from './buoyancy/type';
+import { BuoyancyUtility } from './buoyancy/utility';
 export { setJoltModule } from './jolt-import'
 
 interface PossibleMotors {
@@ -691,5 +693,31 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       }
     }
     this._bodyInterface.SetMotionType(body.GetID(), GetMotionType(motionType), Jolt.EActivation_Activate);
+  }
+
+  registerBuoyancyInterface(impostor: PhysicsImpostor, buoyancy: BuoyancyInterface | null) {
+    const buoyancyUtility = BuoyancyUtility.getInstance(this);
+    if (buoyancy) {
+      if (impostor.joltPluginData.buoyancy) {
+        impostor.joltPluginData.buoyancy = buoyancy;
+      } else {
+        buoyancyUtility.registerBuoyancy(impostor, buoyancy);
+      }
+    } else {
+      buoyancyUtility.unregisterBuoyancy(impostor);
+    }
+  }
+
+  applyBuoyancyImpulse(impostor: PhysicsImpostor, impulse: BuoyancyImpulse, deltaTime: number) {
+    const body: Jolt.Body = impostor.physicsBody;
+
+    const inSurfacePosition = SetJoltVec3(impulse.surfacePosition, this._tempVec3A);
+    const inSurfaceNormal = SetJoltVec3(impulse.surfaceNormal || Vector3.UpReadOnly, this._tempVec3B);
+    const inBuoyancy = impulse.buoyancy;
+    const inLinearDrag = impulse.linearDrag;
+    const inAngularDrag = impulse.angularDrag;
+    const inFluidVelocity = SetJoltVec3(impulse.fluidVelocity || Vector3.ZeroReadOnly, this._tempVec3C);
+    const inGravity = impulse.gravity ? SetJoltVec3(impulse.gravity, this._tempVec3D) : this.world.GetGravity();
+    this._bodyInterface.ApplyBuoyancyImpulse(body.GetID(), inSurfacePosition, inSurfaceNormal, inBuoyancy, inLinearDrag, inAngularDrag, inFluidVelocity, inGravity, deltaTime);
   }
 }

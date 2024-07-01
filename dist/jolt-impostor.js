@@ -272,6 +272,9 @@ PhysicsImpostor.prototype.setGravityFactor = function (factor) {
 PhysicsImpostor.prototype.setGravityOverride = function (gravity) {
     this.joltPluginData.plugin.setGravityOverride(this, gravity);
 };
+PhysicsImpostor.prototype.registerBuoyancyInterface = function (buoyancy) {
+    this.joltPluginData.plugin.registerBuoyancyInterface(this, buoyancy);
+};
 PhysicsImpostor.prototype.moveKinematicPosition = function (position, duration) {
     this.joltPluginData.plugin.moveKinematic(this, position, null, duration);
 };
