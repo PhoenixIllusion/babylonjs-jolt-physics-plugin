@@ -1,21 +1,21 @@
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { SceneCallback, createBox, createFloor } from '../util/example';
-import Jolt from '@phoenixillusion/babylonjs-jolt-plugin/import';
 import { JoltSliderJoint, JoltDistanceJoint, JoltFixedJoint, JoltHingeJoint, JoltPointJoint } from '@phoenixillusion/babylonjs-jolt-plugin/joints';
 import { PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import '@phoenixillusion/babylonjs-jolt-plugin/impostor';
 import { Scene } from '@babylonjs/core/scene';
+import { CollisionTableFilter } from '@phoenixillusion/babylonjs-jolt-plugin';
 
 export default (_scene: Scene): SceneCallback => {
 
   const rot = Quaternion.Identity();
   const size = new Vector3(0.5, 0.5, 0.5);
-  const filter = new Jolt.GroupFilterTable(10);
 
   createFloor({ friction: 0.8, mass: 0, restitution: 0.8 });
 
+  const filter = new CollisionTableFilter(10)
   for (let z = 0; z < 9; ++z)
-    filter.DisableCollision(z, z + 1);
+    filter.disableSubGroupPair([z, z + 1]);
 
   const len = 9;
 
@@ -27,7 +27,7 @@ export default (_scene: Scene): SceneCallback => {
       friction: 1,
       restitution: 0,
       collision: {
-        filter: filter,
+        filter,
         group: 1,
         subGroup: z
       }

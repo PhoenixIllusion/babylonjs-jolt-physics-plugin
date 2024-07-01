@@ -270,3 +270,15 @@ export function createImageMaterial(name: string, image: HTMLImageElement): Mate
   mat.diffuseTexture = createTexture(image);
   return mat;
 }
+
+export function getTiledTexture() {
+  const tiledTexture = new Texture('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAIAAAACCAAAAABX3VL4AAAACXBIWXMAAC4jAAAuIwF4pT92AAAAB3RJTUUH5wsCAyocY2BWPgAAABl0RVh0Q29tbWVudABDcmVhdGVkIHdpdGggR0lNUFeBDhcAAAAOSURBVAjXY2D4z/CfAQAGAAH/P9ph1wAAAABJRU5ErkJggg==');
+  tiledTexture.onLoadObservable.add(() => {
+    tiledTexture.wrapU = 1;
+    tiledTexture.wrapV = 1;
+    tiledTexture.vScale = 3;
+    tiledTexture.uScale = 3;
+    tiledTexture.updateSamplingMode(Texture.NEAREST_NEAREST);
+  })
+  return tiledTexture;
+}

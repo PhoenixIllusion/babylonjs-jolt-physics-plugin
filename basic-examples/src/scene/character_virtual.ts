@@ -35,8 +35,8 @@ export default (_scene: Scene): SceneCallback => {
   floor.ground.material = material;
 
   const createCharacter = () => {
-    const capsuleProps = { height: 8, tessellation: 16 }
-    const capsule = MeshBuilder.CreateCapsule('capsule', { radius: 2, ...capsuleProps })
+    const capsuleProps = { height: 2, tessellation: 16 }
+    const capsule = MeshBuilder.CreateCapsule('capsule', { radius: 0.5, ...capsuleProps })
     capsule.position.set(0, 10, 0);
     capsule.material = getMaterial('#990000');
     if (camera)
@@ -50,9 +50,10 @@ export default (_scene: Scene): SceneCallback => {
   const char = createCharacter();
   const inputHandler = new StandardCharacterVirtualHandler();
   inputHandler.jumpSpeed = 6;
+  inputHandler.characterSpeed = 4;
   char.phyics.controller.inputHandler = inputHandler;
 
-  const sensorBox = createBox(new Vector3(5, 0, -5), Quaternion.Identity(), new Vector3(2, 2, 2), { mass: 10, restitution: 0, friction: 0 }, '#FF6666');
+  const sensorBox = createBox(new Vector3(5, 0, -5), Quaternion.Identity(), new Vector3(0.5, 0.5, 0.5), { mass: 10, restitution: 0, friction: 0 }, '#FF6666');
 
   char.phyics.controller.registerOnJoltPhysicsCollide('on-contact-validate', [sensorBox.physics],
     (_body: PhysicsImpostor): boolean => {
@@ -60,10 +61,10 @@ export default (_scene: Scene): SceneCallback => {
     })
 
   const treadMills: { physics: PhysicsImpostor }[] = [];
-  treadMills.push(createBox(new Vector3(-15, 0.5, -15), Quaternion.Identity(), new Vector3(8, 0.25, 2), undefined, '#6666ff'));
-  treadMills.push(createBox(new Vector3(-5, 0.5, -10), Quaternion.Identity(), new Vector3(2, 0.25, 8), undefined, '#6666ff'));
-  treadMills.push(createBox(new Vector3(-25, 0.5, -10), Quaternion.Identity(), new Vector3(2, 0.25, 8), undefined, '#6666ff'));
-  treadMills.push(createBox(new Vector3(-15, 0.5, -5), Quaternion.Identity(), new Vector3(8, 0.25, 2), undefined, '#6666ff'));
+  treadMills.push(createBox(new Vector3(-15, -0.37, -15), Quaternion.Identity(), new Vector3(8, 0.125, 2), undefined, '#6666ff'));
+  treadMills.push(createBox(new Vector3(-5, -0.37, -10), Quaternion.Identity(), new Vector3(2, 0.125, 8), undefined, '#6666ff'));
+  treadMills.push(createBox(new Vector3(-25, -0.37, -10), Quaternion.Identity(), new Vector3(2, 0.125, 8), undefined, '#6666ff'));
+  treadMills.push(createBox(new Vector3(-15, -0.37, -5), Quaternion.Identity(), new Vector3(8, 0.125, 2), undefined, '#6666ff'));
 
   const physObjs = treadMills.map(obj => obj.physics);
 
@@ -81,7 +82,7 @@ export default (_scene: Scene): SceneCallback => {
       }
     })
 
-  const toggleBox = createBox(new Vector3(15, 0.5, -10), Quaternion.Identity(), new Vector3(2, 2, 2), undefined, '#FF0000');
+  const toggleBox = createBox(new Vector3(15, 0.5, -10), Quaternion.Identity(), new Vector3(2, 2, 2), { mass: 100000 }, '#FF0000');
 
   let colorIndex = 0;
   let lastColorChange = 0;
@@ -101,7 +102,6 @@ export default (_scene: Scene): SceneCallback => {
       lastColorChange = performance.now();
     }
   })
-
 
   const input = {
     direction: new Vector3(),

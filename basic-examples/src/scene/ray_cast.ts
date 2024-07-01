@@ -46,7 +46,7 @@ export default (scene: Scene): SceneCallback => {
   const engine = sphere.getScene().getPhysicsEngine()!;
   const yAxis = new Vector3(0, 1, 0);
   return (_time: number, _delta: number) => {
-    sphere.rotate(yAxis, (Math.PI / 10000) * _delta)
+    sphere.rotate(yAxis, (Math.PI / 10) * _delta)
     ray1.origin.copyFrom(getOrigin())
     ray1.direction.copyFrom(getDirection())
     ray1.length = getDistance();

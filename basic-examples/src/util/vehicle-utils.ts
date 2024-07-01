@@ -7,11 +7,10 @@ import { CameraCombinedInput } from "./controller";
 import { BaseKeyCodes } from "./controller/keyboard";
 import { KeyboardEventTypes } from "@babylonjs/core/Events/keyboardEvents";
 import { FreeCamera } from "@babylonjs/core/Cameras/freeCamera";
-import { Button } from "@babylonjs/gui/2D/controls/button";
-import { App } from "../app";
 import { TerrainMaterial } from "@babylonjs/materials/terrain/terrainMaterial";
 import { loadImage, getImagePixels, createTexture, createHeightField } from "./example";
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
+import { createCommandButton } from "./ui-util";
 
 export interface VehicleInput {
   direction: Vector3,
@@ -42,26 +41,6 @@ export async function loadTrack(scene: Scene, friction = 1) {
   heightField.physicsImpostor!.friction = friction;
 }
 
-function createCommandButton(text: string, index: number) {
-  const state = { pressed: false };
-  const button = Button.CreateSimpleButton('button-' + text, text);
-  button.color = "white";
-  button.background = "green";
-  const screenSize = CameraCombinedInput.getScreenSize();
-  button.leftInPixels = -screenSize.x / 2 + screenSize.x / 8 + 10;
-  button.widthInPixels = screenSize.x / 4;
-  button.heightInPixels = 80;
-  button.topInPixels = screenSize.y / 2 - 50 - index * 90;
-  button.onPointerDownObservable.add(() => {
-    state.pressed = true;
-  });
-  button.onPointerUpObservable.add(() => {
-    state.pressed = false;
-  });
-  App.instance.ui!.addControl(button);
-  return state;
-}
-
 export function setupVehicleInput(scene: Scene): { input: VehicleInput, camera: CameraSetup } {
   const input: VehicleInput = {
     direction: new Vector3(),
@@ -85,10 +64,10 @@ export function setupVehicleInput(scene: Scene): { input: VehicleInput, camera: 
     if (keyboard.BACKWARD) input.direction.z -= 1;
     if (keyboard.BRAKE) input.handbrake = true;
     if (keyboard.BOOST) input.boost = true;
-    if (breakButtonDown.pressed) {
+    if (breakButtonDown.state.pressed) {
       input.handbrake = true;
     }
-    if (boostButtonDown.pressed) {
+    if (boostButtonDown.state.pressed) {
       input.boost = true;
     }
 
@@ -97,10 +76,6 @@ export function setupVehicleInput(scene: Scene): { input: VehicleInput, camera: 
       input.direction.z = clamp(-1, -joystick.y, 1);
     }
   }, camera, keycodes);
-
-
-
-
 
   camera.setController(listener);
   camera.changeTiltY(-.3);

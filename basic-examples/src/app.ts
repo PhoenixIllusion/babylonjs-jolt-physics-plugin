@@ -1,6 +1,6 @@
 import './style.css';
 
-import { Jolt, JoltJSPlugin, loadJolt, setJoltModule } from '@phoenixillusion/babylonjs-jolt-plugin';
+import { Jolt, JoltJSPlugin, PhysicsSettings, loadJolt, setJoltModule } from '@phoenixillusion/babylonjs-jolt-plugin';
 
 import { SceneFunction } from './util/example';
 import { Engine } from '@babylonjs/core/Engines/engine';
@@ -21,13 +21,15 @@ export interface SceneConfig {
 
 type SceneModule = {
     default: SceneFunction,
-    config?: SceneConfig
+    config?: SceneConfig,
+    settings?: PhysicsSettings
 }
 
 export class App {
     private canvas: HTMLCanvasElement;
     private createScene: SceneFunction;
     private config?: SceneConfig;
+    private settings?: PhysicsSettings;
     static instance: App;
 
     private engine?: Engine;
@@ -39,6 +41,8 @@ export class App {
     constructor(module: SceneModule) {
         this.createScene = module.default;
         this.config = module.config;
+        this.settings = module.settings;
+
         // create the canvas html element and attach it to the webpage
         const canvas = this.canvas = document.createElement('canvas');
         canvas.id = 'gameCanvas';
@@ -62,6 +66,7 @@ export class App {
         this.dispose();
         this.createScene = module.default;
         this.config = module.config;
+        this.settings = module.settings;
         this.init();
     }
 
@@ -80,7 +85,7 @@ export class App {
         setJoltModule(() => initJolt({
             locateFile: () => joltWasmUrl,
         }));
-        const joltPlugin = await JoltJSPlugin.loadPlugin(true);
+        const joltPlugin = await JoltJSPlugin.loadPlugin(true, this.settings);
         scene.enablePhysics(new Vector3(0, -9.8, 0), joltPlugin)
 
         if (!(this.config && this.config.getCamera)) {
