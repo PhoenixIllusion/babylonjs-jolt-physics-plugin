@@ -1,7 +1,7 @@
 import { MaskCollisionConfiguration, PhysicsSettings } from '@phoenixillusion/babylonjs-jolt-plugin';
 import { SceneCallback, createBox, createCapsule, createFloor, createSphere } from '../util/example';
 import { Scene } from '@babylonjs/core/scene';
-import { Quaternion, Vector3 } from '@babylonjs/core';
+import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 
 const GROUP_STATIC = 1;
 const GROUP_FLOOR1 = 2;

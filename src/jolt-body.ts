@@ -1,10 +1,10 @@
-import { PhysicsImpostor } from "@babylonjs/core";
 import { createJoltShape } from "./jolt-shapes";
 import Jolt from "./jolt-import";
 import { LAYER_MOVING, LAYER_NON_MOVING, SetJoltQuat, SetJoltVec3 } from "./jolt-util";
 import { PhysicsSettings } from "./jolt-physics";
 import { MotionType } from "./jolt-impostor";
 import { getObjectLayer } from "./jolt-collision";
+import { PhysicsImpostor } from "@babylonjs/core/Physics/v1/physicsImpostor";
 
 
 export function GetMotionType(motionType: MotionType): Jolt.EMotionType {

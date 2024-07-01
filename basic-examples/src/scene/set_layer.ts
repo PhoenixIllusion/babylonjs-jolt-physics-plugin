@@ -1,4 +1,4 @@
-import { Quaternion, Vector3 } from '@babylonjs/core';
+import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { SceneCallback, createBox, createFloor, createSphere, getMaterial } from '../util/example';
 import { Scene } from '@babylonjs/core/scene';
 import { LAYER_MOVING, LAYER_NON_MOVING, LayerCollisionConfiguration, PhysicsSettings } from '@phoenixillusion/babylonjs-jolt-plugin';
