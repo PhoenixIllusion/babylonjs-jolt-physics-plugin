@@ -1,27 +1,33 @@
 import Jolt from './jolt-import';
 import { JoltJSPlugin, JoltPluginData } from '.';
 import { IPhysicsEnabledObject, PhysicsImpostor, PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import './jolt-impostor';
 import { Scene } from '@babylonjs/core/scene';
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { GravityInterface } from './gravity/types';
-declare class CharacterVirtualConfig {
-    maxSlopeAngle: number;
-    mass: number;
-    maxStrength: number;
-    characterPadding: number;
-    penetrationRecoverySpeed: number;
-    predictiveContactDistance: number;
-    enableWalkStairs: boolean;
-    enableStickToFloor: boolean;
+type CharacterVirtualNumberParam = 'maxSlopeAngle' | 'maxStrength' | 'characterPadding' | 'penetrationRecoverySpeed' | 'predictiveContactDistance';
+type CharacterVirtualBooleanParam = 'enableWalkStairs' | 'enableStickToFloor';
+interface CharacterVirtualImpostorParameters extends PhysicsImpostorParameters {
+    maxSlopeAngle?: number;
+    maxStrength?: number;
+    characterPadding?: number;
+    penetrationRecoverySpeed?: number;
+    predictiveContactDistance?: number;
+    enableWalkStairs?: boolean;
+    enableStickToFloor?: boolean;
 }
 interface JoltCharacterVirtualPluginData extends JoltPluginData {
     controller: JoltCharacterVirtual;
 }
 export declare class JoltCharacterVirtualImpostor extends PhysicsImpostor {
     _pluginData: JoltCharacterVirtualPluginData;
-    constructor(object: IPhysicsEnabledObject, type: number, _options: PhysicsImpostorParameters, _scene?: Scene);
+    constructor(object: IPhysicsEnabledObject, type: number, _options: CharacterVirtualImpostorParameters, _scene?: Scene);
     get controller(): JoltCharacterVirtual;
     set controller(controller: JoltCharacterVirtual);
+}
+export interface JoltCharacterVirtualImpostor {
+    getParam(param: CharacterVirtualNumberParam): number | undefined;
+    getParam(param: CharacterVirtualBooleanParam): boolean | undefined;
 }
 interface WorldData {
     jolt: Jolt.JoltInterface;
@@ -72,6 +78,27 @@ export declare class StandardCharacterVirtualHandler implements CharacterVirtual
     processCharacterData(character: Jolt.CharacterVirtual, _physicsSys: Jolt.PhysicsSystem, gravity: Vector3, inDeltaTime: number, _tmpVec3: Jolt.Vec3, _tmpQuat: Jolt.Quat): void;
     updateCharacter(character: Jolt.CharacterVirtual, tempVec: Jolt.Vec3): void;
 }
+declare class CharacterVirtualConfig {
+    private character;
+    private updateSettings;
+    enableWalkStairs: boolean;
+    enableStickToFloor: boolean;
+    constructor(character: Jolt.CharacterVirtual, updateSettings: Jolt.ExtendedUpdateSettings);
+    get mass(): number;
+    set mass(v: number);
+    set maxSlopeAngle(v: number);
+    get maxStrength(): number;
+    set maxStrength(v: number);
+    get characterPadding(): number;
+    get penetrationRecoverySpeed(): number;
+    set penetrationRecoverySpeed(v: number);
+    private _stickToFloorStepDown;
+    get stickToFloorStepDown(): Vector3;
+    set stickToFloorStepDown(v: Vector3);
+    private _walkStairsStepUp;
+    get walkStairsStepUp(): Vector3;
+    set walkStairsStepUp(v: Vector3);
+}
 export declare class JoltCharacterVirtual {
     private impostor;
     private shape;
@@ -82,12 +109,14 @@ export declare class JoltCharacterVirtual {
     private mUpdateSettings;
     updateFilterData: UpdateFiltersData;
     inputHandler?: CharacterVirtualInputHandler;
-    config: CharacterVirtualConfig;
     contactListener?: Jolt.CharacterContactListenerJS;
     private _jolt_temp1;
     private _jolt_tempQuat1;
+    config: CharacterVirtualConfig;
     constructor(impostor: JoltCharacterVirtualImpostor, shape: Jolt.Shape, world: WorldData, plugin: JoltJSPlugin);
     init(): void;
+    setLayer(layer: number): void;
+    onDestroy(): void;
     private _characterUp;
     private _temp1;
     private _temp2;

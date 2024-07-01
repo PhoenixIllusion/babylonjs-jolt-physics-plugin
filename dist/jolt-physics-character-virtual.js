@@ -1,23 +1,16 @@
 import Jolt from './jolt-import';
 import { GetJoltVec3, LAYER_MOVING, SetJoltQuat, SetJoltVec3, wrapJolt } from './jolt-util';
+import { getObjectLayer } from '.';
 import { PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
+import './jolt-impostor';
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Logger } from '@babylonjs/core/Misc/logger';
-class CharacterVirtualConfig {
-    constructor() {
-        this.maxSlopeAngle = 45.0 * (Math.PI / 180.0);
-        this.mass = 70;
-        this.maxStrength = 100.0;
-        this.characterPadding = 0.02;
-        this.penetrationRecoverySpeed = 1.0;
-        this.predictiveContactDistance = 0.1;
-        this.enableWalkStairs = true;
-        this.enableStickToFloor = true;
-    }
-}
 export class JoltCharacterVirtualImpostor extends PhysicsImpostor {
     constructor(object, type, _options, _scene) {
         super(object, type, _options, _scene);
+    }
+    getParam(param) {
+        super.getParam(param);
     }
     get controller() {
         return this._pluginData.controller;
@@ -149,13 +142,42 @@ export class StandardCharacterVirtualHandler {
         character.SetLinearVelocity(tempVec);
     }
 }
+class CharacterVirtualConfig {
+    constructor(character, updateSettings) {
+        this.character = character;
+        this.updateSettings = updateSettings;
+        this.enableWalkStairs = true;
+        this.enableStickToFloor = true;
+        this._stickToFloorStepDown = new Vector3();
+        this._walkStairsStepUp = new Vector3();
+    }
+    get mass() { return this.character.GetMass(); }
+    ;
+    set mass(v) { this.character.SetMass(v); }
+    ;
+    set maxSlopeAngle(v) { this.character.SetMaxSlopeAngle(v); }
+    ;
+    get maxStrength() { return this.character.GetMaxStrength(); }
+    ;
+    set maxStrength(v) { this.character.SetMaxStrength(v); }
+    ;
+    get characterPadding() { return this.character.GetCharacterPadding(); }
+    ;
+    get penetrationRecoverySpeed() { return this.character.GetPenetrationRecoverySpeed(); }
+    ;
+    set penetrationRecoverySpeed(v) { this.character.SetPenetrationRecoverySpeed(v); }
+    ;
+    get stickToFloorStepDown() { return GetJoltVec3(this.updateSettings.mStickToFloorStepDown, this._stickToFloorStepDown); }
+    set stickToFloorStepDown(v) { this._stickToFloorStepDown.copyFrom(v); SetJoltVec3(this._stickToFloorStepDown, this.updateSettings.mStickToFloorStepDown); }
+    get walkStairsStepUp() { return GetJoltVec3(this.updateSettings.mWalkStairsStepUp, this._walkStairsStepUp); }
+    set walkStairsStepUp(v) { this._walkStairsStepUp.copyFrom(v); SetJoltVec3(this._stickToFloorStepDown, this.updateSettings.mWalkStairsStepUp); }
+}
 export class JoltCharacterVirtual {
     constructor(impostor, shape, world, plugin) {
         this.impostor = impostor;
         this.shape = shape;
         this.world = world;
         this.plugin = plugin;
-        this.config = new CharacterVirtualConfig();
         this._characterUp = new Vector3();
         this._temp1 = new Vector3();
         this._temp2 = new Vector3();
@@ -169,30 +191,47 @@ export class JoltCharacterVirtual {
         this._jolt_temp1 = new Jolt.Vec3();
         this._jolt_tempQuat1 = new Jolt.Quat();
         this.mDisposables.push(this._jolt_temp1, this._jolt_tempQuat1);
-        this.mUpdateSettings = new Jolt.ExtendedUpdateSettings();
         const settings = new Jolt.CharacterVirtualSettings();
-        settings.mMass = this.config.mass;
-        settings.mMaxSlopeAngle = this.config.maxSlopeAngle;
-        settings.mMaxStrength = this.config.maxStrength;
+        settings.mMass = this.impostor.getParam('mass') | 70;
+        settings.mMaxSlopeAngle = this.impostor.getParam('maxSlopeAngle') || (45.0 * (Math.PI / 180.0));
+        settings.mMaxStrength = this.impostor.getParam('maxStrength') || 100;
+        settings.mCharacterPadding = this.impostor.getParam('characterPadding') || 0.02;
+        settings.mPenetrationRecoverySpeed = this.impostor.getParam('penetrationRecoverySpeed') || 1;
+        settings.mPredictiveContactDistance = this.impostor.getParam('predictiveContactDistance') || 0.1;
         settings.mShape = this.shape;
-        settings.mCharacterPadding = this.config.characterPadding;
-        settings.mPenetrationRecoverySpeed = this.config.penetrationRecoverySpeed;
-        settings.mPredictiveContactDistance = this.config.predictiveContactDistance;
         const mSupportingVolume = new Jolt.Plane(Jolt.Vec3.prototype.sAxisY(), -1);
         settings.mSupportingVolume = mSupportingVolume;
         Jolt.destroy(mSupportingVolume);
         this.mCharacter = new Jolt.CharacterVirtual(settings, Jolt.Vec3.prototype.sZero(), Jolt.Quat.prototype.sIdentity(), this.world.physicsSystem);
         Jolt.destroy(settings);
+        this.mUpdateSettings = new Jolt.ExtendedUpdateSettings();
         this.mDisposables.push(this.mCharacter, this.mUpdateSettings);
+        this.config = new CharacterVirtualConfig(this.mCharacter, this.mUpdateSettings);
+        this.config.enableStickToFloor = this.impostor.getParam('enableStickToFloor') || false;
+        this.config.enableWalkStairs = this.impostor.getParam('enableWalkStairs') || true;
         const objectVsBroadPhaseLayerFilter = world.jolt.GetObjectVsBroadPhaseLayerFilter();
         const objectLayerPairFilter = world.jolt.GetObjectLayerPairFilter();
-        const filter = this.updateFilterData = {
-            movingBPFilter: new Jolt.DefaultBroadPhaseLayerFilter(objectVsBroadPhaseLayerFilter, LAYER_MOVING),
-            movingLayerFilter: new Jolt.DefaultObjectLayerFilter(objectLayerPairFilter, LAYER_MOVING),
+        const layer = getObjectLayer(this.impostor.getParam('layer') || LAYER_MOVING, this.impostor.getParam('mask'), this.plugin.settings);
+        this.updateFilterData = {
+            movingBPFilter: new Jolt.DefaultBroadPhaseLayerFilter(objectVsBroadPhaseLayerFilter, layer),
+            movingLayerFilter: new Jolt.DefaultObjectLayerFilter(objectLayerPairFilter, layer),
             bodyFilter: new Jolt.BodyFilter(),
             shapeFilter: new Jolt.ShapeFilter()
         };
-        this.mDisposables.push(filter.bodyFilter, filter.shapeFilter, filter.movingBPFilter, filter.movingLayerFilter);
+    }
+    setLayer(layer) {
+        Jolt.destroy(this.updateFilterData.movingBPFilter);
+        Jolt.destroy(this.updateFilterData.movingLayerFilter);
+        const objectVsBroadPhaseLayerFilter = this.world.jolt.GetObjectVsBroadPhaseLayerFilter();
+        const objectLayerPairFilter = this.world.jolt.GetObjectLayerPairFilter();
+        this.updateFilterData.movingBPFilter = new Jolt.DefaultBroadPhaseLayerFilter(objectVsBroadPhaseLayerFilter, layer);
+        this.updateFilterData.movingLayerFilter = new Jolt.DefaultObjectLayerFilter(objectLayerPairFilter, layer);
+    }
+    onDestroy() {
+        Jolt.destroy(this.updateFilterData.movingBPFilter);
+        Jolt.destroy(this.updateFilterData.movingLayerFilter);
+        Jolt.destroy(this.updateFilterData.bodyFilter);
+        Jolt.destroy(this.updateFilterData.shapeFilter);
     }
     prePhysicsUpdate(mDeltaTime) {
         if (this.inputHandler) {
@@ -211,7 +250,7 @@ export class JoltCharacterVirtual {
                 this.mUpdateSettings.mWalkStairsStepUp.Set(0, 0, 0);
             }
             else {
-                const len = -this.mUpdateSettings.mWalkStairsStepUp.Length();
+                const len = this.mUpdateSettings.mWalkStairsStepUp.Length();
                 const vec = this._temp1;
                 this._temp2.set(len, len, len);
                 this._characterUp.multiplyToRef(this._temp2, vec);
@@ -226,10 +265,6 @@ export class JoltCharacterVirtual {
             }
             this.inputHandler.processCharacterData(this.mCharacter, this.world.physicsSystem, this._gravity, mDeltaTime, this._jolt_temp1, this._jolt_tempQuat1);
             this.inputHandler.updateCharacter(this.mCharacter, this._jolt_temp1);
-            this.mCharacter.SetMaxSlopeAngle(this.config.maxSlopeAngle);
-            this.mCharacter.SetMaxStrength(this.config.maxStrength);
-            this.mCharacter.SetMass(this.config.mass);
-            this.mCharacter.SetPenetrationRecoverySpeed(this.config.penetrationRecoverySpeed);
             const inGravity = SetJoltVec3(this._gravity, this._jolt_temp1);
             const { movingBPFilter, movingLayerFilter, bodyFilter, shapeFilter } = this.updateFilterData;
             this.mCharacter.ExtendedUpdate(mDeltaTime, inGravity, this.mUpdateSettings, movingBPFilter, movingLayerFilter, bodyFilter, shapeFilter, this.world.jolt.GetTempAllocator());
