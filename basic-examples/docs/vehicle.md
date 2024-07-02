@@ -39,4 +39,12 @@ This plugin has this exposed via `WheeledVehicleInput`, with default implementat
 
 Per the Motorcycle demo, vehicles do best when they have a low center of gravity. In fact, without a center-of-mass almost right at the bottom of the motorcycle, the 'auto stabilize' behavior of a motorcycle attempting to keep it upright will cause the vehicle to wildly bounce and through itself around as stronger and stronger forces apply to both side attempt to upright it until they exceed the force needed to throw the motorcycle into the air. This modified center-of-mass is done using the extension PhysicsParam of 'centerOfMass: Vector3'.
 
-Since cars and tanks usually balance on multiple wheels and treads, and do not rely on an auto-upright behavior, this center of mass is not as critical. 
+Since cars and tanks usually balance on multiple wheels and treads, and do not rely on an auto-upright behavior, this center of mass is not as critical. However, at higher speeds, a non-ground level center of gravity will cause the vehicle to tip on tight turns. Setting the center of mass to ground-level will allow for near unlimited speed without tipping, although traction will need to be modified to prevent sliding.
+
+#### Traction
+Traction is configured by two values:
+1. Longitudinal Friction - grip in the direction of motion
+2. Lateral Friction - grip in the direction of sliding/drifting in the orthogonal non-direction of motion.
+
+#### Gravity
+see [Vehicle Gravity](./vehicle_gravity.md)
