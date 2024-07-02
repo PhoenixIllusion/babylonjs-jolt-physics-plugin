@@ -3,7 +3,7 @@ import { SceneCallback, createBox, createFloor, createSphere, getMaterial } from
 import { Scene } from '@babylonjs/core/scene';
 export default (_scene: Scene): SceneCallback => {
 
-    createFloor({ mass: 0, restitution: 0, friction: 0, frozen: true, friction: 1 });
+    createFloor({ mass: 0, restitution: 0, frozen: true, friction: 1 });
     createBox(new Vector3(1,3,0), Quaternion.Identity(), new Vector3(0.1,3,1), { mass: 1, friction: 1 }, '#cccccc');
     createSphere(new Vector3(2,6,0), 0.5, { mass: 5}, '#ff00ff');
 

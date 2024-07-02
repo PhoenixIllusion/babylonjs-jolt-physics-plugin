@@ -1,6 +1,5 @@
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { MeshBuilder, SceneCallback, createFloor, createMeshForShape } from '../util/example';
-import Jolt from '@phoenixillusion/babylonjs-jolt-plugin/import';
 import { JoltDistanceJoint, } from '@phoenixillusion/babylonjs-jolt-plugin/joints';
 import { PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
 import '@phoenixillusion/babylonjs-jolt-plugin/impostor';
@@ -11,15 +10,16 @@ import { InstancedMesh } from '@babylonjs/core/Meshes/instancedMesh';
 import '@babylonjs/core/Culling/ray';
 import { Color3 } from '@babylonjs/core/Maths/math.color';
 import { Mesh } from '@babylonjs/core/Meshes/mesh';
+import { CollisionTableFilter } from '@phoenixillusion/babylonjs-jolt-plugin';
 
 export default (scene: Scene): SceneCallback => {
 
-  const filter = new Jolt.GroupFilterTable(10);
+  const filter = new CollisionTableFilter(10);
 
   createFloor({ friction: 0.8, mass: 0, restitution: 0.8 });
 
   for (let z = 0; z < 9; ++z)
-    filter.DisableCollision(z, z + 1);
+    filter.disableSubGroupPair([z, z + 1]);
 
   const len = 9;
 

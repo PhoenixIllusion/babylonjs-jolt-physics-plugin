@@ -41,12 +41,19 @@ The [`app.ts`](./src/app.ts) file is shared among all demo scenes. This file is 
 * [2d_funnel](./docs/2d_funnel.md)
 * [2d_funnel_instanced](./docs/2d_funnel_instanced.md) - using thin-mesh instances 
 * [add_remove_bodies](./docs/add_remove_bodies.md) - adding and removing falling cubes from a live scene
+* [set_motion_type](./docs/set_motion_type.md) - set a body as being Kinematic, Dynamic, or Static
+
+
+#### Collision
+* [alternative_collision_filtering](./docs/alternative_collision_filtering.md) - how to configure mask-based filtering
+* [set_layer](./docs/set_layer.md) - change the collision layer of an existing object
 
 #### Shapes
 
 * [falling_shapes](./docs/falling_shapes.md) - demo of the various supported Physics shapes
 * [heightfield](./docs/heightfield.md) - loading of height fields from image-maps to create terrain
 * [heightfield-tiling](./docs/heightfield-tiling.md) - tiling height fields into a larger field
+* [set_shape](./docs/set_shape.md)
 
 #### Other
 * [conveyor_belt](./docs/conveyor_belt.md) - usage of contact listeners to influence contacting bodies angular and linear velocities
@@ -63,3 +70,15 @@ The [`app.ts`](./src/app.ts) file is shared among all demo scenes. This file is 
 * [character_virtual](./docs/character_virtual.md) - Demonstrates a CharacterVirtual controller, allowing navigation and demonstrating contact-validation and conveyor-belt behavior
 * [vehicle_motorcycle](./docs/vehicle_motorcycle.md) - demonstrates a simple 2-wheeled motrocycle
 * [vehicle_wheeled](./docs/vehicle_wheeled.md) - demonstrates a simple 4-wheeled vehicle
+* [vehicle_tracked](./docs/vehicle_tracked.md) - demonstrated a 2-tracked tank-link vehicle
+* [vehicle_kart](./docs/vehicle_kart.md) - demonstrate a vehicle with tires modified to support higher speeds around corners on a track
+
+#### Gravity
+* [gravity_factor](./docs/gravity_factor.md) - Setting gravity factor between 0 and 1 on a given body
+* [gravity_override](./docs/gravity_override.md) - Customizing the impact of gravity on an individual or multiple bodies
+* [character_virtual_gravity](./docs/character_virtual_gravity.md) - Customizing gravity on a Character Virtual
+* [vehicle_gravity](./docs/vehicle_gravity.md) - Customizing gravity on a Vehicle
+
+#### Buoyancy
+* [buoyancy](./docs/buoyancy.md) - Applying a buoyancy interface to individual bodies
+* [buoyancy_aggregate](./docs/buoyancy_aggregate.md) - Using a custom grouping of buoyancy regions under a parent interface

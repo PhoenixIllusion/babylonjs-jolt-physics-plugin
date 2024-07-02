@@ -1,0 +1,39 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+  <g fill="#090">
+    <rect id="island-1" width="5" height="10" x="0" y="10"/>
+    <rect id="island-2" width="5" height="5" x="0" y="0"/>
+    <rect id="island-3" width="10" height="5" x="10" y="0"/>
+  </g>
+  <rect id="bridge-turn" width="1" height="5" x="2" y="5" fill="#009"/>
+  <rect id="bridge-draw" width="5" height="1" x="5" y="2" fill="#009"/>
+  <path id="door-last" stroke="#009" stroke-width=".1" d="M 15,2 V 3"/>
+  <path id="door-first" stroke="#009" stroke-width=".1" d="M 2,15 H 3"/>
+  <g stroke="#900" stroke-width=".1">
+    <ellipse id="start-spot" cx="2.5" cy="17.5" rx=".25" ry=".25"/>
+    <ellipse id="key-to-door" cx="13.5" cy="1.5" rx=".25" ry=".25"/>
+    <ellipse id="console-bridge-turn" cx="4.5" cy="11.5" rx=".25" ry=".25"/>
+    <ellipse id="console-bridge-draw" cx="4.5" cy="3.5" rx=".25" ry=".25"/>
+  </g>
+  <g stroke="#933" stroke-width=".1">
+    <path d="M 0,0 V 5"/>
+    <path d="M 5,0 H 0"/>
+    <path d="M 5,2 V 0"/>
+    <path d="M 5,5 V 3"/>
+    <path d="M 5,5 H 3"/>
+    <path d="M 2,5 H 0"/>
+    <path d="M 2,10 H 0"/>
+    <path d="M 3,10 H 5"/>
+    <path d="M 5,10 V 20"/>
+    <path d="M 0,20 H 5"/>
+    <path d="M 0,10 V 20"/>
+    <path d="M 2,15 H 0"/>
+    <path d="M 3,15 H 5"/>
+    <path d="M 10,0 H 20"/>
+    <path d="M 20,5 H 10"/>
+    <path d="M 15,3 V 5"/>
+    <path d="M 15,2 V 0"/>
+    <path d="M 20,5 V 0"/>
+    <path d="M 10,5 V 3"/>
+    <path d="M 10,2 V 0"/>
+  </g>
+</svg>

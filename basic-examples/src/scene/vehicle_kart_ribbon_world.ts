@@ -47,7 +47,7 @@ export default (scene: Scene): SceneCallback => {
     , 50, false);
 
   const ribbonGravity: GravityInterface = {
-    getGravity: (com: () => Vector3): Vector3 => {
+    getGravity: (_impostor, com: () => Vector3): Vector3 => {
       const point = path.getClosestPositionTo(com());
       return path.getNormalAt(point, true).scale(9.8)
     }

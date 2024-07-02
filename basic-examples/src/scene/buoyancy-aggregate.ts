@@ -28,10 +28,6 @@ export default (scene: Scene): SceneCallback => {
   setupBuoyancy(new Vector3(-6,8,-3), '#009900')
   setupBuoyancy(new Vector3(6,6,-3), '#990000')
 
-
-
-  const x = 3;
-  const z = 0;
   for(let x = -8; x <= 8; x+=1)
   for(let z = -8; z <= 8; z+=1)
   {

@@ -24,7 +24,7 @@ export const settings: PhysicsSettings = {
 
 export default (_scene: Scene): SceneCallback => {
 
-    createFloor({ mass: 0, restitution: 0, friction: 0, frozen: true, friction: 1 });
+    createFloor({ mass: 0, restitution: 0, frozen: true, friction: 1 });
 
     const ball = createSphere(new Vector3(0,6,0), 0.5, { mass: 5}, '#ff00ff');
 

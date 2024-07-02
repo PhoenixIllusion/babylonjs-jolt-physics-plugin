@@ -1,5 +1,5 @@
 import { MeshBuilder, SceneCallback, createBox } from '../util/example';
-import { DefaultTrackedInput, TrackededVehicleController, Vehicle, createBasicTracked } from '@phoenixillusion/babylonjs-jolt-plugin/vehicle';
+import { DefaultTrackedInput, TrackedVehicleController, Vehicle, createBasicTracked } from '@phoenixillusion/babylonjs-jolt-plugin/vehicle';
 import { SceneConfig } from '../app';
 import { Camera } from '@babylonjs/core/Cameras/camera';
 import { Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
@@ -41,7 +41,7 @@ export default async (scene: Scene): Promise<SceneCallback> => {
 
   const wheeledConfig: Vehicle.TrackVehicleSettings = createBasicTracked({ height: .8, length: 4, width: 1.8 }, { radius: 0.20, width: 0.1 });
   const vehicleInput = new DefaultTrackedInput(car.physics.physicsBody);
-  const controller = new TrackededVehicleController(car.physics, wheeledConfig, vehicleInput);
+  const controller = new TrackedVehicleController(car.physics, wheeledConfig, vehicleInput);
 
   await loadTrack(scene);
   const carWheels: Mesh[] = []
