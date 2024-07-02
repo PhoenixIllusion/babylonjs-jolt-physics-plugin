@@ -97,9 +97,9 @@ export default (scene: Scene): SceneCallback => {
         cylinder.parent = staticShape;
         cylinder.material = sphere1.material = sphere2.material = getMaterial(color);
         cylinder.physicsImpostor = new PhysicsImpostor(cylinder, PhysicsImpostor.CylinderImpostor, physicSetting);
-        new PhysicsImpostor(staticShape, PhysicsImpostor.NoImpostor, physicSetting);
         staticShape.position.copyFrom(pos);
         staticShape.rotationQuaternion = rot.clone();
+        new PhysicsImpostor(staticShape, PhysicsImpostor.NoImpostor, physicSetting);
         meshesCreated++;
         break;
       }
