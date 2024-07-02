@@ -3,7 +3,7 @@ export class GravityVector {
     constructor(gravity) {
         this.gravity = gravity;
     }
-    getGravity(_getCenterOfMass) {
+    getGravity(_impostor, _getCenterOfMass) {
         return this.gravity;
     }
 }
@@ -13,7 +13,7 @@ export class GravityPoint {
         this.magnitude = magnitude;
         this._gravity = new Vector3();
     }
-    getGravity(getCenterOfMass) {
+    getGravity(_impostor, getCenterOfMass) {
         return this.point.subtractToRef(getCenterOfMass(), this._gravity).normalize().scaleInPlace(this.magnitude);
     }
 }

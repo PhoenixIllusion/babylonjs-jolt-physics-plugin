@@ -179,7 +179,7 @@ export class BaseVehicleController {
                 this._previousGravity = undefined;
             }
             if (this.gravity) {
-                const gravity = this.gravity.getGravity(() => GetJoltVec3(physicsBody.GetCenterOfMassPosition(), bodyCoM));
+                const gravity = this.gravity.getGravity(impostor, () => GetJoltVec3(physicsBody.GetCenterOfMassPosition(), bodyCoM));
                 if (!this._previousGravity?.equals(gravity)) {
                     this._previousGravity = this._previousGravity || new Vector3();
                     this._previousGravity?.copyFrom(gravity);

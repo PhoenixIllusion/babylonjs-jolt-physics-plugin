@@ -19,7 +19,7 @@ export declare class DefaultTrackedInput extends DefaultVehicleInput implements 
     constructor(body: Jolt.Body);
     onPrePhysicsUpdate(bodyInterface: Jolt.BodyInterface, controller: Jolt.TrackedVehicleController, _deltaTime: number): void;
 }
-export declare class TrackededVehicleController extends BaseVehicleController<Vehicle.WheelSettingTV, WheelTV, Jolt.TrackedVehicleController> {
+export declare class TrackedVehicleController extends BaseVehicleController<Vehicle.WheelSettingTV, WheelTV, Jolt.TrackedVehicleController> {
     constructor(impostor: PhysicsImpostor, settings: Vehicle.TrackVehicleSettings, input: BaseVehicleInput<Jolt.TrackedVehicleController>);
     getController(controller: Jolt.VehicleController): Jolt.TrackedVehicleController;
     getEngine(controller: Jolt.TrackedVehicleController): Jolt.VehicleEngine;

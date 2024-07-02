@@ -261,7 +261,7 @@ export class JoltCharacterVirtual {
                 GetJoltVec3(this.world.physicsSystem.GetGravity(), this._gravity);
             }
             else {
-                this._gravity.copyFrom(gravity.getGravity(() => GetJoltVec3(this.mCharacter.GetPosition(), this._temp1)));
+                this._gravity.copyFrom(gravity.getGravity(this.impostor, () => GetJoltVec3(this.mCharacter.GetPosition(), this._temp1)));
             }
             this.inputHandler.processCharacterData(this.mCharacter, this.world.physicsSystem, this._gravity, mDeltaTime, this._jolt_temp1, this._jolt_tempQuat1);
             this.inputHandler.updateCharacter(this.mCharacter, this._jolt_temp1);

@@ -4,4 +4,4 @@ export { DefaultVehicleInput } from './input';
 export type { IBaseVehicleController } from './base';
 export { DefaultMotorcycleInput, MotorcycleController, createBasicMotorcycle } from './motorcycle';
 export { DefaultWheeledVehicleInput, WheeledVehicleController, createBasicCar } from './wheeled';
-export { DefaultTrackedInput, TrackededVehicleController, createBasicTracked } from './tracked';
+export { DefaultTrackedInput, TrackedVehicleController, createBasicTracked } from './tracked';

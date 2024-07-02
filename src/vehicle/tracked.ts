@@ -173,7 +173,7 @@ export class DefaultTrackedInput extends DefaultVehicleInput implements BaseVehi
 }
 
 
-export class TrackededVehicleController extends BaseVehicleController<Vehicle.WheelSettingTV, WheelTV, Jolt.TrackedVehicleController> {
+export class TrackedVehicleController extends BaseVehicleController<Vehicle.WheelSettingTV, WheelTV, Jolt.TrackedVehicleController> {
   constructor(impostor: PhysicsImpostor, settings: Vehicle.TrackVehicleSettings, input: BaseVehicleInput<Jolt.TrackedVehicleController>) {
     super(impostor, settings, configureTrackedVehicleConstraint(settings, new Jolt.TrackedVehicleControllerSettings()), input);
   }

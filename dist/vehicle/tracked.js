@@ -153,7 +153,7 @@ export class DefaultTrackedInput extends DefaultVehicleInput {
             bodyInterface.ActivateBody(this.bodyId);
     }
 }
-export class TrackededVehicleController extends BaseVehicleController {
+export class TrackedVehicleController extends BaseVehicleController {
     constructor(impostor, settings, input) {
         super(impostor, settings, configureTrackedVehicleConstraint(settings, new Jolt.TrackedVehicleControllerSettings()), input);
     }

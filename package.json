@@ -34,7 +34,8 @@
     "./character-virtual": "./dist/jolt-physics-character-virtual.js",
     "./util": "./dist/jolt-util.js",
     "./vehicle": "./dist/vehicle/index.js",
-    "./gravity": "./dist/gravity/index.js"
+    "./gravity": "./dist/gravity/index.js",
+    "./buoyancy": "./dist/buoyancy/index.js"
   },
   "files": [
     "README.md",

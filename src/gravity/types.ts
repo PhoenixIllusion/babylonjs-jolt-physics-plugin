@@ -1,5 +1,6 @@
 import type { Vector3 } from "@babylonjs/core/Maths/math.vector";
+import { PhysicsImpostor } from "@babylonjs/core/Physics/v1/physicsImpostor";
 
 export interface GravityInterface {
-  getGravity(getCenterOfMass: () => Vector3): Vector3;
+  getGravity(impostor: PhysicsImpostor, getCenterOfMass: () => Vector3): Vector3;
 }

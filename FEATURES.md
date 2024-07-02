@@ -121,14 +121,16 @@ Vehicle Controllers require a `PhysicsImpostor` for the vehicle, a Vehicle Confi
 The following are supported:
 * WheeledVehicleController
 * MotorcycleController
-* ~~TreadedVehicleController~~ (not implemented)
+* TrackedVehicleController 
 
 Default `VehicleInputs` handle many simple cases, but can be overridden with a custom class implementing the required interface.
 * DefaultWheeledVehicleInput
 * DefaultMotorcycleInput
+* DefaultTrackedInput
 
 "Basic" configurations are available in helper methods on the import using `createBasicCar` and `createBasicMotorcycle`, which can then be modified prior to supplying to the controller. 
 * Basic Car - a 4 wheeled vehicle in front-wheel or 4-wheel-drive, with configurable dimensions on the wheels and their placement on the bounds of the PhysicsImpostor
-* Basic Motorcycle - a 2 wheeled vehicle 
+* Basic Motorcycle - a 2 wheeled vehicle
+* Basic Tracked - vehicle with 2 tracks, left and right
 
 The general "wheeled vehicle" can be configured with any combination of wheels, but by default the controller will attempt to steer all wheels with the same steering, and the internal workings attempt to drive all wheels at the same forward/backward rate. Through Jolt's internal methods, the actual direction of 'forward' per-wheel can be redefined at runtime, but not via the Plugin at this time.
