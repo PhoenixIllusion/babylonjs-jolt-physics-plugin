@@ -1,6 +1,5 @@
 
 import { IPhysicsEnginePlugin, PhysicsImpostorJoint } from '@babylonjs/core/Physics/v1/IPhysicsEnginePlugin';
-import { JoltCharacterVirtualImpostor, JoltCharacterVirtual } from './jolt-physics-character-virtual';
 import Jolt, { loadJolt } from './jolt-import';
 import { ContactCollector } from './jolt-contact';
 import { RayCastUtility } from './jolt-raycast';
@@ -23,6 +22,8 @@ import { BodyUtility, GetMotionType } from './jolt-body';
 import { MotionType } from './jolt-impostor';
 import { BuoyancyImpulse, BuoyancyInterface } from './buoyancy/type';
 import { BuoyancyUtility } from './buoyancy/utility';
+import { JoltCharacterVirtualImpostor } from './character/impostor';
+import { JoltCharacterVirtual } from './character/character-virtual';
 export { setJoltModule } from './jolt-import'
 
 interface PossibleMotors {
@@ -54,6 +55,8 @@ export interface PhysicsSettings {
   collision?: SystemCollisionConfiguration,
   maxBodies?: number;
   maxPairs?: number;
+  disableBidirectionalTransformation?: boolean;
+  freezeStatic?: boolean;
 }
 
 export class JoltJSPlugin implements IPhysicsEnginePlugin {
@@ -79,7 +82,6 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   private _contactListener: Jolt.ContactListenerJS;
 
   private _impostorLookup: Record<number, PhysicsImpostor> = {};
-
   private toDispose: any[] = [];
 
 
@@ -122,9 +124,10 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     this._raycaster = new RayCastUtility(jolt, this);
     this._contactListener = new Jolt.ContactListenerJS();
     this._contactCollector = new ContactCollector(this._contactListener);
-    this.world.SetContactListener(this._contactListener);
 
-    this.toDispose.push(this.jolt, this._tempVec3A, this._tempVec3B, this._tempVec3C, this._tempVec3D, this._tempQuaternion, this._contactListener);
+    this.toDispose.push(this.jolt);
+    this.toDispose.push(this._tempVec3A, this._tempVec3B, this._tempVec3C, this._tempVec3D);
+    this.toDispose.push(this._tempQuaternion, this._contactListener);
 
   }
 
@@ -152,6 +155,9 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   public setMaxSteps(maxSteps: number) {
     this._maxSteps = maxSteps;
   }
+  public getMaxSteps(): number {
+    return this._maxSteps;
+  }
 
   /**
    * Gets the current timestep (only used if useDeltaForWorldStep is false in the constructor)
@@ -174,7 +180,6 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
 
   executeStep(delta: number, impostors: PhysicsImpostor[]): void {
     this._contactCollector.clear();
-    const characterVirtuals: JoltCharacterVirtualImpostor[] = [];
     for (const impostor of impostors) {
       // Update physics world objects to match babylon world
       if (!impostor.soft && !impostor.joltPluginData.frozen) {
@@ -185,16 +190,14 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         const bodyID = body.GetID().GetIndexAndSequenceNumber();
         this._contactCollector.registerImpostor(bodyID, impostor);
       }
-      if (impostor instanceof JoltCharacterVirtualImpostor) {
-        characterVirtuals.push(impostor as JoltCharacterVirtualImpostor);
-      }
+    }
+    if(this._contactCollector.hasRegisteredListener) {
+      this.world.SetContactListener(this._contactCollector.listener);
+    } else {
+      this.world.SetContactListener(0);
     }
 
-    this._stepSimulation(this._useDeltaForWorldStep ? delta : this._timeStep, this._maxSteps, this._fixedTimeStep,
-      (timeStep) => {
-        characterVirtuals.forEach(vChar => vChar.controller?.prePhysicsUpdate(timeStep));
-        this._perPhysicsStepCallbacks.forEach(listener => listener(timeStep));
-      });
+    this._stepSimulation(this._useDeltaForWorldStep ? delta : this._timeStep, this._maxSteps, this._fixedTimeStep, (delta) => this.onPhysicsStep(delta));
 
     for (const impostor of impostors) {
       // Update physics world objects to match babylon world
@@ -204,25 +207,29 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     }
   }
 
+  private onPhysicsStep(inDeltaTime: number): void {
+    this._perPhysicsStepCallbacks.forEach(listener => listener(inDeltaTime));
+  }
+
   // Ammo's behavior when maxSteps > 0 does not behave as described in docs
   // @see http://www.bulletphysics.org/mediawiki-1.5.8/index.php/Stepping_The_World
   //
   // When maxSteps is 0 do the entire simulation in one step
   // When maxSteps is > 0, run up to maxStep times, if on the last step the (remaining step - fixedTimeStep) is < fixedTimeStep, the remainder will be used for the step. (eg. if remainder is 1.001 and fixedTimeStep is 1 the last step will be 1.001, if instead it did 2 steps (1, 0.001) issues occuered when having a tiny step in ammo)
   // Note: To get deterministic physics, timeStep would always need to be divisible by fixedTimeStep
-  private _stepSimulation(timeStep: number = 1 / 60, maxSteps: number = 10, fixedTimeStep: number = 1 / 60, perStep: (timeStep: number) => void) {
+  private _stepSimulation(timeStep: number = 1 / 60, maxSteps: number = 10, fixedTimeStep: number = 1 / 60, onStep: (delta: number)=>void) {
     if (maxSteps == 0) {
-      perStep(timeStep);
+      onStep(timeStep);
       this.jolt.Step(timeStep, 1);
     } else {
       while (maxSteps > 0 && timeStep > 0) {
         if (timeStep - fixedTimeStep < fixedTimeStep) {
-          perStep(timeStep);
+          onStep(timeStep);
           this.jolt.Step(timeStep, 1);
           timeStep = 0;
         } else {
           timeStep -= fixedTimeStep;
-          perStep(fixedTimeStep);
+          onStep(fixedTimeStep);
           this.jolt.Step(fixedTimeStep, 1);
         }
         maxSteps--;

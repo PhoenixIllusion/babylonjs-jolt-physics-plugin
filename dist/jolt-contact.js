@@ -48,10 +48,12 @@ export var OnContactValidateResponse;
 })(OnContactValidateResponse || (OnContactValidateResponse = {}));
 export class ContactCollector {
     constructor(listener) {
+        this.listener = listener;
         this._collisionEnabled = {};
         this._joltEventEnabled = { 'on-contact-add': {}, 'on-contact-persist': {}, 'on-contact-validate': {} };
         this._imposterBodyHash = {};
         this._contactSettings = new JoltContactSetting();
+        this._hasRegisteredListener = false;
         const withChecks = (inBody1, inBody2, type, withImpostors) => {
             const body1Hash = inBody1.GetID().GetIndexAndSequenceNumber();
             const body2Hash = inBody2.GetID().GetIndexAndSequenceNumber();
@@ -147,10 +149,12 @@ export class ContactCollector {
         this._imposterBodyHash[hash] = impostor;
         if (impostor._onPhysicsCollideCallbacks.length > 0) {
             this._collisionEnabled[hash] = true;
+            this._hasRegisteredListener = true;
         }
         Object.keys(this._joltEventEnabled).forEach((key) => {
             if (impostor.JoltPhysicsCallback[key].length > 0) {
                 this._joltEventEnabled[key][hash] = true;
+                this._hasRegisteredListener = true;
             }
         });
     }
@@ -158,5 +162,7 @@ export class ContactCollector {
         this._imposterBodyHash = {};
         this._collisionEnabled = {};
         this._joltEventEnabled = { 'on-contact-add': {}, 'on-contact-persist': {}, 'on-contact-validate': {} };
+        this._hasRegisteredListener = false;
     }
+    get hasRegisteredListener() { return this._hasRegisteredListener; }
 }

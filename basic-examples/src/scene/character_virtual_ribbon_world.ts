@@ -59,9 +59,9 @@ export default (scene: Scene): SceneCallback => {
     pathArray[0].push(p.subtract(binormals[i].scale(3)))
     if (i % 8 == 4) {
       const pos = p.add(new Vector3(0, 10, 0)).add(normals[i].negate());
-      const boxes1 = createBox(pos.add(binormals[i].scale(2)), Quaternion.Identity(), new Vector3(0.25, 0.25, 0.25), { mass: 1, friction: 1 });
+      const boxes1 = createBox(pos.add(binormals[i].scale(2)), Quaternion.Identity(), new Vector3(0.25, 0.25, 0.25), { mass: 1, friction: 1 }, '#990000');
       boxes1.physics.setGravityOverride(ribbonGravity);
-      const boxes2 = createBox(pos.subtract(binormals[i].scale(2)), Quaternion.Identity(), new Vector3(0.25, 0.25, 0.25), { mass: 1, friction: 1 });
+      const boxes2 = createBox(pos.subtract(binormals[i].scale(2)), Quaternion.Identity(), new Vector3(0.25, 0.25, 0.25), { mass: 1, friction: 1 }, '#009900');
       boxes2.physics.setGravityOverride(ribbonGravity);
     }
   });

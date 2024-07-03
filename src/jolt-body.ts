@@ -82,7 +82,13 @@ export class BodyUtility {
     }
     if (frozen !== undefined) {
       impostor.joltPluginData.frozen = frozen;
+    } else if (physicsSettings && physicsSettings.freezeStatic) {
+      impostor.joltPluginData.frozen = motionType === Jolt.EMotionType_Static;
     }
+    if(physicsSettings && physicsSettings.disableBidirectionalTransformation != undefined) {
+      impostor.setParam('disableBidirectionalTransformation', physicsSettings.disableBidirectionalTransformation as any);
+    }
+    impostor.resetUpdateFlags();
     if (dof !== undefined) {
       settings.mAllowedDOFs = dof;
     }

@@ -20,8 +20,10 @@ import { Engine } from '@babylonjs/core/Engines/engine';
 import { CreateLines } from '@babylonjs/core/Meshes/Builders/linesBuilder';
 import { Scene } from '@babylonjs/core/scene';
 import { CreateRibbon } from '@babylonjs/core/Meshes/Builders/ribbonBuilder';
+import { CreatePlane } from '@babylonjs/core/Meshes/Builders/planeBuilder';
 
 export const MeshBuilder = {
+  CreatePlane,
   CreateSphere,
   CreateCylinder,
   CreateBox,

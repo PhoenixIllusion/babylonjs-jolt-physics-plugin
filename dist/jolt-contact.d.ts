@@ -35,11 +35,14 @@ export interface JoltPhysicsCollideCallbacks {
 }
 export type JoltCollisionKey = keyof JoltPhysicsCollideCallbacks;
 export declare class ContactCollector {
+    listener: Jolt.ContactListenerJS;
     private _collisionEnabled;
     private _joltEventEnabled;
     private _imposterBodyHash;
     private _contactSettings;
+    private _hasRegisteredListener;
     constructor(listener: Jolt.ContactListenerJS);
     registerImpostor(hash: number, impostor: PhysicsImpostor): void;
     clear(): void;
+    get hasRegisteredListener(): boolean;
 }

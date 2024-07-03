@@ -66,7 +66,7 @@ export class CameraCombinedInput<T extends Camera, K extends BaseKeyCodes> exten
     if (this.keyboard.state.ROTATE_RIGHT) this.cameraSetup.rotate(this.SWIPE_SENSIBILITY * engine.getDeltaTime() / 500);
     if (this.keyboard.state.ROTATE_UP) this.cameraSetup.changeTiltY(-this.SWIPE_SENSIBILITY * engine.getDeltaTime() / 500);
     if (this.keyboard.state.ROTATE_DOWN) this.cameraSetup.changeTiltY(this.SWIPE_SENSIBILITY * engine.getDeltaTime() / 500);
-    this._onInputCheck(this.camera, this.joystick.joystickDelta, this.keyboard.state)
+    this._onInputCheck(this.camera, this.joystick.joystickDelta.scale(1/this.joystick.speed), this.keyboard.state)
   }
 
   onTouch(point: Nullable<PointerTouch>, offsetX: number, offsetY: number): void {

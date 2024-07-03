@@ -78,8 +78,9 @@ export class ContactCollector {
 
   private _imposterBodyHash: { [hash: number]: PhysicsImpostor } = {};
   private _contactSettings = new JoltContactSetting();
+  private _hasRegisteredListener = false;
 
-  constructor(listener: Jolt.ContactListenerJS) {
+  constructor(public listener: Jolt.ContactListenerJS) {
     const withChecks = (inBody1: Jolt.Body, inBody2: Jolt.Body, type: keyof CollisionRecords | 'regular', withImpostors: (body1: PhysicsImpostor, body2: PhysicsImpostor, rev: boolean) => void) => {
 
 
@@ -184,21 +185,28 @@ export class ContactCollector {
       wrapContactEvent('on-contact-persist', inBody1, inBody2, ioSettings);
     }
   }
+
   registerImpostor(hash: number, impostor: PhysicsImpostor) {
     this._imposterBodyHash[hash] = impostor;
     if (impostor._onPhysicsCollideCallbacks.length > 0) {
       this._collisionEnabled[hash] = true;
+      this._hasRegisteredListener = true;
     }
     (Object.keys(this._joltEventEnabled) as (keyof CollisionRecords & keyof JoltPhysicsCollideCallbacks)[]).forEach((key) => {
       if (impostor.JoltPhysicsCallback[key].length > 0) {
         this._joltEventEnabled[key][hash] = true;
+        this._hasRegisteredListener = true;
       }
     });
   }
+
   clear() {
     this._imposterBodyHash = {};
     this._collisionEnabled = {};
     this._joltEventEnabled = { 'on-contact-add': {}, 'on-contact-persist': {}, 'on-contact-validate': {} };
+    this._hasRegisteredListener = false;
   }
+
+  get hasRegisteredListener(): boolean { return this._hasRegisteredListener; }
 
 }

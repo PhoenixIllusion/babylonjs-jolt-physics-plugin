@@ -32,6 +32,8 @@ export interface PhysicsSettings {
     collision?: SystemCollisionConfiguration;
     maxBodies?: number;
     maxPairs?: number;
+    disableBidirectionalTransformation?: boolean;
+    freezeStatic?: boolean;
 }
 export declare class JoltJSPlugin implements IPhysicsEnginePlugin {
     private jolt;
@@ -68,6 +70,7 @@ export declare class JoltJSPlugin implements IPhysicsEnginePlugin {
      * @param maxSteps the maximum number of steps by the physics engine per frame
      */
     setMaxSteps(maxSteps: number): void;
+    getMaxSteps(): number;
     /**
      * Gets the current timestep (only used if useDeltaForWorldStep is false in the constructor)
      * @returns the current timestep in seconds
@@ -77,6 +80,7 @@ export declare class JoltJSPlugin implements IPhysicsEnginePlugin {
     registerPerPhysicsStepCallback(listener: (timeStep: number) => void): void;
     unregisterPerPhysicsStepCallback(listener: (timeStep: number) => void): void;
     executeStep(delta: number, impostors: PhysicsImpostor[]): void;
+    private onPhysicsStep;
     private _stepSimulation;
     getPluginVersion(): number;
     applyImpulse(impostor: PhysicsImpostor, force: Vector3, contactPoint: Vector3): void;
