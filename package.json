@@ -1,7 +1,7 @@
 {
   "name": "@phoenixillusion/babylonjs-jolt-plugin",
   "private": true,
-  "version": "1.4.0",
+  "version": "1.4.1",
   "type": "module",
   "scripts": {
     "build": "mkdir -p dist && cp src/jolt-import.js ./dist/. && tsc",
@@ -31,7 +31,7 @@
     "./contact": "./dist/jolt-contact.js",
     "./joints": "./dist/joints/index.js",
     "./path": "./dist/jolt-constraint-path.js",
-    "./character-virtual": "./dist/jolt-physics-character-virtual.js",
+    "./character-virtual": "./dist/character/index.js",
     "./util": "./dist/jolt-util.js",
     "./vehicle": "./dist/vehicle/index.js",
     "./gravity": "./dist/gravity/index.js",

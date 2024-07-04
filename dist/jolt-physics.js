@@ -82,7 +82,6 @@ export class JoltJSPlugin {
         this._raycaster = new RayCastUtility(jolt, this);
         this._contactListener = new Jolt.ContactListenerJS();
         this._contactCollector = new ContactCollector(this._contactListener);
-        this.world.SetContactListener(this._contactListener);
         this.toDispose.push(this.jolt);
         this.toDispose.push(this._tempVec3A, this._tempVec3B, this._tempVec3C, this._tempVec3D);
         this.toDispose.push(this._tempQuaternion, this._contactListener);
