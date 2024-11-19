@@ -21,7 +21,7 @@
     "@babylonjs/loaders": "6.44.0",
     "@babylonjs/materials": "6.44.0",
     "@babylonjs/serializers": "6.44.0",
-    "@phoenixillusion/babylonjs-jolt-plugin": "github:PhoenixIllusion/babylonjs-jolt-physics-plugin#v1.2.0",
+    "@phoenixillusion/babylonjs-jolt-plugin": "github:PhoenixIllusion/babylonjs-jolt-physics-plugin#v1.4.1",
     "@phoenixillusion/babylonjs-trenchbroom-loader": "PhoenixIllusion/babylonjs-trenchbroom-loader#v1.0.5",
     "quickhull3d": "2.1.0"
   }

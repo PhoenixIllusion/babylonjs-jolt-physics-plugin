@@ -47,16 +47,20 @@ interface HeightFieldData {
 }
 interface JoltCollisionExtras {
   collisionShape: JoltShapes;
-  motionType: JoltMotionType;
+  motionType?: JoltMotionType;
 
-  friction: float;
-  mass: float;
-  restitution: float;
+  friction?: float;
+  mass?: float;
+  restitution?: float;
 
   worldPosition: Float3;
-  worldRotation: Float4;
-  worldScale: Float3;
+  worldRotation?: Float4;
+  worldScale?: Float3;
   extents: Float3;
+
+  isSensor?: boolean;
+  mesh?: number;
+  centerOfMass?: Float3;
 
   heightfield?: HeightFieldData;
 }
@@ -107,7 +111,8 @@ async function createTexture(name: string, buffer: Promise<ArrayBufferView>, sce
 
 async function createHeightField(collision: JoltCollisionExtras, heightfield: HeightFieldData,
           loadImage: (index: number)=>Promise<ArrayBufferView>, getTex: (name: string, index: number, scene: Scene)=>Promise<Texture>): Promise<Mesh> {
-  const img = await createImageBitmap(new Blob([await loadImage(heightfield.depthBuffer)]));
+  const blob = new Blob([await loadImage(heightfield.depthBuffer)]);
+  const img = await createImageBitmap(blob);
   const size = img.width;
   canvas.width = canvas.height = size;
   const ctx = canvas.getContext('2d')!;
@@ -157,7 +162,9 @@ async function createHeightField(collision: JoltCollisionExtras, heightfield: He
     mesh.material = terrainMaterial;
     mesh.position.set(...collision.worldPosition);
     mesh.rotationQuaternion = new Quaternion();
-    mesh.rotationQuaternion.set(...collision.worldRotation);
+    if(collision.worldRotation) {
+      mesh.rotationQuaternion.set(...collision.worldRotation);
+    }
     mesh.physicsImpostor = new PhysicsImpostor(mesh, PhysicsImpostor.HeightmapImpostor, {
         mass: 0,
         heightMap: {
@@ -210,16 +217,18 @@ export default class {
           const collisionData = extras.jolt.collision;
 
           const [ex, ey, ez] = collisionData.extents;
-          const [sx, sy, sz] = collisionData.worldScale;
+          const [sx, sy, sz] = collisionData.worldScale || [1,1,1];
           node.computeWorldMatrix(true);
           const transformParent = new MinimalPhysicsNode(node.name + ": min", new Vector3(ex * sx, ey * sy, ez * sz), node);
           transformParent.position.set(...collisionData.worldPosition);
           transformParent.rotationQuaternion = new Quaternion();
-          transformParent.rotationQuaternion.set(...collisionData.worldRotation);
+          if(collisionData.worldRotation) {
+            transformParent.rotationQuaternion.set(...collisionData.worldRotation);
+          }
 
-          if (collisionData.motionType == 'Dynamic' || collisionData.motionType == 'Kinematic') {
+          if (collisionData.motionType != 'Static' || collisionData.mass ) {
             node.parent = transformParent;
-            node.scaling.set(...collisionData.worldScale);
+            node.scaling.set(sx, sy, sz);
             node.position.set(0, 0, 0);
             node.rotationQuaternion = new Quaternion();
           }
@@ -227,9 +236,10 @@ export default class {
             {
               friction: collisionData.friction,
               restitution: collisionData.restitution,
-              mass: collisionData.mass,
-              ignoreParent: true,
-              disableBidirectionalTransformation: true
+              mass: collisionData.mass || 0,
+              sensor: collisionData.isSensor,
+              centerOfMass: collisionData.centerOfMass ? new Vector3(... collisionData.centerOfMass): undefined,
+              ignoreParent: true
             })
         }
       }

@@ -1,6 +1,16 @@
 
 ### API Changes
 
+#### Version 1.4.1
+* Physics Options - default value for bidirectional and frozen-static
+* Disable JS Contact Listener when not being used
+
+#### Demo
+* Adjust controller sensitivity
+* Add TextLabel generator
+* Character Virtual: Ribbon World: Set box colors
+* Character Virtual: Interactive - wire up bridges, fix controller direction
+
 #### Version 1.4.0
 * Set Motion Type
 * Move Kinematic
