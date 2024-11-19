@@ -94,7 +94,5 @@ export class RayCastUtility {
     this.toDispose.forEach(joltObj => {
       Jolt.destroy(joltObj);
     });
-    Jolt.destroy(this._bp_filter);
-    Jolt.destroy(this._object_filter);
   }
 }
