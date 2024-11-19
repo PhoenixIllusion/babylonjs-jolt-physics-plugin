@@ -34,6 +34,7 @@ export declare class JoltCharacterVirtual {
     inputHandler?: CharacterVirtualInputHandler;
     contactListener?: Jolt.CharacterContactListenerJS;
     private _jolt_temp1;
+    private _jolt_temp1R;
     private _jolt_tempQuat1;
     config: CharacterVirtualConfig;
     private onPhysicsStep;

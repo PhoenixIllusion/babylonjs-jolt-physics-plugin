@@ -18,16 +18,12 @@ export type float4 = [float, float, float, float];
 export const f3 = (v: Vector3): float3 => [v.x, v.y, v.z];
 export const f4 = (v: Quaternion): float4 => [v.x, v.y, v.z, v.w];
 
-export const SetJoltVec3 = (vec3: Vector3, jVec3: Jolt.Vec3) => {
-  jVec3.Set(vec3.x, vec3.y, vec3.z)
-  return jVec3;
-}
-export const SetJoltRVec3 = (vec3: Vector3, jVec3: Jolt.RVec3) => {
+export const SetJoltVec3 = <T extends Jolt.RVec3 | Jolt.Vec3>(vec3: Vector3, jVec3: T): T => {
   jVec3.Set(vec3.x, vec3.y, vec3.z)
   return jVec3;
 }
 
-export const GetJoltVec3 = (jVec3: JVec3, vec3: Vector3) => {
+export const GetJoltVec3 = <T extends Jolt.RVec3 | Jolt.Vec3>(jVec3: T, vec3: Vector3) => {
   vec3.set(jVec3.GetX(), jVec3.GetY(), jVec3.GetZ())
   return vec3;
 }

@@ -9,7 +9,7 @@
     "clean-examples": "rm -r basic-examples/dist basic-examples/node_modules trenchbroom-examples/dist trenchbroom-examples/node_modules gltf-extras/node_modules gltf-extras/dist"
   },
   "devDependencies": {
-    "@babylonjs/core": "7.1.0",
+    "@babylonjs/core": "7.34.1",
     "typescript": "5.2.2"
   },
   "keywords": [
@@ -18,10 +18,10 @@
   ],
   "author": "Phoenix Illusion",
   "peerDependencies": {
-    "@babylonjs/core": "6.x-7.x"
+    "@babylonjs/core": "6.x - 7.x"
   },
   "dependencies": {
-    "jolt-physics": "0.24.0"
+    "jolt-physics": "0.29.0"
   },
   "exports": {
     ".": "./dist/index.js",

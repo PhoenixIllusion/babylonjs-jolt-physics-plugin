@@ -11,7 +11,7 @@ export declare class BuoyancyPlane implements BuoyancyInterface {
     fluidVelocity: Vector3;
     surfacePosition: Vector3;
     constructor(plane: Plane);
-    static FromPosition(position: Vector3, normal?: import("@babylonjs/core/types").DeepImmutableObject<Vector3>): BuoyancyPlane;
+    static FromPosition(position: Vector3, normal?: import("@babylonjs/core").DeepImmutableObject<Vector3>): BuoyancyPlane;
     getBuoyancyImpulse(_impostor: PhysicsImpostor, _getBoundingInfo: () => BoundingInfo): BuoyancyImpulse | null;
 }
 export declare class BuoyancyAggregate implements BuoyancyInterface {

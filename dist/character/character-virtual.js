@@ -23,7 +23,8 @@ export class JoltCharacterVirtual {
         this.mDisposables = impostor._pluginData.toDispose;
         this._jolt_temp1 = new Jolt.Vec3();
         this._jolt_tempQuat1 = new Jolt.Quat();
-        this.mDisposables.push(this._jolt_temp1, this._jolt_tempQuat1);
+        this._jolt_temp1R = new Jolt.RVec3();
+        this.mDisposables.push(this._jolt_temp1, this._jolt_tempQuat1, this._jolt_temp1R);
         const settings = new Jolt.CharacterVirtualSettings();
         settings.mMass = this.impostor.getParam('mass') | 70;
         settings.mMaxSlopeAngle = this.impostor.getParam('maxSlopeAngle') || (45.0 * (Math.PI / 180.0));
@@ -35,7 +36,7 @@ export class JoltCharacterVirtual {
         const mSupportingVolume = new Jolt.Plane(Jolt.Vec3.prototype.sAxisY(), -1);
         settings.mSupportingVolume = mSupportingVolume;
         Jolt.destroy(mSupportingVolume);
-        this.mCharacter = new Jolt.CharacterVirtual(settings, Jolt.Vec3.prototype.sZero(), Jolt.Quat.prototype.sIdentity(), this.world.physicsSystem);
+        this.mCharacter = new Jolt.CharacterVirtual(settings, Jolt.RVec3.prototype.sZero(), Jolt.Quat.prototype.sIdentity(), this.world.physicsSystem);
         Jolt.destroy(settings);
         this.mUpdateSettings = new Jolt.ExtendedUpdateSettings();
         this.mDisposables.push(this.mCharacter, this.mUpdateSettings);
@@ -109,8 +110,7 @@ export class JoltCharacterVirtual {
         return this.mCharacter;
     }
     setPosition(position) {
-        SetJoltVec3(position, this._jolt_temp1);
-        this.mCharacter.SetPosition(this._jolt_temp1);
+        this.mCharacter.SetPosition(SetJoltVec3(position, this._jolt_temp1R));
     }
     registerOnJoltPhysicsCollide(kind, collideAgainst, func) {
         let _lVelocity = new Vector3();

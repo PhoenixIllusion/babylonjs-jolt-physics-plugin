@@ -42,6 +42,7 @@ export class JoltCharacterVirtual {
   public contactListener?: Jolt.CharacterContactListenerJS;
 
   private _jolt_temp1!: Jolt.Vec3;
+  private _jolt_temp1R!: Jolt.RVec3;
   private _jolt_tempQuat1!: Jolt.Quat;
 
   public config!: CharacterVirtualConfig;
@@ -59,7 +60,8 @@ export class JoltCharacterVirtual {
 
     this._jolt_temp1 = new Jolt.Vec3();
     this._jolt_tempQuat1 = new Jolt.Quat();
-    this.mDisposables.push(this._jolt_temp1, this._jolt_tempQuat1);
+    this._jolt_temp1R = new Jolt.RVec3();
+    this.mDisposables.push(this._jolt_temp1, this._jolt_tempQuat1, this._jolt_temp1R);
 
 
     const settings = new Jolt.CharacterVirtualSettings();
@@ -75,7 +77,7 @@ export class JoltCharacterVirtual {
     settings.mSupportingVolume = mSupportingVolume;
     Jolt.destroy(mSupportingVolume);
 
-    this.mCharacter = new Jolt.CharacterVirtual(settings, Jolt.Vec3.prototype.sZero(), Jolt.Quat.prototype.sIdentity(), this.world.physicsSystem);
+    this.mCharacter = new Jolt.CharacterVirtual(settings, Jolt.RVec3.prototype.sZero(), Jolt.Quat.prototype.sIdentity(), this.world.physicsSystem);
     Jolt.destroy(settings);
     this.mUpdateSettings = new Jolt.ExtendedUpdateSettings();
     this.mDisposables.push(this.mCharacter, this.mUpdateSettings);
@@ -178,8 +180,7 @@ export class JoltCharacterVirtual {
   }
 
   setPosition(position: Vector3) {
-    SetJoltVec3(position, this._jolt_temp1);
-    this.mCharacter.SetPosition(this._jolt_temp1);
+    this.mCharacter.SetPosition(SetJoltVec3(position, this._jolt_temp1R));
   }
 
   public _JoltPhysicsCallback: {

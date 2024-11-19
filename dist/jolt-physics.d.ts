@@ -48,6 +48,7 @@ export declare class JoltJSPlugin implements IPhysicsEnginePlugin {
     private _tempVec3B;
     private _tempVec3C;
     private _tempVec3D;
+    private _tempRVec3A;
     private _tempQuaternion;
     private _tempQuaternionBJS;
     private _bodyInterface;

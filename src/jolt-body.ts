@@ -23,7 +23,8 @@ export function GetMotionType(motionType: MotionType): Jolt.EMotionType {
 
 
 export class BodyUtility {
-  static createBody(impostor: PhysicsImpostor, physicsSettings: PhysicsSettings | undefined, bodyInterface: Jolt.BodyInterface, tempVec3A: Jolt.Vec3, tempVec3B: Jolt.Vec3, tempQuaternion: Jolt.Quat): Jolt.Body {
+  static createBody(impostor: PhysicsImpostor, physicsSettings: PhysicsSettings | undefined, bodyInterface: Jolt.BodyInterface,
+    tempVec3A: Jolt.Vec3, tempVec3B: Jolt.Vec3, tempRVec3A: Jolt.RVec3, tempQuaternion: Jolt.Quat): Jolt.Body {
     const shape = createJoltShape(impostor, tempVec3A, tempVec3B, tempQuaternion);
     const mass = impostor.getParam('mass');
     const friction = impostor.getParam('friction');
@@ -34,9 +35,6 @@ export class BodyUtility {
     const frozen = impostor.getParam('frozen');
     const allowDynamicOrKinematic = impostor.getParam('allowDynamicOrKinematic');
 
-    impostor.object.computeWorldMatrix(true);
-    SetJoltVec3(impostor.object.position, tempVec3A);
-    SetJoltQuat(impostor.object.rotationQuaternion!, tempQuaternion);
 
     let motionType = Jolt.EMotionType_Static;
     const pMotionType = impostor.getParam('motionType');
@@ -55,7 +53,10 @@ export class BodyUtility {
       layer = ((mass === 0) ? LAYER_NON_MOVING : LAYER_MOVING);
     }
 
-    const settings = new Jolt.BodyCreationSettings(shape, tempVec3A, tempQuaternion, motionType, layer);
+    impostor.object.computeWorldMatrix(true);
+    SetJoltVec3(impostor.object.position, tempRVec3A);
+    SetJoltQuat(impostor.object.rotationQuaternion!, tempQuaternion);
+    const settings = new Jolt.BodyCreationSettings(shape, tempRVec3A, tempQuaternion, motionType, layer);
     if (collision) {
       if (collision.group !== undefined) {
         settings.mCollisionGroup.SetGroupID(collision.group);

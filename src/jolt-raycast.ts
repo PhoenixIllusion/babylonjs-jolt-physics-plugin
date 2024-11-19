@@ -1,7 +1,7 @@
 
 import { IRaycastQuery, PhysicsRaycastResult } from '@babylonjs/core/Physics/physicsRaycastResult';
 import Jolt from './jolt-import';
-import { SetJoltVec3, GetJoltVec3, LAYER_MOVING, SetJoltRVec3 } from './jolt-util';
+import { SetJoltVec3, GetJoltVec3, LAYER_MOVING } from './jolt-util';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { JoltJSPlugin, PhysicsSettings } from './jolt-physics';
 import { getObjectLayer } from './jolt-collision';
@@ -66,7 +66,7 @@ export class RayCastUtility {
     }
 
     const delta = to.subtract(from);
-    SetJoltRVec3(from, this._ray.mOrigin);
+    SetJoltVec3(from, this._ray.mOrigin);
     SetJoltVec3(delta, this._ray.mDirection);
     this._ray_collector.Reset();
     this.plugin.world.GetNarrowPhaseQuery().CastRay(

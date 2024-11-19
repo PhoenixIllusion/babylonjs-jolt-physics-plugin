@@ -72,6 +72,8 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   private _tempVec3C: Jolt.Vec3;
   private _tempVec3D: Jolt.Vec3;
 
+  private _tempRVec3A: Jolt.RVec3;
+
   private _tempQuaternion: Jolt.Quat;
   private _tempQuaternionBJS = new Quaternion();
   private _bodyInterface: Jolt.BodyInterface;
@@ -120,13 +122,14 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     this._tempVec3B = new Jolt.Vec3();
     this._tempVec3C = new Jolt.Vec3();
     this._tempVec3D = new Jolt.Vec3();
+    this._tempRVec3A = new Jolt.RVec3();
     this._tempQuaternion = new Jolt.Quat();
     this._raycaster = new RayCastUtility(jolt, this);
     this._contactListener = new Jolt.ContactListenerJS();
     this._contactCollector = new ContactCollector(this._contactListener);
 
     this.toDispose.push(this.jolt);
-    this.toDispose.push(this._tempVec3A, this._tempVec3B, this._tempVec3C, this._tempVec3D);
+    this.toDispose.push(this._tempVec3A, this._tempVec3B, this._tempVec3C, this._tempVec3D, this._tempRVec3A );
     this.toDispose.push(this._tempQuaternion, this._contactListener);
 
   }
@@ -245,7 +248,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
     if (!impostor.soft) {
       const physicsBody: Jolt.Body = impostor.physicsBody;
 
-      const worldPoint = this._tempVec3A;
+      const worldPoint = this._tempRVec3A;
       const impulse = this._tempVec3B;
       SetJoltVec3(force, impulse)
       SetJoltVec3(contactPoint, worldPoint)
@@ -263,8 +266,9 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       const forceJ = this._tempVec3B;
       SetJoltVec3(force, forceJ)
       if (contactPoint) {
-        const worldPoint = this._tempVec3A;
+        const worldPoint = this._tempRVec3A;
         SetJoltVec3(contactPoint, worldPoint)
+
         this._bodyInterface.AddForce(physicsBody.GetID(), forceJ, worldPoint, Jolt.EActivation_Activate);
       } else {
         this._bodyInterface.AddForce(physicsBody.GetID(), forceJ, Jolt.EActivation_Activate);
@@ -299,7 +303,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
         this._impostorLookup[-performance.now()] = impostor;
         return;
       }
-      const body = BodyUtility.createBody(impostor, this.settings, this._bodyInterface, this._tempVec3A, this._tempVec3B, this._tempQuaternion);
+      const body = BodyUtility.createBody(impostor, this.settings, this._bodyInterface, this._tempVec3A, this._tempVec3B, this._tempRVec3A, this._tempQuaternion);
       impostor.joltPluginData.plugin = this;
       this._bodyInterface.AddBody(body.GetID(), Jolt.EActivation_Activate);
       this._impostorLookup[body.GetID().GetIndexAndSequenceNumber()] = impostor;
@@ -396,7 +400,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   }
 
   setPhysicsBodyTransformation(impostor: PhysicsImpostor, newPosition: Vector3, newRotation: Quaternion): void {
-    const position = this._tempVec3A;
+    const position = this._tempRVec3A;
     const rotation = this._tempQuaternion;
     position.Set(newPosition.x, newPosition.y, newPosition.z);
     rotation.Set(newRotation.x, newRotation.y, newRotation.z, newRotation.w);
@@ -674,7 +678,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   moveKinematic(impostor: PhysicsImpostor, position: Vector3 | null, rotation: Quaternion | null, duration: number): void {
     const body: Jolt.Body = impostor.physicsBody;
 
-    const vec3 = (position != null) ? SetJoltVec3(position, this._tempVec3A) : body.GetPosition();
+    const vec3 = (position != null) ? SetJoltVec3(position, this._tempRVec3A) : body.GetPosition();
     const quat = (rotation != null) ? SetJoltQuat(rotation, this._tempQuaternion) : body.GetRotation();
 
     body.MoveKinematic(vec3, quat, duration);
@@ -718,7 +722,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
   applyBuoyancyImpulse(impostor: PhysicsImpostor, impulse: BuoyancyImpulse, deltaTime: number) {
     const body: Jolt.Body = impostor.physicsBody;
 
-    const inSurfacePosition = SetJoltVec3(impulse.surfacePosition, this._tempVec3A);
+    const inSurfacePosition = SetJoltVec3(impulse.surfacePosition, this._tempRVec3A);
     const inSurfaceNormal = SetJoltVec3(impulse.surfaceNormal || Vector3.UpReadOnly, this._tempVec3B);
     const inBuoyancy = impulse.buoyancy;
     const inLinearDrag = impulse.linearDrag;
