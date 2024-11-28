@@ -1,7 +1,7 @@
 {
   "name": "@phoenixillusion/babylonjs-jolt-plugin",
   "private": true,
-  "version": "1.4.1",
+  "version": "1.4.2",
   "type": "module",
   "scripts": {
     "build": "mkdir -p dist && cp src/jolt-import.js ./dist/. && tsc",
@@ -21,7 +21,7 @@
     "@babylonjs/core": "6.x - 7.x"
   },
   "dependencies": {
-    "jolt-physics": "0.29.0"
+    "jolt-physics": "0.30.0"
   },
   "exports": {
     ".": "./dist/index.js",

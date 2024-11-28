@@ -145,6 +145,10 @@ export class ThinPhysicsNode {
         return this.mesh.getIndices();
     }
 }
+Object.defineProperty(PhysicsImpostor, 'EmptyImpostor', {
+    value: 200,
+    writable: false
+});
 Object.defineProperty(PhysicsImpostor.prototype, "joltPluginData", {
     get: function () {
         return this._pluginData;

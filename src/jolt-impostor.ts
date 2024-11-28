@@ -217,6 +217,10 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
     allowDynamicOrKinematic?: boolean;
   }
 
+  namespace PhysicsImpostor {
+    export const EmptyImpostor: number;
+  }
+  
   interface PhysicsImpostor {
     get joltPluginData(): JoltPluginData;
     getParam(paramName: ImpostorBoolParam): boolean | undefined;
@@ -275,6 +279,10 @@ export interface JoltPluginData {
   plugin: JoltJSPlugin;
 }
 
+Object.defineProperty(PhysicsImpostor, 'EmptyImpostor', {
+  value: 200,
+  writable: false
+});
 
 Object.defineProperty(PhysicsImpostor.prototype, "joltPluginData", {
   get: function (this: PhysicsImpostor) {

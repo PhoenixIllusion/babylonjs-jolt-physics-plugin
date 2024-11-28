@@ -79,6 +79,9 @@ function createShapeSettings(impostor: PhysicsImpostor, tempVec3A: Jolt.Vec3, te
   };
   let returnValue: Jolt.ShapeSettings | undefined = undefined;
   switch (impostor.type) {
+    case PhysicsImpostor.EmptyImpostor:
+      returnValue = new Jolt.EmptyShapeSettings();
+      break;
     case PhysicsImpostor.SphereImpostor:
       const radiusX = impostorExtents.x;
       const radiusY = impostorExtents.y;
@@ -99,9 +102,18 @@ function createShapeSettings(impostor: PhysicsImpostor, tempVec3A: Jolt.Vec3, te
       break;
     }
     case PhysicsImpostor.CylinderImpostor:
-      returnValue = new Jolt.CylinderShapeSettings(0.5 * impostorExtents.y, 0.5 * impostorExtents.x);
+      const radiusTop = impostor.getParam('radiusTop');
+      const radiusBottom = impostor.getParam('radiusBottom');
+      if (radiusTop && radiusBottom) {
+        returnValue = new Jolt.TaperedCylinderShapeSettings(impostorExtents.y / 2, radiusTop, radiusBottom);
+      } else {
+        const capRadius = impostorExtents.x / 2;
+        returnValue = new Jolt.CylinderShapeSettings(0.5 * impostorExtents.y, capRadius);
+      }
       break;
     case PhysicsImpostor.PlaneImpostor:
+      returnValue = new Jolt.PlaneShapeSettings(Jolt.Plane.prototype.sFromPointAndNormal(Jolt.Vec3.prototype.sZero(),Jolt.Vec3.prototype.sAxisY()))
+      break;
     case PhysicsImpostor.BoxImpostor:
       const extent = new Jolt.Vec3(Math.max(impostorExtents.x / 2, 0.055), Math.max(impostorExtents.y / 2, 0.055), Math.max(impostorExtents.z / 2, 0.055));
       returnValue = new Jolt.BoxShapeSettings(extent);

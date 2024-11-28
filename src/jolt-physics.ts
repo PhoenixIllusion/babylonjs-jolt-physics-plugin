@@ -333,7 +333,7 @@ export class JoltJSPlugin implements IPhysicsEnginePlugin {
       delete this._impostorLookup[impostor.physicsBody.GetID().GetIndexAndSequenceNumber()];
       this._bodyInterface.RemoveBody(impostor.physicsBody.GetID());
       this._bodyInterface.DestroyBody(impostor.physicsBody.GetID());
-
+      (impostor as any)._physicsBody = undefined;
       if (impostor.joltPluginData) {
         impostor.joltPluginData.toDispose.forEach((d: any) => {
           Jolt.destroy(d);

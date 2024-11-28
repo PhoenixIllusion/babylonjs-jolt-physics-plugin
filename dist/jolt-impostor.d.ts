@@ -98,6 +98,9 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
         dof?: number;
         allowDynamicOrKinematic?: boolean;
     }
+    namespace PhysicsImpostor {
+        const EmptyImpostor: number;
+    }
     interface PhysicsImpostor {
         get joltPluginData(): JoltPluginData;
         getParam(paramName: ImpostorBoolParam): boolean | undefined;

@@ -270,6 +270,7 @@ export class JoltJSPlugin {
             delete this._impostorLookup[impostor.physicsBody.GetID().GetIndexAndSequenceNumber()];
             this._bodyInterface.RemoveBody(impostor.physicsBody.GetID());
             this._bodyInterface.DestroyBody(impostor.physicsBody.GetID());
+            impostor._physicsBody = undefined;
             if (impostor.joltPluginData) {
                 impostor.joltPluginData.toDispose.forEach((d) => {
                     Jolt.destroy(d);
