@@ -14,8 +14,8 @@ export default (scene: Scene): SceneCallback => {
 
   let meshesCreated = 0;
   const generateObject = () => {
-    let numTypes = 7;
-    let objectType = Math.ceil(Math.random() * numTypes);
+    let numTypes = 8;
+    let objectType =  Math.ceil(Math.random() * numTypes);
 
     let colors = ['#ff0000', '#d9b1a3', '#4d4139', '#ccad33', '#f2ff40', '#00ff00', '#165943', '#567371', '#80d5ff', '#69778c',
       '#beb6f2', '#7159b3', '#73004d', '#d90074', '#ff8091', '#bf3030', '#592400', '#a66c29', '#b3aa86', '#296600', '#00e600',
@@ -46,11 +46,20 @@ export default (scene: Scene): SceneCallback => {
         // Cylinder
         let radius = 0.5 + Math.random();
         let halfHeight = 0.5 + 0.5 * Math.random();
-        createCylinder(pos, radius, halfHeight * 2, physicSetting, colors[objectType - 1]);
+        createCylinder(pos, radius, radius, halfHeight * 2, physicSetting, colors[objectType - 1]);
         meshesCreated++;
         break;
       }
       case 4: {
+        // Cylinder
+        let radiusTop = 0.5 + Math.random();
+        let radiusBottom = 0.5 + Math.random();
+        let halfHeight = 0.5 + 0.5 * Math.random();
+        createCylinder(pos, radiusTop, radiusBottom, halfHeight * 2, physicSetting, colors[objectType - 1]);
+        meshesCreated++;
+        break;
+      }
+      case 5: {
         // Capsule
         let radius = 0.5 + Math.random();
         let halfHeight = 0.5 + 0.5 * Math.random();
@@ -58,7 +67,7 @@ export default (scene: Scene): SceneCallback => {
         meshesCreated++;
         break;
       }
-      case 5: {
+      case 6: {
         // Tapered capsule
         let topRadius = 0.1 + Math.random() / 2;
         let bottomRadius = 0.5 + Math.random() / 2;
@@ -67,7 +76,7 @@ export default (scene: Scene): SceneCallback => {
         meshesCreated++;
         break;
       }
-      case 6: {
+      case 7: {
         // Convex hull
         const points = [];
         for (let p = 0; p < 10; ++p)
@@ -77,7 +86,7 @@ export default (scene: Scene): SceneCallback => {
         meshesCreated++;
         break;
       }
-      case 7: {
+      case 8: {
         const staticShape = new Mesh('static-shape', scene);
         let l = 1.0 + Math.random();
         let r2 = 0.5 + 0.5 * Math.random();

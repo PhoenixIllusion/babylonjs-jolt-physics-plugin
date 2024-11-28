@@ -6,7 +6,8 @@
   "scripts": {
     "build": "mkdir -p dist && cp src/jolt-import.js ./dist/. && tsc",
     "git-pages": "sh build-git-pages.sh",
-    "clean-examples": "rm -r basic-examples/dist basic-examples/node_modules trenchbroom-examples/dist trenchbroom-examples/node_modules gltf-extras/node_modules gltf-extras/dist"
+    "examples:clean": "npm run --prefix basic-examples clean && npm run --prefix gltf-extras clean && npm run --prefix trenchbroom-examples clean",
+    "examples:rebuild:lock": "npm run --prefix basic-examples rebuild:lock && npm run --prefix gltf-extras rebuild:lock && npm run --prefix trenchbroom-examples rebuild:lock"
   },
   "devDependencies": {
     "@babylonjs/core": "7.34.1",

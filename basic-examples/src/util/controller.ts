@@ -30,7 +30,7 @@ export class CameraCombinedInput<T extends Camera, K extends BaseKeyCodes> exten
 
   constructor(private _onInputCheck: OnInputCheck<T, K>, private cameraSetup: CameraSetup, keycodes: K) {
     super();
-    this.joystick = new JoystickControl(App.instance.ui!);
+    this.joystick = new JoystickControl(App.instance!.ui!);
     this.keyboard = new KeyboardControl(keycodes);
   }
 

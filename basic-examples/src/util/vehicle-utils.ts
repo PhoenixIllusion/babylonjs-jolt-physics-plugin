@@ -11,6 +11,7 @@ import { TerrainMaterial } from "@babylonjs/materials/terrain/terrainMaterial";
 import { loadImage, getImagePixels, createTexture, createHeightField } from "./example";
 import { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import { createCommandButton } from "./ui-util";
+import { App } from "../app";
 
 export interface VehicleInput {
   direction: Vector3,
@@ -53,33 +54,35 @@ export function setupVehicleInput(scene: Scene): { input: VehicleInput, camera: 
   const breakButtonDown = createCommandButton('BRAKE', 0);
   const boostButtonDown = createCommandButton('BOOST', 1);
 
-  const listener = new CameraCombinedInput<FreeCamera, VehicleKeyCodes>((_camera, joystick, keyboard) => {
-    input.direction.x = 0;
-    input.direction.z = 0;
-    input.handbrake = false;
-    input.boost = false;
-    if (keyboard.LEFT) input.direction.x = 1;
-    if (keyboard.RIGHT) input.direction.x -= 1;
-    if (keyboard.FORWARD) input.direction.z = 1;
-    if (keyboard.BACKWARD) input.direction.z -= 1;
-    if (keyboard.BRAKE) input.handbrake = true;
-    if (keyboard.BOOST) input.boost = true;
-    if (breakButtonDown.state.pressed) {
-      input.handbrake = true;
-    }
-    if (boostButtonDown.state.pressed) {
-      input.boost = true;
-    }
+    if(App.instance?.ui) {
+    const listener = new CameraCombinedInput<FreeCamera, VehicleKeyCodes>((_camera, joystick, keyboard) => {
+      input.direction.x = 0;
+      input.direction.z = 0;
+      input.handbrake = false;
+      input.boost = false;
+      if (keyboard.LEFT) input.direction.x = 1;
+      if (keyboard.RIGHT) input.direction.x -= 1;
+      if (keyboard.FORWARD) input.direction.z = 1;
+      if (keyboard.BACKWARD) input.direction.z -= 1;
+      if (keyboard.BRAKE) input.handbrake = true;
+      if (keyboard.BOOST) input.boost = true;
+      if (breakButtonDown.state.pressed) {
+        input.handbrake = true;
+      }
+      if (boostButtonDown.state.pressed) {
+        input.boost = true;
+      }
 
-    if (joystick.length() > 0) {
-      input.direction.x = clamp(-1, -joystick.x, 1);
-      input.direction.z = clamp(-1, -joystick.y, 1);
-    }
-  }, camera, keycodes);
+      if (joystick.length() > 0) {
+        input.direction.x = clamp(-1, -joystick.x, 1);
+        input.direction.z = clamp(-1, -joystick.y, 1);
+      }
+    }, camera, keycodes);
 
-  camera.setController(listener);
-  camera.changeTiltY(-.3);
-  camera.setDistance(25);
+    camera.setController(listener);
+    camera.changeTiltY(-.3);
+    camera.setDistance(25);
+  }
   return { input, camera };
 }
 

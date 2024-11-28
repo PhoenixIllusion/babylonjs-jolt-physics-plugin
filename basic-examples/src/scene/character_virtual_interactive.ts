@@ -74,7 +74,7 @@ class Teleport {
 class ButtonActiveRegion {
   public sensor: PhysicsImpostor;
   constructor(mesh: AbstractMesh, radius: number, public text: string) {
-    const sensor = createCylinder(mesh.position, radius, 2, { sensor: true, mass: 0}, '#00ff00');
+    const sensor = createCylinder(mesh.position, radius, radius, 2, { sensor: true, mass: 0}, '#00ff00');
     sensor.cylinder.material!.wireframe = true;
     this.sensor = sensor.physics;
   }

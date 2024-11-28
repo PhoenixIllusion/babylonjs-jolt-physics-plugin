@@ -6,24 +6,26 @@
   "scripts": {
     "dev": "vite --force",
     "build": "tsc && vite build --emptyOutDir",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "clean": "rm -fr ./dist ./node_modules",
+    "rebuild:lock": "rm -f ./package-lock.json && npm install && npm run clean"
   },
   "devDependencies": {
-    "@babylonjs/inspector": "7.10.2",
+    "@babylonjs/inspector": "7.34.1",
     "@types/node": "20.11.24",
     "typescript": "5.2.2",
     "vite": "5.2.11",
     "vite-plugin-virtual-mpa": "1.10.1"
   },
   "dependencies": {
-    "@babylonjs/core": "7.10.2",
-    "@babylonjs/gui": "7.10.2",
-    "@babylonjs/gui-editor": "7.10.2",
-    "@babylonjs/loaders": "7.10.2",
-    "@babylonjs/materials": "7.10.2",
-    "@babylonjs/serializers": "7.10.2",
-    "@phoenixillusion/babylonjs-jolt-plugin": "github:PhoenixIllusion/babylonjs-jolt-physics-plugin#v1.4.1",
-    "jolt-physics": "0.24.0",
+    "@babylonjs/core": "7.34.1",
+    "@babylonjs/gui": "7.34.1",
+    "@babylonjs/gui-editor": "7.34.1",
+    "@babylonjs/loaders": "7.34.1",
+    "@babylonjs/materials": "7.34.1",
+    "@babylonjs/serializers": "7.34.1",
+    "@phoenixillusion/babylonjs-jolt-plugin": "github:PhoenixIllusion/babylonjs-jolt-physics-plugin#v1.4.2",
+    "jolt-physics": "0.30.0",
     "quickhull3d": "2.1.0"
   }
 }

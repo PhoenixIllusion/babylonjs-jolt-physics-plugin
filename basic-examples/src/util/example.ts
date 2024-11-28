@@ -74,11 +74,19 @@ export const createSphere = (position: Vector3, radius: number, physicsOptions: 
   const physics = new PhysicsImpostor(sphere, PhysicsImpostor.SphereImpostor, physicsOptions);
   return { sphere, physics };
 }
-export const createCylinder = (position: Vector3, radius: number, height: number, physicsOptions: PhysicsOptions = NullPhysics, color: string = '#FFFFFF') => {
-  const cylinder = MeshBuilder.CreateCylinder('cylinder', { diameter: radius, height, tessellation: 16 });
-  cylinder.position.copyFrom(position);
-  cylinder.material = getMaterial(color);
-  const physics = new PhysicsImpostor(cylinder, PhysicsImpostor.CylinderImpostor, physicsOptions);
+export const createCylinder = (position: Vector3, radiusTop: number, radiusBottom: number, height: number, physicsOptions: PhysicsOptions = NullPhysics, color: string = '#FFFFFF') => {
+  const cylinderProps = { height, tessellation: 16 };
+  const isTapered = radiusTop !== radiusBottom; 
+  const cylinder = (isTapered)
+    ? MeshBuilder.CreateCylinder('cylinder', { diameterTop: radiusTop * 2, diameterBottom: radiusBottom * 2, ...cylinderProps })
+    : MeshBuilder.CreateCylinder('cylinder', { diameter: radiusTop * 2, ...cylinderProps })
+    cylinder.position.copyFrom(position);
+    cylinder.material = getMaterial(color);
+  const physics = new PhysicsImpostor(cylinder, PhysicsImpostor.CylinderImpostor, {
+    radiusTop: isTapered ? radiusTop : undefined,
+    radiusBottom: isTapered ? radiusBottom : undefined,
+    ...physicsOptions
+  });
   return { cylinder, physics };
 }
 
@@ -92,15 +100,16 @@ export const createBox = (position: Vector3, rotation: Quaternion, halfExtent: V
 }
 
 export const createCapsule = (position: Vector3, radiusTop: number, radiusBottom: number, height: number, physicsOptions: PhysicsOptions = NullPhysics, color = '#FFFFFF') => {
-  const capsuleProps = { height: height + radiusTop + radiusBottom, tessellation: 16 }
-  const box = (radiusTop !== radiusBottom)
+  const capsuleProps = { height: height + radiusTop + radiusBottom, tessellation: 16 };
+  const isTapered = radiusTop !== radiusBottom; 
+  const box = (isTapered)
     ? MeshBuilder.CreateCapsule('capsule', { radiusTop, radiusBottom, ...capsuleProps })
     : MeshBuilder.CreateCapsule('capsule', { radius: radiusBottom, ...capsuleProps })
   box.position.copyFrom(position);
   box.material = getMaterial(color);
   const physics = new PhysicsImpostor(box, PhysicsImpostor.CapsuleImpostor, {
-    radiusTop: radiusTop !== radiusBottom ? radiusBottom : undefined,
-    radiusBottom: radiusTop !== radiusBottom ? radiusBottom : undefined,
+    radiusTop: isTapered ? radiusTop : undefined,
+    radiusBottom: isTapered ? radiusBottom : undefined,
     ...physicsOptions
   });
   return { box, physics };
@@ -110,22 +119,20 @@ export const createConvexHull = (position: Vector3, points: Vector3[], physicsOp
   const rawPoints = points.map(x => [x.x, x.y, x.z]);
   const faces = QuickHull(points.map(x => [x.x, x.y, x.z]));
 
-  const filteredPoints: number[][] = [];
-  const indexUsed: { [i: number]: boolean } = {}
-  faces.forEach(indices => {
-    indices.forEach(i => {
-      if (!indexUsed[i]) {
-        indexUsed[i] = true;
-        filteredPoints.push(rawPoints[i]);
-      }
+  const vertex: number[] = [];
+  const indices: number[] = [];
+  let index = 0;
+  faces.forEach(vIndex => {
+    [0,2,1].forEach(i => {
+      vertex.push(... rawPoints[vIndex[i]]);
+      indices.push(index++);
     })
   })
-  const positions = filteredPoints.flat();
-  const indices = QuickHull(filteredPoints).flat();
+
   const normals: number[] = [];
   var vertexData = new VertexData();
-  VertexData.ComputeNormals(positions, indices, normals);
-  vertexData.positions = positions;
+  VertexData.ComputeNormals(vertex, indices, normals);
+  vertexData.positions = vertex;
   vertexData.indices = indices;
   vertexData.normals = normals;
 
@@ -133,7 +140,6 @@ export const createConvexHull = (position: Vector3, points: Vector3[], physicsOp
   vertexData.applyToMesh(mesh);
   mesh.position.copyFrom(position);
   mesh.material = getMaterial(color);
-  mesh.material.wireframe = true;
   const physics = new PhysicsImpostor(mesh, PhysicsImpostor.ConvexHullImpostor, physicsOptions);
   return { mesh, physics };
 }
@@ -198,7 +204,7 @@ export function createMeshForShape(impostor: PhysicsImpostor, color: Color3) {
 
   const mesh = new Mesh('debug-mesh', Engine.LastCreatedScene!);
   vertexData.applyToMesh(mesh);
-  mesh.overrideMaterialSideOrientation = Material.ClockWiseSideOrientation;
+  mesh.sideOrientation = Material.ClockWiseSideOrientation;
   return mesh;
 }
 

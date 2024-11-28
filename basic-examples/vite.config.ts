@@ -1,7 +1,9 @@
 import { defineConfig } from 'vite'
 import type { Page }from 'vite-plugin-virtual-mpa';
-import { createMpaPlugin } from 'vite-plugin-virtual-mpa'
+import { createMpaPlugin } from 'vite-plugin-virtual-mpa';
 import fs from 'fs';
+import path from 'path';
+
 
 function genPages() {
   const files = fs.readdirSync('src/scene').filter(file => /.+\.ts$/.test(file)).map(js_file => js_file.replace('.ts',''));
@@ -11,6 +13,9 @@ function genPages() {
       data: {
         files
       }
+  }, {
+    name: "memtest",
+    template: 'static/_template_memtest.html'
   }, 
   ... files.map(file => ({
     name: file, 

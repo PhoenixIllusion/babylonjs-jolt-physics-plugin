@@ -2,7 +2,7 @@ import './style.css';
 
 import { Jolt, JoltJSPlugin, PhysicsSettings, loadJolt, setJoltModule } from '@phoenixillusion/babylonjs-jolt-plugin';
 
-import { SceneFunction } from './util/example';
+import { clearMaterials, SceneFunction } from './util/example';
 import { Engine } from '@babylonjs/core/Engines/engine';
 import { FlyCamera } from '@babylonjs/core/Cameras/flyCamera';
 import { Vector3 } from '@babylonjs/core/Maths/math.vector';
@@ -10,13 +10,12 @@ import { DirectionalLight } from '@babylonjs/core/Lights/directionalLight';
 import "@babylonjs/core/Physics/physicsEngineComponent";
 import { Scene } from '@babylonjs/core/scene';
 import { Camera } from '@babylonjs/core/Cameras/camera';
-import { MemoryAvailableElement, setupMemoryAvailable } from './util/memory-available';
 import { AdvancedDynamicTexture } from '@babylonjs/gui/2D/advancedDynamicTexture';
 
 import joltWasmUrl from 'jolt-physics/jolt-physics.wasm.wasm?url'
 
 export interface SceneConfig {
-    getCamera(): Camera | undefined;
+    getCamera(scene: Scene): Camera | undefined;
 }
 
 type SceneModule = {
@@ -25,79 +24,82 @@ type SceneModule = {
     settings?: PhysicsSettings
 }
 
-export class App {
+export class AppMemTest {
     private canvas: HTMLCanvasElement;
-    private createScene: SceneFunction;
-    private config?: SceneConfig;
-    private settings?: PhysicsSettings;
-    static instance?: App;
+    static instance: AppMemTest;
 
-    private engine?: Engine;
     private scene?: Scene;
     public ui?: AdvancedDynamicTexture;
+    private engine: Engine;
 
-    private memoryAvailableEle?: MemoryAvailableElement;
+    constructor() {
 
-    constructor(module: SceneModule) {
-        this.createScene = module.default;
-        this.config = module.config;
-        this.settings = module.settings;
 
         // create the canvas html element and attach it to the webpage
         const canvas = this.canvas = document.createElement('canvas');
         canvas.id = 'gameCanvas';
         document.body.style.height = window.innerHeight + 'px';
         document.body.appendChild(canvas);
-
-        this.init();
-        App.instance = this;
+        this.engine = new Engine(this.canvas, true);
     }
 
-    disposeScene() {
-        this.scene?.dispose();
-        this.ui?.dispose();
-        this.scene = undefined;
-    }
-    dispose() {
-        this.engine?.dispose();
-        this.engine = undefined;
-    }
-    load(module: SceneModule) {
-        this.dispose();
-        this.createScene = module.default;
-        this.config = module.config;
-        this.settings = module.settings;
-        this.init();
-    }
-
-    async init() {
-        const curURL = new URL(window.location.href);
+    async runSequence() {
         const initJolt = (await import('jolt-physics/wasm')).default;
         setJoltModule(() => initJolt({
             locateFile: () => joltWasmUrl,
         }) as any);
-        if (!this.memoryAvailableEle && curURL.searchParams.get('mem')) {
-            await loadJolt({});
-            this.memoryAvailableEle = setupMemoryAvailable(Jolt);
+        await loadJolt({});
+        const freeMem = Jolt.JoltInterface.prototype.sGetFreeMemory();
+        const mem = () => freeMem - Jolt.JoltInterface.prototype.sGetFreeMemory();
+
+        const modules = await import.meta.glob('./scene/*.ts')
+        const allModules: [string, ()=>Promise<SceneModule>][] = Object.entries(modules) as any;
+        for(let i=0;i<allModules.length;i++) {
+            const [moduleName, module] = allModules[i];
+            this.load(await module());
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            this.dispose();
+            console.log(moduleName, mem());
+            await new Promise(resolve => setTimeout(resolve, 100));
         }
+    }
+
+    load(module: SceneModule) {
+        this.dispose();
+        this.init(module);
+    }
+
+    dispose() {
+        this.scene?.dispose();
+        this.ui?.dispose();
+        clearMaterials();
+        this.scene = undefined;
+    }
+
+    async init(module: SceneModule) {
         // initialize babylon scene and engine
-        const engine = this.engine = new Engine(this.canvas, true);
-        const scene = this.scene = new Scene(engine);
+        const scene = this.scene = new Scene(this.engine);
         this.ui = AdvancedDynamicTexture.CreateFullscreenUI('gui');
 
 
-        const joltPlugin = await JoltJSPlugin.loadPlugin(true, this.settings);
+        const { settings, config } = module;
+        const createScene = module.default;
+
+        const joltPlugin = await JoltJSPlugin.loadPlugin(true, settings);
         scene.enablePhysics(new Vector3(0, -9.8, 0), joltPlugin)
 
-        if (!(this.config && this.config.getCamera)) {
+        if (!(config && config.getCamera)) {
             const camera = new FlyCamera('camera1', new Vector3(0, 15, 30), scene);
             // This targets the camera to scene origin
             camera.setTarget(new Vector3(0, 10, 0));
 
             // This attaches the camera to the canvas
             camera.attachControl(true);
+            scene.activeCamera = camera;
         } else {
-            this.config.getCamera();
+            const camera = config.getCamera(scene);
+            if(camera)
+                scene.activeCamera = camera;
         }
 
 
@@ -108,7 +110,7 @@ export class App {
         // Default intensity is 1. Let's dim the light a small amount
         light.intensity = 0.7;
 
-        const maybeCallback = this.createScene(scene);
+        const maybeCallback = createScene(scene);
         const callback = maybeCallback instanceof Promise ? await maybeCallback : maybeCallback;
 
         joltPlugin.registerPerPhysicsStepCallback(delta => {
@@ -116,11 +118,10 @@ export class App {
                 callback(performance.now(), delta)
             ]
         })
-
         // run the main render loop
-        engine.runRenderLoop(() => {
+        this.engine.runRenderLoop(() => {
             const scene = this.scene;
-            if (scene) {
+            if (scene && scene.isReady() && scene.activeCamera) {
                 scene.render();
             }
         });

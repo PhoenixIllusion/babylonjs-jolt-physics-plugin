@@ -32,11 +32,11 @@ export default (_scene: Scene): SceneCallback => {
 
 
   // Create 2 cylinders
-  let cylinder1 = createCylinder(new Vector3(-25.0, 1.0, -20.0), 1.0, 6.0,
+  let cylinder1 = createCylinder(new Vector3(-25.0, 1.0, -20.0), 1.0, 1.0, 6.0,
     { mass: 10, restitution: 0, friction: 1 }, '#FF0000');
   cylinder1.cylinder.rotationQuaternion = Quaternion.FromRotationMatrix(Matrix.RotationAxis(new Vector3(0, 0, 1), 0.5 * Math.PI));
 
-  let cylinder2 = createCylinder(new Vector3(-25.0, 1.0, 20.0), 1.0, 6.0,
+  let cylinder2 = createCylinder(new Vector3(-25.0, 1.0, 20.0), 1.0, 1.0, 6.0,
     { mass: 10, restitution: 0, friction: 1 }, '#FF0000');
   cylinder2.cylinder.rotationQuaternion = Quaternion.FromRotationMatrix(Matrix.RotationAxis(new Vector3(0, 0, 1), 0.5 * Math.PI));
 

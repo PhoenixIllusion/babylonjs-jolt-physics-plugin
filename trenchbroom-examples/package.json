@@ -6,23 +6,31 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "clean": "rm -fr ./dist ./node_modules",
+    "rebuild:lock": "rm -f ./package-lock.json && npm install && npm run clean"
   },
   "devDependencies": {
-    "@babylonjs/inspector": "6.44.0",
+    "@babylonjs/inspector": "7.34.1",
     "@types/node": "20.11.24",
     "typescript": "5.2.2",
     "vite": "4.5.0"
   },
   "dependencies": {
-    "@babylonjs/core": "6.44.0",
-    "@babylonjs/gui": "6.44.0",
-    "@babylonjs/gui-editor": "6.44.0",
-    "@babylonjs/loaders": "6.44.0",
-    "@babylonjs/materials": "6.44.0",
-    "@babylonjs/serializers": "6.44.0",
-    "@phoenixillusion/babylonjs-jolt-plugin": "github:PhoenixIllusion/babylonjs-jolt-physics-plugin#v1.4.1",
+    "@babylonjs/core": "7.34.1",
+    "@babylonjs/gui": "7.34.1",
+    "@babylonjs/gui-editor": "7.34.1",
+    "@babylonjs/loaders": "7.34.1",
+    "@babylonjs/materials": "7.34.1",
+    "@babylonjs/serializers": "7.34.1",
+    "@phoenixillusion/babylonjs-jolt-plugin": "github:PhoenixIllusion/babylonjs-jolt-physics-plugin#v1.4.2",
     "@phoenixillusion/babylonjs-trenchbroom-loader": "PhoenixIllusion/babylonjs-trenchbroom-loader#v1.0.5",
     "quickhull3d": "2.1.0"
+  },
+  "overrides":{
+    "@phoenixillusion/babylonjs-trenchbroom-loader":{
+      "@babylonjs/core": "7.x",
+      "@babylonjs/loaders": "7.x"
+    }
   }
 }

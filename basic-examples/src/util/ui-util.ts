@@ -18,6 +18,6 @@ export function createCommandButton(text: string, index: number) {
   button.onPointerUpObservable.add(() => {
     state.pressed = false;
   });
-  App.instance.ui!.addControl(button);
+  App.instance?.ui!.addControl(button);
   return { button, state };
 }

@@ -56,7 +56,7 @@ export class MemoryAvailableElement extends HTMLElement {
     }));
     const dispose = document.createElement('button');
     dispose.onclick = () => {
-      App.instance.disposeScene();
+      App.instance?.disposeScene();
       this.update();
     }
     dispose.innerText = 'Free Scene';

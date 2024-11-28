@@ -182,7 +182,7 @@ export default class {
   static async forFile(file: string): Promise<void> {
     const loader = new GLTFLoader(fileLoader);
     const scene = EngineStore.LastCreatedScene!;
-    const data: IGLTFLoaderData = await new Promise((resolve, reject) => fileLoader.loadFile(scene, "levels/"+ file + ".glb", "", resolve, () => {}, true, reject));
+    const data: IGLTFLoaderData = await new Promise((resolve, reject) => fileLoader.loadFile(scene, "levels/"+ file + ".glb", "", resolve as any, () => {}, true, reject));
     await loader.loadAsync(scene, data, '');
     const pendingPromises: Promise<any>[] = [];
     const cache: { [id: number]: Promise<Texture>} = {}

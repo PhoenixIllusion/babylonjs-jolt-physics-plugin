@@ -44,7 +44,7 @@ const run: SceneFunction = async (scene: Scene) => {
     const extents = mesh.getBoundingInfo().boundingBox.extendSize.scale(2);
 
     const root_transform = new TransformNode('character_offset');
-    model.mesh.position.y -= extents.y / 2;
+    model.mesh.position.y -= extents.y / 9;
     mesh.parent = root_transform;
     root_transform.position.set(spawn.x, spawn.y, spawn.z);
 

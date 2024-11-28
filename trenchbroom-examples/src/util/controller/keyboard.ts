@@ -1,10 +1,10 @@
 import { EngineStore } from "@babylonjs/core/Engines/engineStore";
-import type { Engine } from "@babylonjs/core/Engines/engine";
 import { KeyboardEventTypes } from "@babylonjs/core/Events/keyboardEvents";
 import type { KeyboardInfo } from "@babylonjs/core/Events";
 import { Observer } from "@babylonjs/core/Misc/observable";
 import { Scene } from "@babylonjs/core/scene";
 import { Nullable } from "@babylonjs/core/types";
+import { AbstractEngine } from "@babylonjs/core/Engines/abstractEngine";
 
 type DIRECTION_KEY = 'a' | 's' | 'd' | 'w' | 'ArrowDown' | 'ArrowUp' | 'ArrowLeft' | 'ArrowRight';
 type ROTATE_KEY = 'q' | 'e' | 'z' | 'c';
@@ -51,7 +51,7 @@ export class KeyState implements IKeyState<boolean> {
 
 export class KeyboardControl {
   private _keys = new Array<number>();
-  private _onCanvasBlurObserver?: Nullable<Observer<Engine>>;
+  private _onCanvasBlurObserver?: Nullable<Observer<AbstractEngine>>;
   private _onKeyboardObserver?: Nullable<Observer<KeyboardInfo>>;
 
   public state = new KeyState();
