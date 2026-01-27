@@ -1,7 +1,7 @@
 {
   "name": "@phoenixillusion/babylonjs-jolt-plugin",
   "private": true,
-  "version": "1.4.2",
+  "version": "1.4.3",
   "type": "module",
   "scripts": {
     "build": "mkdir -p dist && cp src/jolt-import.js ./dist/. && tsc",
@@ -10,7 +10,7 @@
     "examples:rebuild:lock": "npm run --prefix basic-examples rebuild:lock && npm run --prefix gltf-extras rebuild:lock && npm run --prefix trenchbroom-examples rebuild:lock"
   },
   "devDependencies": {
-    "@babylonjs/core": "7.34.1",
+    "@babylonjs/core": "8.47.0",
     "typescript": "5.2.2"
   },
   "keywords": [
@@ -19,10 +19,10 @@
   ],
   "author": "Phoenix Illusion",
   "peerDependencies": {
-    "@babylonjs/core": "6.x - 7.x"
+    "@babylonjs/core": "6.x - 8.x"
   },
   "dependencies": {
-    "jolt-physics": "0.30.0"
+    "jolt-physics": "1.0.0"
   },
   "exports": {
     ".": "./dist/index.js",

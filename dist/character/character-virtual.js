@@ -4,6 +4,64 @@ import Jolt from "../jolt-import";
 import { GetJoltVec3, LAYER_MOVING, SetJoltVec3, wrapJolt } from "../jolt-util";
 import { CharacterVirtualConfig } from "./config";
 import { Logger } from "@babylonjs/core/Misc/logger";
+const _lVelocity = new Vector3();
+const _aVelocity = new Vector3();
+function JoltCharacterContactListener(character, listener, plugin) {
+    listener.OnAdjustBodyVelocity = (_inCharacter, inBody2Ptr, lVelocityPtr, aVelocityPtr) => {
+        const inBody2 = wrapJolt(inBody2Ptr, Jolt.Body);
+        const lVelocity = wrapJolt(lVelocityPtr, Jolt.Vec3);
+        const aVelocity = wrapJolt(aVelocityPtr, Jolt.Vec3);
+        const impostor = plugin.GetImpostorForBodyId(inBody2.GetID().GetIndexAndSequenceNumber());
+        GetJoltVec3(lVelocity, _lVelocity);
+        GetJoltVec3(aVelocity, _aVelocity);
+        character.onJoltCollide('on-adjust-velocity', { body: impostor, linearVelocity: _lVelocity, angularVelocity: _aVelocity });
+        SetJoltVec3(_aVelocity, aVelocity);
+        SetJoltVec3(_lVelocity, lVelocity);
+    };
+    function getViaBodyId(inBodyID2Ptr) {
+        const inBodyID2 = wrapJolt(inBodyID2Ptr, Jolt.BodyID);
+        return plugin.GetImpostorForBodyId(inBodyID2.GetIndexAndSequenceNumber());
+    }
+    function getViaCharacterPtr(inOtherCharacter) {
+        const inBodyID2 = wrapJolt(inOtherCharacter, Jolt.CharacterVirtual);
+        return plugin.GetImpostorForBodyId(-inBodyID2.GetID().GetValue());
+    }
+    function onValidate(getBody) {
+        return (_inCharacter, inBodyID2Ptr, _inSubShapeID2) => {
+            const ret = character.onJoltCollide('on-contact-validate', { body: getBody(inBodyID2Ptr) });
+            if (ret !== undefined) {
+                return ret;
+            }
+            return true;
+        };
+    }
+    function onContact(kind, getBody) {
+        return (_inCharacter, inBodyID2Ptr, _inSubShapeID2, inContactPosition, inContactNormal, _ioSettings) => {
+            character.onJoltCollide(kind, {
+                body: getBody(inBodyID2Ptr),
+                position: GetJoltVec3(wrapJolt(inContactPosition, Jolt.Vec3), new Vector3),
+                normal: GetJoltVec3(wrapJolt(inContactNormal, Jolt.Vec3), new Vector3)
+            });
+        };
+    }
+    function onRemove(getBody) {
+        return (_inCharacter, inBodyID2Ptr, _inSubShapeID2) => {
+            character.onJoltCollide('on-contact-remove', {
+                body: getBody(inBodyID2Ptr)
+            });
+        };
+    }
+    listener.OnContactValidate = onValidate(getViaBodyId);
+    listener.OnCharacterContactValidate = onValidate(getViaCharacterPtr);
+    listener.OnContactAdded = onContact('on-contact-add', getViaBodyId);
+    listener.OnCharacterContactAdded = onContact('on-contact-add', getViaCharacterPtr);
+    listener.OnContactPersisted = onContact('on-contact-persist', getViaBodyId);
+    listener.OnCharacterContactPersisted = onContact('on-contact-persist', getViaCharacterPtr);
+    listener.OnContactRemoved = onRemove(getViaBodyId);
+    listener.OnCharacterContactRemoved = onRemove(getViaCharacterPtr);
+    listener.OnContactSolve = () => { };
+    listener.OnCharacterContactSolve = () => { };
+}
 export class JoltCharacterVirtual {
     constructor(impostor, shape, world, plugin) {
         this.impostor = impostor;
@@ -14,7 +72,7 @@ export class JoltCharacterVirtual {
         this._temp1 = new Vector3();
         this._temp2 = new Vector3();
         this._gravity = new Vector3();
-        this._JoltPhysicsCallback = { 'on-adjust-velocity': [], 'on-contact-add': [], 'on-contact-validate': [] };
+        this._JoltPhysicsCallback = { 'on-adjust-velocity': [], 'on-contact-add': [], 'on-contact-persist': [], 'on-contact-validate': [], 'on-contact-remove': [] };
         this.onPhysicsStep = this.prePhysicsUpdate.bind(this);
     }
     init() {
@@ -113,55 +171,16 @@ export class JoltCharacterVirtual {
         this.mCharacter.SetPosition(SetJoltVec3(position, this._jolt_temp1R));
     }
     registerOnJoltPhysicsCollide(kind, collideAgainst, func) {
-        let _lVelocity = new Vector3();
-        let _aVelocity = new Vector3();
         if (!this.contactListener) {
             this.contactListener = new Jolt.CharacterContactListenerJS();
-            this.contactListener.OnAdjustBodyVelocity = (_inCharacter, inBody2Ptr, lVelocityPtr, aVelocityPtr) => {
-                const inBody2 = wrapJolt(inBody2Ptr, Jolt.Body);
-                const lVelocity = wrapJolt(lVelocityPtr, Jolt.Vec3);
-                const aVelocity = wrapJolt(aVelocityPtr, Jolt.Vec3);
-                const impostor = this.plugin.GetImpostorForBodyId(inBody2.GetID().GetIndexAndSequenceNumber());
-                GetJoltVec3(lVelocity, _lVelocity);
-                GetJoltVec3(aVelocity, _aVelocity);
-                this.onJoltCollide('on-adjust-velocity', { body: impostor, linearVelocity: _lVelocity, angularVelocity: _aVelocity });
-                SetJoltVec3(_aVelocity, aVelocity);
-                SetJoltVec3(_lVelocity, lVelocity);
-            };
-            this.contactListener.OnContactAdded = (_inCharacter, inBodyID2Ptr, _inSubShapeID2, _inContactPosition, _inContactNormal, _ioSettings) => {
-                const inBodyID2 = wrapJolt(inBodyID2Ptr, Jolt.BodyID);
-                const impostor = this.plugin.GetImpostorForBodyId(inBodyID2.GetIndexAndSequenceNumber());
-                this.onJoltCollide('on-contact-add', { body: impostor });
-            };
-            this.contactListener.OnContactValidate = (_inCharacter, inBodyID2Ptr, _inSubShapeID2) => {
-                const inBodyID2 = wrapJolt(inBodyID2Ptr, Jolt.BodyID);
-                const impostor = this.plugin.GetImpostorForBodyId(inBodyID2.GetIndexAndSequenceNumber());
-                const ret = this.onJoltCollide('on-contact-validate', { body: impostor });
-                if (ret !== undefined) {
-                    return ret;
-                }
-                return true;
-            };
-            this.contactListener.OnContactSolve = (_inCharacter, _inBodyID2, _inSubShapeID2, _inContactPosition, _inContactNormal, _inContactVelocity, _inContactMaterial, _inCharacterVelocity, _ioNewCharacterVelocity) => {
-            };
+            JoltCharacterContactListener(this, this.contactListener, this.plugin);
             this.mCharacter.SetListener(this.contactListener);
             this.mDisposables.push(this.contactListener);
         }
         const collidedAgainstList = collideAgainst instanceof Array ?
             collideAgainst
             : [collideAgainst];
-        if (kind == 'on-contact-add') {
-            const list = this._JoltPhysicsCallback['on-contact-add'];
-            list.push({ callback: func, otherImpostors: collidedAgainstList });
-        }
-        if (kind == 'on-contact-validate') {
-            const list = this._JoltPhysicsCallback['on-contact-validate'];
-            list.push({ callback: func, otherImpostors: collidedAgainstList });
-        }
-        if (kind == 'on-adjust-velocity') {
-            const list = this._JoltPhysicsCallback[kind];
-            list.push({ callback: func, otherImpostors: collidedAgainstList });
-        }
+        this._JoltPhysicsCallback[kind].push({ callback: func, otherImpostors: collidedAgainstList });
     }
     unregisterOnJoltPhysicsCollide(kind, collideAgainst, func) {
         const collidedAgainstList = collideAgainst instanceof Array ?
@@ -222,7 +241,17 @@ export class JoltCharacterVirtual {
                         collisionHandlerCount++;
                     });
                 }
-                else if (kind === 'on-contact-add') {
+                else if (kind === 'on-contact-add' || kind === 'on-contact-persist') {
+                    const list = this._JoltPhysicsCallback[kind];
+                    const e = event;
+                    list.filter((obj) => {
+                        return obj.otherImpostors.indexOf(event.body) !== -1;
+                    }).forEach((obj) => {
+                        obj.callback(e.body, e.position, e.normal);
+                        collisionHandlerCount++;
+                    });
+                }
+                else if (kind === 'on-contact-remove') {
                     const list = this._JoltPhysicsCallback[kind];
                     const e = event;
                     list.filter((obj) => {

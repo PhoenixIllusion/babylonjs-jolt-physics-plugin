@@ -12,7 +12,7 @@ export const loadJolt = async (importSettings) => {
         return;
     }
     if (!Jolt) {
-        Jolt = (await import('https://www.unpkg.com/jolt-physics@0.30.0/dist/jolt-physics.wasm-compat.js')).default
+        Jolt = (await import('https://www.unpkg.com/jolt-physics@1.0.0/dist/jolt-physics.wasm-compat.js')).default
     }
     const j = await Jolt(importSettings);
     Object.assign(_jolt, j);

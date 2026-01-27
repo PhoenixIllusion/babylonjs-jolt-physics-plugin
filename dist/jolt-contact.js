@@ -50,13 +50,11 @@ export class ContactCollector {
     constructor(listener) {
         this.listener = listener;
         this._collisionEnabled = {};
-        this._joltEventEnabled = { 'on-contact-add': {}, 'on-contact-persist': {}, 'on-contact-validate': {} };
+        this._joltEventEnabled = { 'on-contact-add': {}, 'on-contact-persist': {}, 'on-contact-validate': {}, 'on-contact-remove': {} };
         this._imposterBodyHash = {};
         this._contactSettings = new JoltContactSetting();
         this._hasRegisteredListener = false;
-        const withChecks = (inBody1, inBody2, type, withImpostors) => {
-            const body1Hash = inBody1.GetID().GetIndexAndSequenceNumber();
-            const body2Hash = inBody2.GetID().GetIndexAndSequenceNumber();
+        const withChecksByHash = (body1Hash, body2Hash, type, withImpostors) => {
             const hash = type === 'regular' ? this._collisionEnabled : this._joltEventEnabled[type];
             const body1Enabled = hash[body1Hash];
             const body2Enabled = hash[body2Hash];
@@ -70,6 +68,11 @@ export class ContactCollector {
                     withImpostors(body2, body1, true);
                 }
             }
+        };
+        const withChecks = (inBody1, inBody2, type, withImpostors) => {
+            const body1Hash = inBody1.GetID().GetIndexAndSequenceNumber();
+            const body2Hash = inBody2.GetID().GetIndexAndSequenceNumber();
+            withChecksByHash(body1Hash, body2Hash, type, withImpostors);
         };
         const wrapContactSettings = (ioSettings, rev, withSettings) => {
             this._contactSettings.marshall(ioSettings, rev);
@@ -129,7 +132,12 @@ export class ContactCollector {
             return wrapContactValidate(inBody1, inBody2);
         };
         // @ts-ignore: Unused
-        listener.OnContactRemoved = (shapeIdPair) => { };
+        listener.OnContactRemoved = (shapeIdPair) => {
+            const idPair = Jolt.wrapPointer(shapeIdPair, Jolt.SubShapeIDPair);
+            withChecksByHash(idPair.GetBody1ID().GetIndexAndSequenceNumber(), idPair.GetBody2ID().GetIndexAndSequenceNumber(), 'on-contact-remove', (body1, body2, _rev) => {
+                body1.onJoltCollide('on-contact-remove', { body: body2 });
+            });
+        };
         // @ts-ignore: Unused
         listener.OnContactAdded = (inBody1ptr, inBody2ptr, inManifold, ioSettingsPtr) => {
             const inBody1 = Jolt.wrapPointer(inBody1ptr, Jolt.Body);
@@ -161,7 +169,7 @@ export class ContactCollector {
     clear() {
         this._imposterBodyHash = {};
         this._collisionEnabled = {};
-        this._joltEventEnabled = { 'on-contact-add': {}, 'on-contact-persist': {}, 'on-contact-validate': {} };
+        this._joltEventEnabled = { 'on-contact-add': {}, 'on-contact-persist': {}, 'on-contact-validate': {}, 'on-contact-remove': {} };
         this._hasRegisteredListener = false;
     }
     get hasRegisteredListener() { return this._hasRegisteredListener; }

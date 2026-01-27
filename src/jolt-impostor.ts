@@ -1,6 +1,6 @@
 
 import { IPhysicsEnabledObject, PhysicsImpostor, PhysicsImpostorParameters } from '@babylonjs/core/Physics/v1/physicsImpostor';
-import { OnContactCallback, OnContactValidateCallback, JoltCollisionKey, JoltContactSetting, OnContactValidateResponse, JoltCollisionCallback, JoltPhysicsCollideCallbacks } from './jolt-contact';
+import { OnContactCallback, OnContactValidateCallback, JoltCollisionKey, JoltContactSetting, OnContactValidateResponse, JoltCollisionCallback, JoltPhysicsCollideCallbacks, OnContactRemove } from './jolt-contact';
 import { Matrix, Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { Logger } from '@babylonjs/core/Misc/logger';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
@@ -254,8 +254,10 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
     JoltPhysicsCallback: JoltPhysicsCollideCallbacks;
     registerOnJoltPhysicsCollide(kind: 'on-contact-add' | 'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactCallback): void;
     registerOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidateCallback): void;
+    registerOnJoltPhysicsCollide(kind: 'on-contact-remove', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactRemove): void;
     unregisterOnJoltPhysicsCollide(kind: 'on-contact-add' | 'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactCallback): void;
     unregisterOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidateCallback): void;
+    unregisterOnJoltPhysicsCollide(kind: 'on-contact-remove', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactRemove): void;
 
     setShape(type: number, param: PhysicsImpostorParameters): void;
     onJoltCollide(kind: 'on-contact-add' | 'on-contact-persist', event: {
@@ -265,6 +267,9 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
     onJoltCollide(kind: 'on-contact-validate', event: {
       body: PhysicsImpostor;
     }): OnContactValidateResponse | undefined;
+    onJoltCollide(kind: 'on-contact-remove', event: {
+      body: PhysicsImpostor;
+    }): void;
   }
 }
 
@@ -296,7 +301,7 @@ Object.defineProperty(PhysicsImpostor.prototype, "joltPluginData", {
 });
 Object.defineProperty(PhysicsImpostor.prototype, "JoltPhysicsCallback", {
   get: function (this: PhysicsImpostor) {
-    (this as any)._JoltPhysicsCallback = (this as any)._JoltPhysicsCallback || { 'on-contact-add': [], 'on-contact-persist': [], 'on-contact-validate': [] };
+    (this as any)._JoltPhysicsCallback = (this as any)._JoltPhysicsCallback || { 'on-contact-add': [], 'on-contact-persist': [], 'on-contact-remove': [], 'on-contact-validate': [] };
     return (this as any)._JoltPhysicsCallback;
   },
   set: function (this: PhysicsImpostor, value: JoltPhysicsCollideCallbacks) {

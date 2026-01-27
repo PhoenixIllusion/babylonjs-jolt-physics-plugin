@@ -5,9 +5,10 @@ import { JoltCharacterVirtualImpostor } from "./impostor";
 import { CharacterVirtualInputHandler } from "./input";
 import { PhysicsImpostor } from "@babylonjs/core/Physics/v1/physicsImpostor";
 import { JoltJSPlugin } from "../jolt-physics";
-type OnContactValidate = (body: PhysicsImpostor) => boolean;
-type OnContactAdd = (body: PhysicsImpostor) => void;
 type OnAdjustVelocity = (body: PhysicsImpostor, linearVelocity: Vector3, angularVelocity: Vector3) => void;
+type OnContactValidate = (body: PhysicsImpostor) => boolean;
+type OnContact = (body: PhysicsImpostor, offset: Vector3, normal: Vector3) => void;
+type OnContactRemove = (body: PhysicsImpostor) => void;
 type CharacterListenerCallbacks<T> = {
     callback: T;
     otherImpostors: Array<PhysicsImpostor>;
@@ -51,16 +52,24 @@ export declare class JoltCharacterVirtual {
     setPosition(position: Vector3): void;
     _JoltPhysicsCallback: {
         'on-adjust-velocity': CharacterListenerCallbacks<OnAdjustVelocity>[];
-        'on-contact-add': CharacterListenerCallbacks<OnContactAdd>[];
+        'on-contact-add': CharacterListenerCallbacks<OnContact>[];
+        'on-contact-persist': CharacterListenerCallbacks<OnContact>[];
+        'on-contact-remove': CharacterListenerCallbacks<OnContactRemove>[];
         'on-contact-validate': CharacterListenerCallbacks<OnContactValidate>[];
     };
-    registerOnJoltPhysicsCollide(kind: 'on-contact-add', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactAdd): void;
+    registerOnJoltPhysicsCollide(kind: 'on-contact-add' | 'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContact): void;
+    registerOnJoltPhysicsCollide(kind: 'on-contact-remove', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactRemove): void;
     registerOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidate): void;
     registerOnJoltPhysicsCollide(kind: 'on-adjust-velocity', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnAdjustVelocity): void;
-    unregisterOnJoltPhysicsCollide(kind: 'on-contact-add', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactAdd): void;
+    unregisterOnJoltPhysicsCollide(kind: 'on-contact-add' | 'on-contact-remove', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContact): void;
     unregisterOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidate): void;
     unregisterOnJoltPhysicsCollide(kind: 'on-adjust-velocity', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnAdjustVelocity): void;
-    onJoltCollide(kind: 'on-contact-add', event: {
+    onJoltCollide(kind: 'on-contact-add' | 'on-contact-persist', event: {
+        body: PhysicsImpostor;
+        position: Vector3;
+        normal: Vector3;
+    }): void;
+    onJoltCollide(kind: 'on-contact-remove', event: {
         body: PhysicsImpostor;
     }): void;
     onJoltCollide(kind: 'on-contact-validate', event: {

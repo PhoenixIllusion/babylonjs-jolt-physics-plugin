@@ -24,7 +24,8 @@ export declare const enum OnContactValidateResponse {
 }
 export type OnContactValidateCallback = (body: PhysicsImpostor) => OnContactValidateResponse;
 export type OnContactCallback = (body: PhysicsImpostor, offset: Vector3, contactSettings: JoltContactSetting) => void;
-export interface JoltCollisionCallback<T extends OnContactValidateCallback | OnContactCallback> {
+export type OnContactRemove = (body: PhysicsImpostor) => void;
+export interface JoltCollisionCallback<T extends OnContactValidateCallback | OnContactCallback | OnContactRemove> {
     callback: T;
     otherImpostors: Array<PhysicsImpostor>;
 }
@@ -32,6 +33,7 @@ export interface JoltPhysicsCollideCallbacks {
     'on-contact-add': JoltCollisionCallback<OnContactCallback>[];
     'on-contact-persist': JoltCollisionCallback<OnContactCallback>[];
     'on-contact-validate': JoltCollisionCallback<OnContactValidateCallback>[];
+    'on-contact-remove': JoltCollisionCallback<OnContactRemove>[];
 }
 export type JoltCollisionKey = keyof JoltPhysicsCollideCallbacks;
 export declare class ContactCollector {

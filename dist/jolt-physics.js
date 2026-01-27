@@ -239,7 +239,7 @@ export class JoltJSPlugin {
                 imp.physicsBody = char.getCharacter();
                 imp._pluginData.controller = char;
                 imp._pluginData.plugin = this;
-                this._impostorLookup[-performance.now()] = impostor;
+                this._impostorLookup[-char.getCharacter().GetID().GetValue()] = impostor;
                 return;
             }
             const body = BodyUtility.createBody(impostor, this.settings, this._bodyInterface, this._tempVec3A, this._tempVec3B, this._tempRVec3A, this._tempQuaternion);
@@ -263,6 +263,8 @@ export class JoltJSPlugin {
                     Jolt.destroy(d);
                 });
                 impostor.joltPluginData.toDispose = [];
+                const char = impostor.physicsBody;
+                delete this._impostorLookup[-char.GetID().GetValue()];
             }
             return;
         }

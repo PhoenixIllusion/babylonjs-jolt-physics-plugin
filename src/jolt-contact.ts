@@ -58,34 +58,35 @@ export const enum OnContactValidateResponse {
 }
 export type OnContactValidateCallback = (body: PhysicsImpostor) => OnContactValidateResponse;
 export type OnContactCallback = (body: PhysicsImpostor, offset: Vector3, contactSettings: JoltContactSetting) => void;
-
-export interface JoltCollisionCallback<T extends OnContactValidateCallback | OnContactCallback> { callback: T, otherImpostors: Array<PhysicsImpostor> }
+export type OnContactRemove = (body: PhysicsImpostor) => void
+export interface JoltCollisionCallback<T extends OnContactValidateCallback | OnContactCallback | OnContactRemove> { callback: T, otherImpostors: Array<PhysicsImpostor> }
 
 
 export interface JoltPhysicsCollideCallbacks {
   'on-contact-add': JoltCollisionCallback<OnContactCallback>[],
   'on-contact-persist': JoltCollisionCallback<OnContactCallback>[],
-  'on-contact-validate': JoltCollisionCallback<OnContactValidateCallback>[]
+  'on-contact-validate': JoltCollisionCallback<OnContactValidateCallback>[],
+  'on-contact-remove': JoltCollisionCallback<OnContactRemove>[]
 }
 export type JoltCollisionKey = keyof JoltPhysicsCollideCallbacks;
 
-type CollisionRecords = { 'on-contact-add': Record<number, boolean>, 'on-contact-persist': Record<number, boolean>, 'on-contact-validate': Record<number, boolean> };
+type CollisionRecords = {
+   'on-contact-add': Record<number, boolean>,
+   'on-contact-persist': Record<number, boolean>,
+   'on-contact-validate': Record<number, boolean>,
+   'on-contact-remove': Record<number, boolean> };
 
 export class ContactCollector {
 
   private _collisionEnabled: Record<number, boolean> = {};
-  private _joltEventEnabled: CollisionRecords = { 'on-contact-add': {}, 'on-contact-persist': {}, 'on-contact-validate': {} };
+  private _joltEventEnabled: CollisionRecords = { 'on-contact-add': {}, 'on-contact-persist': {}, 'on-contact-validate': {}, 'on-contact-remove': {} };
 
   private _imposterBodyHash: { [hash: number]: PhysicsImpostor } = {};
   private _contactSettings = new JoltContactSetting();
   private _hasRegisteredListener = false;
 
   constructor(public listener: Jolt.ContactListenerJS) {
-    const withChecks = (inBody1: Jolt.Body, inBody2: Jolt.Body, type: keyof CollisionRecords | 'regular', withImpostors: (body1: PhysicsImpostor, body2: PhysicsImpostor, rev: boolean) => void) => {
-
-
-      const body1Hash = inBody1.GetID().GetIndexAndSequenceNumber();
-      const body2Hash = inBody2.GetID().GetIndexAndSequenceNumber();
+    const withChecksByHash = (body1Hash: number, body2Hash: number, type: keyof CollisionRecords | 'regular', withImpostors: (body1: PhysicsImpostor, body2: PhysicsImpostor, rev: boolean) => void) => {
       const hash = type === 'regular' ? this._collisionEnabled : this._joltEventEnabled[type];
 
       const body1Enabled = hash[body1Hash];
@@ -101,6 +102,11 @@ export class ContactCollector {
           withImpostors(body2, body1, true)
         }
       }
+    }
+    const withChecks = (inBody1: Jolt.Body, inBody2: Jolt.Body, type: keyof CollisionRecords | 'regular', withImpostors: (body1: PhysicsImpostor, body2: PhysicsImpostor, rev: boolean) => void) => {
+      const body1Hash = inBody1.GetID().GetIndexAndSequenceNumber();
+      const body2Hash = inBody2.GetID().GetIndexAndSequenceNumber();
+      withChecksByHash(body1Hash, body2Hash, type, withImpostors)
     }
 
     const wrapContactSettings = (ioSettings: Jolt.ContactSettings, rev: boolean, withSettings: (settings: JoltContactSetting) => void) => {
@@ -169,7 +175,13 @@ export class ContactCollector {
       return wrapContactValidate(inBody1, inBody2);
     }
     // @ts-ignore: Unused
-    listener.OnContactRemoved = (shapeIdPair) => { /* do nothing */ }
+    listener.OnContactRemoved = (shapeIdPair) => { 
+      const idPair = Jolt.wrapPointer(shapeIdPair, Jolt.SubShapeIDPair);
+      withChecksByHash(idPair.GetBody1ID().GetIndexAndSequenceNumber(), idPair.GetBody2ID().GetIndexAndSequenceNumber(), 'on-contact-remove',
+        (body1, body2, _rev) => {
+          body1.onJoltCollide('on-contact-remove', { body: body2})
+        });
+    }
     // @ts-ignore: Unused
     listener.OnContactAdded = (inBody1ptr, inBody2ptr, inManifold, ioSettingsPtr) => {
       const inBody1 = Jolt.wrapPointer(inBody1ptr, Jolt.Body);
@@ -203,7 +215,7 @@ export class ContactCollector {
   clear() {
     this._imposterBodyHash = {};
     this._collisionEnabled = {};
-    this._joltEventEnabled = { 'on-contact-add': {}, 'on-contact-persist': {}, 'on-contact-validate': {} };
+    this._joltEventEnabled = { 'on-contact-add': {}, 'on-contact-persist': {}, 'on-contact-validate': {}, 'on-contact-remove': {} };
     this._hasRegisteredListener = false;
   }
 

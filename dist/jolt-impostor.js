@@ -161,7 +161,7 @@ Object.defineProperty(PhysicsImpostor.prototype, "joltPluginData", {
 });
 Object.defineProperty(PhysicsImpostor.prototype, "JoltPhysicsCallback", {
     get: function () {
-        this._JoltPhysicsCallback = this._JoltPhysicsCallback || { 'on-contact-add': [], 'on-contact-persist': [], 'on-contact-validate': [] };
+        this._JoltPhysicsCallback = this._JoltPhysicsCallback || { 'on-contact-add': [], 'on-contact-persist': [], 'on-contact-remove': [], 'on-contact-validate': [] };
         return this._JoltPhysicsCallback;
     },
     set: function (value) {

@@ -1,5 +1,5 @@
 import { IPhysicsEnabledObject, PhysicsImpostor } from '@babylonjs/core/Physics/v1/physicsImpostor';
-import { OnContactCallback, OnContactValidateCallback, JoltContactSetting, OnContactValidateResponse, JoltPhysicsCollideCallbacks } from './jolt-contact';
+import { OnContactCallback, OnContactValidateCallback, JoltContactSetting, OnContactValidateResponse, JoltPhysicsCollideCallbacks, OnContactRemove } from './jolt-contact';
 import { Matrix, Quaternion, Vector3 } from '@babylonjs/core/Maths/math.vector';
 import { TransformNode } from '@babylonjs/core/Meshes/transformNode';
 import { BoundingInfo } from '@babylonjs/core/Culling/boundingInfo';
@@ -127,8 +127,10 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
         JoltPhysicsCallback: JoltPhysicsCollideCallbacks;
         registerOnJoltPhysicsCollide(kind: 'on-contact-add' | 'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactCallback): void;
         registerOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidateCallback): void;
+        registerOnJoltPhysicsCollide(kind: 'on-contact-remove', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactRemove): void;
         unregisterOnJoltPhysicsCollide(kind: 'on-contact-add' | 'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactCallback): void;
         unregisterOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidateCallback): void;
+        unregisterOnJoltPhysicsCollide(kind: 'on-contact-remove', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactRemove): void;
         setShape(type: number, param: PhysicsImpostorParameters): void;
         onJoltCollide(kind: 'on-contact-add' | 'on-contact-persist', event: {
             body: PhysicsImpostor;
@@ -137,6 +139,9 @@ declare module '@babylonjs/core/Physics/v1/physicsImpostor' {
         onJoltCollide(kind: 'on-contact-validate', event: {
             body: PhysicsImpostor;
         }): OnContactValidateResponse | undefined;
+        onJoltCollide(kind: 'on-contact-remove', event: {
+            body: PhysicsImpostor;
+        }): void;
     }
 }
 export interface JoltPluginData {

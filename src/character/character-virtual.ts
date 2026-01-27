@@ -9,13 +9,14 @@ import { PhysicsImpostor } from "@babylonjs/core/Physics/v1/physicsImpostor";
 import { Logger } from "@babylonjs/core/Misc/logger";
 import { JoltJSPlugin } from "../jolt-physics";
 
-
-type OnContactValidate = (body: PhysicsImpostor) => boolean;
-type OnContactAdd = (body: PhysicsImpostor) => void;
 type OnAdjustVelocity = (body: PhysicsImpostor, linearVelocity: Vector3, angularVelocity: Vector3) => void;
 
+type OnContactValidate = (body: PhysicsImpostor) => boolean;
+type OnContact = (body: PhysicsImpostor, offset: Vector3, normal: Vector3) => void;
+type OnContactRemove = (body: PhysicsImpostor) => void;
+
 type CharacterListenerCallbacks<T> = { callback: T, otherImpostors: Array<PhysicsImpostor> }
-type CharacterListenerCallbackKey = 'on-adjust-velocity' | 'on-contact-add' | 'on-contact-validate';
+type CharacterListenerCallbackKey = 'on-adjust-velocity' | 'on-contact-add' | 'on-contact-persist'  | 'on-contact-remove' | 'on-contact-validate';
 
 
 interface WorldData {
@@ -29,6 +30,68 @@ interface UpdateFiltersData {
   bodyFilter: Jolt.BodyFilter;
   shapeFilter: Jolt.ShapeFilter
 }
+
+const _lVelocity = new Vector3();
+const _aVelocity = new Vector3();
+function JoltCharacterContactListener(character: JoltCharacterVirtual, listener: Jolt.CharacterContactListenerJS, plugin: JoltJSPlugin) {
+        listener.OnAdjustBodyVelocity = (_inCharacter: RawPointer<Jolt.CharacterVirtual>, inBody2Ptr: RawPointer<Jolt.Body>, lVelocityPtr: RawPointer<Jolt.Vec3>, aVelocityPtr: RawPointer<Jolt.Vec3>): void => {
+        const inBody2 = wrapJolt(inBody2Ptr, Jolt.Body);
+        const lVelocity = wrapJolt(lVelocityPtr, Jolt.Vec3);
+        const aVelocity = wrapJolt(aVelocityPtr, Jolt.Vec3);
+        const impostor = plugin.GetImpostorForBodyId(inBody2.GetID().GetIndexAndSequenceNumber());
+        GetJoltVec3(lVelocity, _lVelocity);
+        GetJoltVec3(aVelocity, _aVelocity);
+        character.onJoltCollide('on-adjust-velocity', { body: impostor, linearVelocity: _lVelocity, angularVelocity: _aVelocity });
+        SetJoltVec3(_aVelocity, aVelocity);
+        SetJoltVec3(_lVelocity, lVelocity);
+      }
+      function getViaBodyId(inBodyID2Ptr: RawPointer<Jolt.BodyID>) {
+        const inBodyID2 = wrapJolt(inBodyID2Ptr as any as number, Jolt.BodyID);
+        return plugin.GetImpostorForBodyId(inBodyID2.GetIndexAndSequenceNumber());
+      }
+      function getViaCharacterPtr(inOtherCharacter: RawPointer<Jolt.CharacterVirtual>) {
+        const inBodyID2 = wrapJolt(inOtherCharacter as number, Jolt.CharacterVirtual);
+        return plugin.GetImpostorForBodyId(-inBodyID2.GetID().GetValue());
+      }
+      function onValidate(getBody: typeof getViaBodyId | typeof getViaBodyId) {
+        return (_inCharacter: RawPointer<Jolt.CharacterVirtual>, inBodyID2Ptr: RawPointer<Jolt.BodyID|Jolt.CharacterVirtual>, _inSubShapeID2: RawPointer<Jolt.SubShapeID>) => {
+          const ret = character.onJoltCollide('on-contact-validate', { body: getBody(inBodyID2Ptr) });
+          if (ret !== undefined) {
+            return ret;
+          }
+          return true;
+        }
+      }
+      function onContact(kind: 'on-contact-add' | 'on-contact-persist', getBody: typeof getViaBodyId | typeof getViaBodyId ) {
+        return (_inCharacter: RawPointer<Jolt.CharacterVirtual>, inBodyID2Ptr: RawPointer<Jolt.BodyID|Jolt.CharacterVirtual>, _inSubShapeID2: RawPointer<Jolt.SubShapeID>,
+            inContactPosition: RawPointer<Jolt.Vec3>, inContactNormal: RawPointer<Jolt.Vec3>, _ioSettings: RawPointer<Jolt.CharacterContactSettings>): void => {
+                character.onJoltCollide(kind, {
+                  body: getBody(inBodyID2Ptr),
+                  position: GetJoltVec3(wrapJolt(inContactPosition, Jolt.Vec3), new Vector3),
+                  normal: GetJoltVec3(wrapJolt(inContactNormal, Jolt.Vec3), new Vector3)
+                })
+              }
+      }
+      function onRemove( getBody: typeof getViaBodyId | typeof getViaBodyId ) {
+        return (_inCharacter: RawPointer<Jolt.CharacterVirtual>, inBodyID2Ptr: RawPointer<Jolt.BodyID|Jolt.CharacterVirtual>, _inSubShapeID2: RawPointer<Jolt.SubShapeID>): void => {
+          character.onJoltCollide('on-contact-remove', {
+            body: getBody(inBodyID2Ptr)
+          })
+        }
+      }
+
+      listener.OnContactValidate = onValidate(getViaBodyId);
+      listener.OnCharacterContactValidate = onValidate(getViaCharacterPtr);
+      listener.OnContactAdded = onContact('on-contact-add', getViaBodyId)
+      listener.OnCharacterContactAdded = onContact('on-contact-add', getViaCharacterPtr)
+      listener.OnContactPersisted = onContact('on-contact-persist', getViaBodyId)
+      listener.OnCharacterContactPersisted = onContact('on-contact-persist', getViaCharacterPtr)
+      listener.OnContactRemoved = onRemove(getViaBodyId);
+      listener.OnCharacterContactRemoved = onRemove(getViaCharacterPtr);
+      listener.OnContactSolve = () => {}
+      listener.OnCharacterContactSolve = () => {}
+    }
+
 
 export class JoltCharacterVirtual {
   private mCharacter!: Jolt.CharacterVirtual;
@@ -185,50 +248,22 @@ export class JoltCharacterVirtual {
 
   public _JoltPhysicsCallback: {
     'on-adjust-velocity': CharacterListenerCallbacks<OnAdjustVelocity>[],
-    'on-contact-add': CharacterListenerCallbacks<OnContactAdd>[],
+    'on-contact-add': CharacterListenerCallbacks<OnContact>[],
+    'on-contact-persist': CharacterListenerCallbacks<OnContact>[],
+    'on-contact-remove': CharacterListenerCallbacks<OnContactRemove>[],
     'on-contact-validate': CharacterListenerCallbacks<OnContactValidate>[]
-  } = { 'on-adjust-velocity': [], 'on-contact-add': [], 'on-contact-validate': [] }
+  } = { 'on-adjust-velocity': [], 'on-contact-add': [],'on-contact-persist': [], 'on-contact-validate': [], 'on-contact-remove': [] }
 
-  public registerOnJoltPhysicsCollide(kind: 'on-contact-add', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactAdd): void;
+  public registerOnJoltPhysicsCollide(kind: 'on-contact-add'|'on-contact-persist', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContact): void;
+  public registerOnJoltPhysicsCollide(kind: 'on-contact-remove', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactRemove): void;
   public registerOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidate): void;
   public registerOnJoltPhysicsCollide(kind: 'on-adjust-velocity', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnAdjustVelocity): void;
   public registerOnJoltPhysicsCollide(kind: CharacterListenerCallbackKey, collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>,
-    func: OnContactValidate | OnContactAdd | OnAdjustVelocity): void {
+    func: OnContactValidate | OnContact | OnContactRemove | OnAdjustVelocity): void {
 
-    let _lVelocity = new Vector3();
-    let _aVelocity = new Vector3();
     if (!this.contactListener) {
       this.contactListener = new Jolt.CharacterContactListenerJS();
-      this.contactListener.OnAdjustBodyVelocity = (_inCharacter: RawPointer<Jolt.CharacterVirtual>, inBody2Ptr: RawPointer<Jolt.Body>, lVelocityPtr: RawPointer<Jolt.Vec3>, aVelocityPtr: RawPointer<Jolt.Vec3>): void => {
-        const inBody2 = wrapJolt(inBody2Ptr, Jolt.Body);
-        const lVelocity = wrapJolt(lVelocityPtr, Jolt.Vec3);
-        const aVelocity = wrapJolt(aVelocityPtr, Jolt.Vec3);
-        const impostor = this.plugin.GetImpostorForBodyId(inBody2.GetID().GetIndexAndSequenceNumber());
-        GetJoltVec3(lVelocity, _lVelocity);
-        GetJoltVec3(aVelocity, _aVelocity);
-        this.onJoltCollide('on-adjust-velocity', { body: impostor, linearVelocity: _lVelocity, angularVelocity: _aVelocity });
-        SetJoltVec3(_aVelocity, aVelocity);
-        SetJoltVec3(_lVelocity, lVelocity);
-      }
-      this.contactListener.OnContactAdded = (_inCharacter: RawPointer<Jolt.CharacterVirtual>, inBodyID2Ptr: RawPointer<Jolt.BodyID>, _inSubShapeID2: RawPointer<Jolt.SubShapeID>,
-        _inContactPosition: RawPointer<Jolt.Vec3>, _inContactNormal: RawPointer<Jolt.Vec3>, _ioSettings: RawPointer<Jolt.CharacterContactSettings>): void => {
-        const inBodyID2 = wrapJolt(inBodyID2Ptr as any as number, Jolt.BodyID);
-        const impostor = this.plugin.GetImpostorForBodyId(inBodyID2.GetIndexAndSequenceNumber());
-        this.onJoltCollide('on-contact-add', { body: impostor });
-      }
-      this.contactListener.OnContactValidate = (_inCharacter: RawPointer<Jolt.CharacterVirtual>, inBodyID2Ptr: RawPointer<Jolt.BodyID>, _inSubShapeID2: RawPointer<Jolt.SubShapeID>): boolean => {
-        const inBodyID2 = wrapJolt(inBodyID2Ptr as any as number, Jolt.BodyID);
-        const impostor = this.plugin.GetImpostorForBodyId(inBodyID2.GetIndexAndSequenceNumber());
-        const ret = this.onJoltCollide('on-contact-validate', { body: impostor });
-        if (ret !== undefined) {
-          return ret;
-        }
-        return true;
-      }
-      this.contactListener.OnContactSolve = (_inCharacter: RawPointer<Jolt.CharacterVirtual>, _inBodyID2: RawPointer<Jolt.BodyID>, _inSubShapeID2: RawPointer<Jolt.SubShapeID>,
-        _inContactPosition: RawPointer<Jolt.Vec3>, _inContactNormal: RawPointer<Jolt.Vec3>, _inContactVelocity: RawPointer<Jolt.Vec3>, _inContactMaterial: RawPointer<Jolt.PhysicsMaterial>,
-        _inCharacterVelocity: RawPointer<Jolt.Vec3>, _ioNewCharacterVelocity: RawPointer<Jolt.Vec3>): void => {
-      }
+      JoltCharacterContactListener(this, this.contactListener, this.plugin)
       this.mCharacter.SetListener(this.contactListener);
       this.mDisposables.push(this.contactListener);
     }
@@ -236,24 +271,13 @@ export class JoltCharacterVirtual {
     const collidedAgainstList: Array<PhysicsImpostor> = collideAgainst instanceof Array ?
       <Array<PhysicsImpostor>>collideAgainst
       : [<PhysicsImpostor>collideAgainst];
-    if (kind == 'on-contact-add') {
-      const list = this._JoltPhysicsCallback['on-contact-add'];
-      list.push({ callback: func as OnContactAdd, otherImpostors: collidedAgainstList });
-    }
-    if (kind == 'on-contact-validate') {
-      const list = this._JoltPhysicsCallback['on-contact-validate'];
-      list.push({ callback: func as OnContactValidate, otherImpostors: collidedAgainstList });
-    }
-    if (kind == 'on-adjust-velocity') {
-      const list = this._JoltPhysicsCallback[kind];
-      list.push({ callback: func as OnAdjustVelocity, otherImpostors: collidedAgainstList });
-    }
+    this._JoltPhysicsCallback[kind].push({ callback: func as any, otherImpostors: collidedAgainstList });
   }
-  public unregisterOnJoltPhysicsCollide(kind: 'on-contact-add', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactAdd): void;
+  public unregisterOnJoltPhysicsCollide(kind: 'on-contact-add'|'on-contact-remove', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContact): void;
   public unregisterOnJoltPhysicsCollide(kind: 'on-contact-validate', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnContactValidate): void;
   public unregisterOnJoltPhysicsCollide(kind: 'on-adjust-velocity', collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>, func: OnAdjustVelocity): void;
   public unregisterOnJoltPhysicsCollide(kind: CharacterListenerCallbackKey, collideAgainst: PhysicsImpostor | Array<PhysicsImpostor>,
-    func: OnContactValidate | OnContactAdd | OnAdjustVelocity): void {
+    func: OnContactValidate | OnContact | OnAdjustVelocity): void {
     const collidedAgainstList: Array<PhysicsImpostor> = collideAgainst instanceof Array ?
       <Array<PhysicsImpostor>>collideAgainst
       : [<PhysicsImpostor>collideAgainst];
@@ -280,10 +304,12 @@ export class JoltCharacterVirtual {
   }
 
 
-  public onJoltCollide(kind: 'on-contact-add', event: { body: PhysicsImpostor }): void;
+  public onJoltCollide(kind: 'on-contact-add'|'on-contact-persist', event: { body: PhysicsImpostor, position: Vector3, normal: Vector3 }): void;
+  public onJoltCollide(kind: 'on-contact-remove', event: { body: PhysicsImpostor }): void;
   public onJoltCollide(kind: 'on-contact-validate', event: { body: PhysicsImpostor }): boolean | undefined;
   public onJoltCollide(kind: 'on-adjust-velocity', event: { body: PhysicsImpostor, linearVelocity: Vector3, angularVelocity: Vector3 }): void;
-  public onJoltCollide(kind: CharacterListenerCallbackKey, event: { body: PhysicsImpostor, linearVelocity: Vector3, angularVelocity: Vector3 } | { body: PhysicsImpostor }): boolean | undefined | void {
+  
+  public onJoltCollide(kind: CharacterListenerCallbackKey, event: { body: PhysicsImpostor, linearVelocity: Vector3, angularVelocity: Vector3 } | { body: PhysicsImpostor, position: Vector3, normal: Vector3 } | { body: PhysicsImpostor }): boolean | undefined | void {
     if (!this._JoltPhysicsCallback[kind].length) {
       return undefined;
     }
@@ -316,7 +342,16 @@ export class JoltCharacterVirtual {
             obj.callback(e.body, e.linearVelocity, e.angularVelocity);
             collisionHandlerCount++;
           });
-        } else if (kind === 'on-contact-add') {
+        } else if (kind === 'on-contact-add' || kind === 'on-contact-persist') {
+          const list = this._JoltPhysicsCallback[kind];
+          const e = event as { body: PhysicsImpostor, position: Vector3, normal: Vector3 };
+          list.filter((obj) => {
+            return obj.otherImpostors.indexOf(event.body) !== -1;
+          }).forEach((obj) => {
+            obj.callback(e.body, e.position, e.normal);
+            collisionHandlerCount++;
+          });
+        } else if (kind === 'on-contact-remove') {
           const list = this._JoltPhysicsCallback[kind];
           const e = event as { body: PhysicsImpostor };
           list.filter((obj) => {
